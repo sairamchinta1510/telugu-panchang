@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telugu Daily Panchang · నిత్య పంచాంగం</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #fdf6ec; color: #3e2723; padding: 16px; min-height: 100vh; max-width: 480px; margin: 0 auto; }
+
+/* Page Header */
+.page-header { text-align: center; padding: 20px 16px 14px; background: linear-gradient(135deg, #5d4037 0%, #8d6e63 60%, #d7a96b 100%); border-radius: 14px; margin-bottom: 14px; color: white; }
+.page-header .om { font-size: 2.2rem; line-height: 1; margin-bottom: 6px; }
+.page-header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: 1px; }
+.page-header .telugu-title { font-size: 0.9rem; opacity: 0.88; margin-top: 3px; }
+
+/* Location bar */
+.location-bar { background: #efebe9; border: 1px solid #d7ccc8; border-radius: 8px; padding: 8px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: #4e342e; flex-wrap: wrap; }
+.location-bar .loc-name { font-weight: 600; }
+.location-bar .loc-coords { color: #8d6e63; margin-left: auto; font-size: 0.72rem; }
+.location-bar.error { color: #bf360c; background: #fbe9e7; border-color: #ffccbc; }
+
+/* Date banner */
+.date-banner { background: #fff; border: 1px solid #d7ccc8; border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; }
+.date-banner .gregorian { font-size: 0.82rem; color: #8d6e63; margin-bottom: 4px; }
+.date-banner .telugu-date { font-size: 1.05rem; font-weight: 700; color: #4e342e; }
+.date-banner .samvatsara { font-size: 0.78rem; color: #8d6e63; margin-top: 3px; }
+
+/* Sections */
+.section { background: #fff; border: 1px solid #d7ccc8; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+.section-header { background: #5d4037; color: white; padding: 7px 14px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; display: flex; gap: 6px; align-items: center; }
+.section-header .te { opacity: 0.82; font-weight: normal; }
+
+/* Rows */
+.row { display: flex; align-items: flex-start; padding: 10px 14px; border-bottom: 1px solid #efebe9; }
+.row:last-child { border-bottom: none; }
+.row .key { flex: 0 0 42%; }
+.row .key .en { font-size: 0.82rem; font-weight: 600; color: #3e2723; }
+.row .key .te { font-size: 0.72rem; color: #8d6e63; }
+.row .value { flex: 1; text-align: right; }
+.row .value .main { font-size: 0.85rem; font-weight: 700; color: #3e2723; }
+.row .value .te { font-size: 0.72rem; color: #8d6e63; }
+.row .value .until { font-size: 0.7rem; color: #a1887f; display: block; }
+
+/* Time rows */
+.time-row { display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid #efebe9; }
+.time-row:last-child { border-bottom: none; }
+.time-row .icon { width: 26px; font-size: 1rem; flex-shrink: 0; }
+.time-row .label { flex: 1; }
+.time-row .label .en { font-size: 0.82rem; font-weight: 600; }
+.time-row .label .te { font-size: 0.7rem; color: #8d6e63; }
+.time-row .time-val { font-size: 0.85rem; font-weight: 700; }
+.time-row .time-val.good { color: #33691e; }
+.time-row .time-val.danger { color: #bf360c; }
+
+.bad-note { padding: 6px 14px 8px; font-size: 0.7rem; color: #a1887f; font-style: italic; }
+
+/* Skeleton loading */
+.skel { background: linear-gradient(90deg, #efebe9 25%, #d7ccc8 50%, #efebe9 75%); background-size: 200% 100%; animation: skel 1.4s infinite; border-radius: 4px; height: 14px; margin: 4px 0; }
+@keyframes skel { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* Error banner */
+.error-banner { background: #fbe9e7; border: 1px solid #ffccbc; border-radius: 8px; padding: 10px 14px; color: #bf360c; font-size: 0.82rem; margin-bottom: 12px; display: none; }
+
+footer { text-align: center; padding: 14px; font-size: 0.7rem; color: #a1887f; }
+
+.sankalpam-card {
+  background: #fff;
+  border: 1px solid #d7ccc8;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.sankalpam-card h2 {
+  background: #5d4037;
+  color: #fff;
+  padding: 7px 14px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin: 0;
+}
+.sankalpam-body {
+  padding: 12px 14px;
+}
+.sankalpam-te {
+  font-size: 0.95rem;
+  line-height: 1.9;
+  color: #3e2723;
+  margin-bottom: 0.6rem;
+  font-weight: 500;
+}
+.sankalpam-en {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: #6d4c41;
+  font-style: italic;
+}
+.hora-row { display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #f5ede6; font-size: 0.8rem; gap: 8px; }
+.hora-row:last-child { border-bottom: none; }
+.hora-row .hora-time { color: #8d6e63; min-width: 110px; }
+.hora-row .hora-planet { font-weight: 600; color: #4e342e; flex: 1; }
+.hora-row .hora-icon { width: 20px; text-align: center; }
+.hora-row.hora-current { background: #fff8e1; border-radius: 6px; padding: 5px 6px; margin: 0 -6px; }
+
+/* Location permission modal */
+.loc-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.loc-modal { background: #fff; border-radius: 16px; padding: 28px 24px 20px; max-width: 320px; width: 100%; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+.loc-modal-icon { font-size: 2.8rem; margin-bottom: 10px; }
+.loc-modal h2 { font-size: 1.1rem; color: #3e2723; margin-bottom: 8px; }
+.loc-modal p { font-size: 0.84rem; color: #6d4c41; line-height: 1.6; margin-bottom: 20px; }
+.loc-modal-btns { display: flex; gap: 10px; }
+.loc-modal-btns button { flex: 1; padding: 11px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+.loc-btn-yes { background: #5d4037; color: #fff; }
+.loc-btn-yes:hover { background: #4e342e; }
+.loc-btn-no  { background: #efebe9; color: #4e342e; }
+.loc-btn-no:hover  { background: #d7ccc8; }
+</style>
+</head>
+<body>
+
+<!-- Location permission dialog -->
+<div class="loc-modal-overlay" id="loc-modal" style="display:none;">
+  <div class="loc-modal">
+    <div class="loc-modal-icon">📍</div>
+    <h2>Use Your Location?</h2>
+    <p>For accurate Panchang timings, we need your location.<br>
+    Your location is only used to compute sunrise/sunset and is never stored.</p>
+    <div class="loc-modal-btns">
+      <button class="loc-btn-yes" onclick="locationDialogAnswer(true)">✓ Yes, Allow</button>
+      <button class="loc-btn-no"  onclick="locationDialogAnswer(false)">✗ No, Use Default</button>
+    </div>
+  </div>
+</div>
+
+<!-- Location blocked help dialog -->
+<div class="loc-modal-overlay" id="loc-blocked-modal" style="display:none;">
+  <div class="loc-modal" style="text-align:left;">
+    <div style="text-align:center;font-size:2.2rem;margin-bottom:10px;">🔒</div>
+    <h2 style="text-align:center;margin-bottom:12px;">Location is Blocked</h2>
+    <p style="margin-bottom:14px;">Your browser has blocked location access. To fix this, reset the permission in your browser settings, then tap <b>Try Again</b>.</p>
+    <div style="background:#fdf6ec;border-radius:8px;padding:10px 12px;font-size:0.8rem;color:#4e342e;line-height:1.9;margin-bottom:18px;">
+      <b>🌐 Chrome / Edge:</b> Click the 🔒 lock in the address bar → <i>Site settings</i> → Location → <b>Allow</b><br>
+      <b>🦊 Firefox:</b> Click the shield icon → <i>Permissions</i> → Location → <b>Allow</b><br>
+      <b>📱 Safari (iPhone):</b> Settings → Safari → Location → <b>Allow</b><br>
+      <b>🤖 Android Chrome:</b> Settings → Site Settings → Location → find this site → <b>Allow</b>
+    </div>
+    <div class="loc-modal-btns">
+      <button class="loc-btn-yes" onclick="tryLocationAgain()">↺ Try Again</button>
+      <button class="loc-btn-no"  onclick="document.getElementById('loc-blocked-modal').style.display='none'">✗ Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="page-header">
+  <div class="om">🕉</div>
+  <h1>Daily Panchang</h1>
+  <div class="telugu-title">నిత్య పంచాంగం</div>
+</div>
+
+<div class="error-banner" id="error-banner"></div>
+
+<div class="location-bar" id="location-bar">
+  <span>📍</span>
+  <span class="loc-name" id="loc-name">Detecting location…</span>
+  <span class="loc-coords" id="loc-coords"></span>
+  <button id="loc-enable-btn" onclick="showLocationBlockedHelp()" style="display:none;margin-left:auto;padding:5px 11px;font-size:0.78rem;background:#5d4037;color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;">📍 Enable Location</button>
+</div>
+
+<div class="date-banner">
+  <div class="gregorian" id="gregorian-date"><div class="skel" style="width:180px"></div></div>
+  <div class="telugu-date" id="telugu-date"><div class="skel" style="width:260px"></div></div>
+  <div class="samvatsara" id="samvatsara"><div class="skel" style="width:200px"></div></div>
+</div>
+
+<!-- Calendar Section -->
+<div class="section">
+  <div class="section-header"><span>📅 Calendar</span><span class="te">· కాలమానం</span></div>
+  <div class="row">
+    <div class="key"><div class="en">Rutuvu</div><div class="te">రుతువు</div></div>
+    <div class="value"><div class="main" id="rutuvu-en"><div class="skel" style="width:80px"></div></div><div class="te" id="rutuvu-te"><div class="skel" style="width:60px;margin-left:auto"></div></div></div>
+  </div>
+  <div class="row">
+    <div class="key"><div class="en">Masam</div><div class="te">మాసం</div></div>
+    <div class="value"><div class="main" id="masam-en"><div class="skel" style="width:80px"></div></div><div class="te" id="masam-te"><div class="skel" style="width:60px;margin-left:auto"></div></div></div>
+  </div>
+  <div class="row">
+    <div class="key"><div class="en">Paksham</div><div class="te">పక్షం</div></div>
+    <div class="value"><div class="main" id="paksham-en"><div class="skel" style="width:80px"></div></div><div class="te" id="paksham-te"><div class="skel" style="width:60px;margin-left:auto"></div></div></div>
+  </div>
+</div>
+
+<!-- Panchangam Section -->
+<div class="section">
+  <div class="section-header"><span>☀️ Panchangam</span><span class="te">· పంచాంగం</span></div>
+  <div class="row">
+    <div class="key"><div class="en">Tithi</div><div class="te">తిథి</div></div>
+    <div class="value"><div class="main" id="tithi-en"><div class="skel" style="width:90px"></div></div><div class="te" id="tithi-te"><div class="skel" style="width:60px;margin-left:auto"></div></div><span class="until" id="tithi-until"></span></div>
+  </div>
+  <div class="row">
+    <div class="key"><div class="en">Nakshatra</div><div class="te">నక్షత్రం</div></div>
+    <div class="value"><div class="main" id="nakshatra-en"><div class="skel" style="width:90px"></div></div><div class="te" id="nakshatra-te"><div class="skel" style="width:60px;margin-left:auto"></div></div><span class="until" id="nakshatra-until"></span></div>
+  </div>
+  <div class="row">
+    <div class="key"><div class="en">Yoga</div><div class="te">యోగం</div></div>
+    <div class="value"><div class="main" id="yoga-en"><div class="skel" style="width:80px"></div></div><div class="te" id="yoga-te"><div class="skel" style="width:60px;margin-left:auto"></div></div><span class="until" id="yoga-until"></span></div>
+  </div>
+  <div class="row">
+    <div class="key"><div class="en">Karana</div><div class="te">కరణం</div></div>
+    <div class="value"><div class="main" id="karana-en"><div class="skel" style="width:80px"></div></div><div class="te" id="karana-te"><div class="skel" style="width:60px;margin-left:auto"></div></div><span class="until" id="karana-until"></span></div>
+  </div>
+  <div class="row">
+    <div class="key"><div class="en">Vara</div><div class="te">వారం</div></div>
+    <div class="value"><div class="main" id="vara-en"><div class="skel" style="width:80px"></div></div><div class="te" id="vara-te"><div class="skel" style="width:60px;margin-left:auto"></div></div></div>
+  </div>
+</div>
+
+<!-- Sun Timings Section -->
+<div class="section">
+  <div class="section-header"><span>🌅 Sun Timings</span><span class="te">· సూర్యోదయ అస్తమయం</span></div>
+  <div class="time-row">
+    <span class="icon">🌅</span>
+    <div class="label"><div class="en">Sunrise</div><div class="te">సూర్యోదయం</div></div>
+    <span class="time-val good" id="sunrise"><span class="skel" style="width:60px;display:inline-block"></span></span>
+  </div>
+  <div class="time-row">
+    <span class="icon">🌇</span>
+    <div class="label"><div class="en">Sunset</div><div class="te">సూర్యాస్తమయం</div></div>
+    <span class="time-val good" id="sunset"><span class="skel" style="width:60px;display:inline-block"></span></span>
+  </div>
+  <div class="time-row">
+    <span class="icon">✨</span>
+    <div class="label"><div class="en">Abhijit Muhurta</div><div class="te">అభిజిత్ ముహూర్తం</div></div>
+    <span class="time-val good" id="abhijit"><span class="skel" style="width:110px;display:inline-block"></span></span>
+  </div>
+</div>
+
+
+<div class="section">
+  <div class="section-header"><span>⏰ Hora Table</span><span class="te">· హోరా పట్టిక</span></div>
+  <div id="hora-table-body" style="padding:0 14px 8px;">
+    <div class="skel" style="height:14px;margin:8px 0;"></div>
+    <div class="skel" style="height:14px;margin:8px 0;"></div>
+    <div class="skel" style="height:14px;margin:8px 0;"></div>
+  </div>
+</div>
+
+<div id="sankalpam-section" style="display:none;" class="sankalpam-card"></div>
+
+<footer>Panchang computed for your location · Refreshes at midnight · Telugu/Andhra tradition</footer>
+
+<script>
+// ── API Configuration ────────────────────────────────────────────────────────
+const API_BASE = 'https://api.sanatanadharmas.com/panchang';
+
+async function fetchPanchang(lat, lon, date) {
+  const dateStr = [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');
+  const url = `${API_BASE}?lat=${lat}&lon=${lon}&date=${dateStr}`;
+  const resp = await fetch(url, { cache: 'no-store' });
+  if (!resp.ok) throw new Error(`Panchang API returned ${resp.status}`);
+  return await resp.json();
+}
+
+// ══════════════════════════════════════════
+// GEO MODULE — Browser Geolocation + Nominatim
+// ══════════════════════════════════════════
+const Geo = (() => {
+  const DEFAULT = { lat: 17.38, lon: 78.48, city: 'Hyderabad', isDefault: true };
+
+  async function reverseGeocode(lat, lon) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'TeluguPanchang/1.0 (today.sanatanadharmas.com)' } });
+      if (!res.ok) throw new Error('Nominatim error');
+      const data = await res.json();
+      const addr = data.address;
+      return addr.city || addr.town || addr.village || addr.county || 'Unknown location';
+    } catch {
+      return null;
+    }
+  }
+
+  function detect(onSuccess, onError) {
+    if (!navigator.geolocation) {
+      onError('Geolocation not supported. Showing Hyderabad defaults.', DEFAULT);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+        try {
+          const lat  = pos.coords.latitude;
+          const lon  = pos.coords.longitude;
+          const latStr = `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}`;
+          const lonStr = `${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
+          const city = await reverseGeocode(lat, lon) || `${latStr} ${lonStr}`;
+          onSuccess({ lat, lon, city });
+        } catch (err) {
+          onError('Error processing location. Showing Hyderabad defaults.', DEFAULT);
+        }
+      },
+      err => {
+        let msg;
+        switch (err.code) {
+          case 1: msg = 'Location permission denied. Showing Hyderabad defaults.'; break;
+          case 2: msg = 'Location unavailable. Showing Hyderabad defaults.'; break;
+          default: msg = 'Location timeout. Showing Hyderabad defaults.';
+        }
+        onError(msg, DEFAULT);
+      },
+      { timeout: 10000, maximumAge: 300000 }
+    );
+  }
+
+  return { detect, DEFAULT };
+})();
+
+// ══════════════════════════════════════════
+// UI MODULE — Render Data to DOM
+// ══════════════════════════════════════════
+const UI = (() => {
+  function fmt(date) {
+    if (!date) return '';
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function fmtRange(a, b) { return `${fmt(a)} – ${fmt(b)}`; }
+
+  function set(id, html) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-banner');
+    el.textContent = '⚠ ' + msg;
+    el.style.display = 'block';
+  }
+
+  function showLocation(loc) {
+    const nameEl = document.getElementById('loc-name');
+    if (nameEl) nameEl.textContent = loc.city;
+    const latDir = loc.lat >= 0 ? 'N' : 'S';
+    const lonDir = loc.lon >= 0 ? 'E' : 'W';
+    set('loc-coords', `${Math.abs(loc.lat).toFixed(2)}°${latDir} · ${Math.abs(loc.lon).toFixed(2)}°${lonDir}`);
+    if (loc.isDefault) {
+      document.getElementById('location-bar').classList.add('error');
+      document.getElementById('loc-enable-btn').style.display = 'inline-block';
+    }
+  }
+
+  function render(data, loc) {
+    const p = data.panchang;
+    const now = new Date();
+
+    // Date banner
+    set('gregorian-date', now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' }));
+    const masamDisplayTe = (p.masam.adhika ? 'అధిక ' : '') + p.masam.te;
+    set('telugu-date', `${masamDisplayTe} మాసం · ${p.paksham.te}`);
+    set('samvatsara', `${p.samvatsara.en} సంవత్సరం`);
+
+    // Calendar section
+    set('rutuvu-en',  p.rutu.en + ' Ritu');
+    set('rutuvu-te',  p.rutu.te + ' ఋతువు');
+    const masamEn = (p.masam.adhika ? 'Adhika ' : '') + p.masam.en;
+    const masamTe = (p.masam.adhika ? 'అధిక ' : '') + p.masam.te;
+    set('masam-en',   masamEn + ' Masam');
+    set('masam-te',   masamTe + ' మాసం');
+    set('paksham-en', p.paksham.en);
+    set('paksham-te', p.paksham.te);
+
+    // Panchangam section
+    set('tithi-en',        p.tithi.en);
+    set('tithi-te',        p.tithi.te);
+    set('nakshatra-en',    p.nakshatra.en);
+    set('nakshatra-te',    p.nakshatra.te);
+    set('yoga-en',         p.yoga.en);
+    set('yoga-te',         p.yoga.te);
+    set('karana-en',       p.karana.en);
+    set('karana-te',       p.karana.te);
+    set('vara-en',         p.vaaram.en);
+    set('vara-te',         p.vaaram.te);
+
+    function fmtUntil(end_time, next_day) {
+      if (!end_time) return '';
+      const [h, m] = end_time.split(':').map(Number);
+      const period = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      const timeStr = `${h12}:${String(m).padStart(2,'0')} ${period}`;
+      return `until ${timeStr}${next_day ? ' +1' : ''}`;
+    }
+    set('tithi-until',     fmtUntil(p.tithi.end_time,     p.tithi.next_day));
+    set('nakshatra-until', fmtUntil(p.nakshatra.end_time, p.nakshatra.next_day));
+    set('yoga-until',      fmtUntil(p.yoga.end_time,      p.yoga.next_day));
+    set('karana-until',    fmtUntil(p.karana.end_time,    p.karana.next_day));
+
+    // Sun timings from API
+    set('sunrise', p.sunrise);
+    set('sunset',  p.sunset);
+
+    // Compute inauspicious periods from API sunrise/sunset strings.
+    // All arithmetic is done in minutes-since-midnight using the panchang location's
+    // local HH:MM times from the API, avoiding browser timezone contamination.
+    function hhmm_to_minutes(hhmm) {
+      const [h, m] = hhmm.split(':').map(Number);
+      return h * 60 + m;
+    }
+    function minutes_to_hhmm(mins) {
+      const h = Math.floor(mins / 60) % 24;
+      const m = Math.round(mins % 60);
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    }
+    function fmtRangeHHMM(startMins, endMins) {
+      return `${minutes_to_hhmm(startMins)} – ${minutes_to_hhmm(endMins)}`;
+    }
+
+    const sunriseMins  = hhmm_to_minutes(p.sunrise);
+    const sunsetMins   = hhmm_to_minutes(p.sunset);
+    const dayDuration  = sunsetMins - sunriseMins;
+    const slotDuration = dayDuration / 8;
+
+    // Use the API-computed vaaram so weekday matches the panchang location's date,
+    // not the browser's local date (which can differ near midnight for diaspora users).
+    const VAARAM_ORDER  = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const weekday       = VAARAM_ORDER.indexOf(p.vaaram.en);
+
+    const middayMins = (sunriseMins + sunsetMins) / 2;
+
+    set('abhijit', fmtRangeHHMM(middayMins - 24, middayMins + 24));
+
+    // ── Hora Table ──
+    const PLANETS = [
+      { en: 'Saturn',  te: 'శని',   icon: '🪐' },
+      { en: 'Jupiter', te: 'గురు',  icon: '🟡' },
+      { en: 'Mars',    te: 'కుజ',   icon: '🔴' },
+      { en: 'Sun',     te: 'సూర్య', icon: '☀️' },
+      { en: 'Venus',   te: 'శుక్ర', icon: '⚪' },
+      { en: 'Mercury', te: 'బుధ',   icon: '💚' },
+      { en: 'Moon',    te: 'చంద్ర', icon: '🌙' },
+    ];
+    // Weekday (0=Sun) → starting planet index in PLANETS array
+    const HORA_START = [3, 6, 2, 5, 1, 4, 0]; // Sun→Sun(3), Mon→Moon(6), Tue→Mars(2)...
+    const dayOfWeek = VAARAM_ORDER.indexOf(p.vaaram.en); // 0=Sun
+    const startPlanet = HORA_START[dayOfWeek];
+    const dayDurMins = sunsetMins - sunriseMins;
+    const nightDurMins = 24 * 60 - dayDurMins;
+    const dayHoraDur = dayDurMins / 12;
+    const nightHoraDur = nightDurMins / 12;
+    const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
+
+    let horaRows = '';
+    for (let i = 0; i < 24; i++) {
+      const planet = PLANETS[(startPlanet + i) % 7];
+      const isDay = i < 12;
+      const horaDur = isDay ? dayHoraDur : nightHoraDur;
+      const horaStart = isDay
+        ? sunriseMins + i * dayHoraDur
+        : sunsetMins + (i - 12) * nightHoraDur;
+      const horaEnd = horaStart + horaDur;
+      const isCurrent = nowMins >= horaStart && nowMins < horaEnd;
+      const startStr = minutes_to_hhmm(horaStart);
+      const endStr   = minutes_to_hhmm(horaEnd % (24*60));
+      horaRows += `<div class="hora-row${isCurrent ? ' hora-current' : ''}">
+        <span class="hora-icon">${planet.icon}</span>
+        <span class="hora-planet">${planet.en} <span style="color:#a1887f;font-weight:normal">(${planet.te})</span></span>
+        <span class="hora-time">${startStr} – ${endStr}${isDay ? '' : ' 🌙'}</span>
+      </div>`;
+    }
+    const horaEl = document.getElementById('hora-table-body');
+    if (horaEl) horaEl.innerHTML = horaRows;
+
+    // Sankalpam section
+    const sankEl = document.getElementById('sankalpam-section');
+    if (sankEl && data.sankalpam) {
+      const s = data.sankalpam;
+      sankEl.innerHTML = `
+        <h2>సంకల్పం / Sankalpam</h2>
+        <div class="sankalpam-body">
+          <p class="sankalpam-te">${s.full_te}</p>
+          <p class="sankalpam-en">${s.full_en}</p>
+        </div>
+      `;
+      sankEl.style.display = 'block';
+    }
+  }
+
+  function scheduleRefreshAtMidnight() {
+    const now  = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const msUntilMidnight = next.getTime() - now.getTime();
+    setTimeout(() => { location.reload(); }, msUntilMidnight);
+  }
+
+  return { render, showLocation, showError, scheduleRefreshAtMidnight };
+})();
+
+// ══════════════════════════════════════════
+// BOOTSTRAP — Wire everything together
+// ══════════════════════════════════════════
+async function computeAndRender(loc) {
+  try {
+    UI.showLocation(loc);
+    const today = new Date();
+    const data = await fetchPanchang(loc.lat, loc.lon, today);
+    UI.render(data, loc);
+    UI.scheduleRefreshAtMidnight();
+  } catch (err) {
+    UI.showError('Could not load Panchang data: ' + err.message);
+    console.error(err);
+  }
+}
+
+// ── Dialog-first location flow ──
+// Show our own Yes/No dialog before triggering the browser permission prompt.
+// This avoids the "denied by default" surprise and lets users consciously choose.
+
+function locationDialogAnswer(allowed) {
+  document.getElementById('loc-modal').style.display = 'none';
+  if (allowed) {
+    document.getElementById('loc-name').textContent = 'Detecting location…';
+    Geo.detect(
+      loc => computeAndRender(loc),
+      (msg, fallbackLoc) => {
+        UI.showError(msg);
+        if (fallbackLoc) computeAndRender({ ...fallbackLoc, isDefault: true });
+      }
+    );
+  } else {
+    computeAndRender({ ...Geo.DEFAULT, isDefault: true });
+  }
+}
+
+function retryLocation() {
+  window.location.reload();
+}
+
+function showLocationBlockedHelp() {
+  document.getElementById('loc-blocked-modal').style.display = 'flex';
+}
+
+function tryLocationAgain() {
+  document.getElementById('loc-blocked-modal').style.display = 'none';
+  document.getElementById('loc-enable-btn').style.display = 'none';
+  document.getElementById('location-bar').classList.remove('error');
+  document.getElementById('loc-name').textContent = 'Detecting location…';
+  document.getElementById('loc-coords').textContent = '';
+  document.getElementById('error-banner').style.display = 'none';
+  Geo.detect(
+    loc => computeAndRender(loc),
+    (msg, fallbackLoc) => {
+      UI.showError(msg);
+      if (fallbackLoc) computeAndRender({ ...fallbackLoc, isDefault: true });
+    }
+  );
+}
+
+// Check if permission was previously granted — skip dialog if already allowed
+if (navigator.permissions) {
+  navigator.permissions.query({ name: 'geolocation' }).then(result => {
+    if (result.state === 'granted') {
+      // Already allowed — detect silently, no dialog needed
+      Geo.detect(
+        loc => computeAndRender(loc),
+        (msg, fallbackLoc) => {
+          UI.showError(msg);
+          if (fallbackLoc) computeAndRender({ ...fallbackLoc, isDefault: true });
+        }
+      );
+    } else {
+      // 'prompt' or 'denied' — show our dialog first
+      document.getElementById('loc-modal').style.display = 'flex';
+    }
+  });
+} else {
+  // Browser doesn't support permissions API — show dialog to be safe
+  document.getElementById('loc-modal').style.display = 'flex';
+}
+</script>
+</body>
+</html>

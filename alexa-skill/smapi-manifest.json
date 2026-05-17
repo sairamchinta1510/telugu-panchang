@@ -1,0 +1,66 @@
+{
+  "manifest": {
+    "permissions": [
+      {
+        "name": "alexa::devices:all:geolocation:read"
+      },
+      {
+        "name": "alexa::devices:all:address:full:read"
+      }
+    ],
+    "publishingInformation": {
+      "isAvailableWorldwide": false,
+      "category": "EDUCATION_AND_REFERENCE",
+      "testingInstructions": "Enable skill, say: open Telugu Panchang",
+      "targetedLocales": [
+        "en-IN"
+      ],
+      "distributionCountries": [
+        "IN",
+        "GB",
+        "US"
+      ],
+      "locales": {
+        "en-IN": {
+          "keywords": [
+            "panchang",
+            "telugu",
+            "hindu",
+            "calendar",
+            "rahu kalam",
+            "tithi",
+            "nakshatra"
+          ],
+          "summary": "Daily Telugu Hindu Panchang - tithi, nakshatra, Rahu Kalam and more",
+          "description": "Get accurate daily Telugu Panchang including tithi, nakshatra, yoga, karana, Rahu Kalam, Yamagandam, Gulikai and Abhijit Muhurta for your location.",
+          "examplePhrases": [
+            "Alexa, open Telugu Panchang",
+            "Alexa, ask Telugu Panchang what is today's tithi",
+            "Alexa, ask Telugu Panchang when is Rahu Kalam"
+          ],
+          "name": "Telugu Panchang"
+        }
+      }
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "arn:aws:lambda:us-east-1:913111977146:function:telugu-panchang-alexa"
+        }
+      }
+    },
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "isChildDirected": false,
+      "containsAds": false,
+      "isExportCompliant": true,
+      "usesPersonalInfo": false,
+      "locales": {
+        "en-IN": {
+          "privacyPolicyUrl": "https://today.sanatanadharmas.com",
+          "termsOfUseUrl": "https://today.sanatanadharmas.com"
+        }
+      }
+    }
+  }
+}

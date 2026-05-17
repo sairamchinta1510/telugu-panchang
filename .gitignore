@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+
+# Lambda packages (large binary deps)
+alexa-skill/lambda/package/
+alexa-skill/deploy.zip
+
+# Node
+node_modules/
+
+# Misc
+*.zip
+.env

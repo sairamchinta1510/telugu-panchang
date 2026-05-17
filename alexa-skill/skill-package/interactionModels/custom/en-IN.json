@@ -1,0 +1,105 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "telugu panchang",
+      "intents": [
+        {
+          "name": "DailyBriefingIntent",
+          "samples": [
+            "tell me today's panchang",
+            "give me panchang",
+            "what is today's panchang",
+            "today's panchang",
+            "daily panchang",
+            "full panchang"
+          ]
+        },
+        {
+          "name": "TithiIntent",
+          "samples": [
+            "what is today's tithi",
+            "today's tithi",
+            "what tithi is today",
+            "tell me the tithi"
+          ]
+        },
+        {
+          "name": "NakshatraIntent",
+          "samples": [
+            "what nakshatra is today",
+            "today's nakshatra",
+            "today's star",
+            "what is today's star",
+            "today's nakshatram"
+          ]
+        },
+        {
+          "name": "YogaIntent",
+          "samples": [
+            "what is today's yoga",
+            "today's yoga"
+          ]
+        },
+        {
+          "name": "RahuKalamIntent",
+          "samples": [
+            "what is rahu kalam",
+            "when is rahu kalam",
+            "rahu kalam today",
+            "rahu kalam timing",
+            "when is rahu kalam today"
+          ]
+        },
+        {
+          "name": "YamagandamIntent",
+          "samples": [
+            "when is yamagandam",
+            "yamagandam today",
+            "yamagandam timing"
+          ]
+        },
+        {
+          "name": "GulikaiIntent",
+          "samples": [
+            "when is gulikai",
+            "gulikai kalam today",
+            "gulikai timing"
+          ]
+        },
+        {
+          "name": "AbhijitIntent",
+          "samples": [
+            "what is abhijit muhurta",
+            "when is abhijit muhurta",
+            "best time today",
+            "auspicious time today"
+          ]
+        },
+        {
+          "name": "SunTimingsIntent",
+          "samples": [
+            "what time is sunrise",
+            "when does the sun rise",
+            "what time is sunset",
+            "when does the sun set",
+            "sunrise today",
+            "sunset today"
+          ]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        }
+      ],
+      "types": []
+    }
+  }
+}

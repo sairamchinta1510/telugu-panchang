@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Panchang API — Lambda + HTTP API
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 256
+    Runtime: python3.12
+    Environment:
+      Variables:
+        PYTHONDONTWRITEBYTECODE: "1"
+
+Resources:
+  PanchangFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: handler.lambda_handler
+      Description: Telugu Panchang computation API
+      Events:
+        PanchangGet:
+          Type: HttpApi
+          Properties:
+            Path: /panchang
+            Method: GET
+            ApiId: !Ref PanchangHttpApi
+
+  PanchangHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowMethods:
+          - GET
+          - OPTIONS
+        AllowHeaders:
+          - "*"
+
+Outputs:
+  ApiEndpoint:
+    Description: Panchang API endpoint URL
+    Value: !Sub "https://${PanchangHttpApi}.execute-api.${AWS::Region}.amazonaws.com/panchang"
+  FunctionArn:
+    Value: !GetAtt PanchangFunction.Arn
