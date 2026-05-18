@@ -4,6 +4,28 @@ Maps lat/lon to Puranic Dweepa/Varsha/Khanda terminology (English + Telugu).
 """
 from __future__ import annotations
 
+# Sanskrit vasara (day-lord) names used in Sankalpam recitation.
+# Keyed by English weekday name (Sunday=0 … Saturday=6).
+_VASARA_EN = {
+    "Sunday":    "Bhaanu Vasare",
+    "Monday":    "Indu Vasare",
+    "Tuesday":   "Bhauma Vasare",
+    "Wednesday": "Saumya Vasare",
+    "Thursday":  "Guru Vasare",
+    "Friday":    "Bhrugu Vasare",
+    "Saturday":  "Sthira Vasare",
+}
+
+_VASARA_TE = {
+    "Sunday":    "భాను వాసరే",
+    "Monday":    "ఇందు వాసరే",
+    "Tuesday":   "భౌమ వాసరే",
+    "Wednesday": "సౌమ్య వాసరే",
+    "Thursday":  "గురు వాసరే",
+    "Friday":    "భృగు వాసరే",
+    "Saturday":  "స్థిర వాసరే",
+}
+
 # ── Global region table ───────────────────────────────────────────────────────
 # Each tuple: (lat_min, lat_max, lon_min, lon_max,
 #              dweepa_en, dweepa_te, varsha_en, varsha_te, khanda_en, khanda_te)
@@ -170,6 +192,7 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
     nakshatra = p["nakshatra"]["en"]
     yoga = p["yoga"]["en"]
     karana = p["karana"]["en"]
+    vasara_en = _VASARA_EN.get(vaaram, vaaram + " Vasare")
 
     g_parts_en = " ".join(filter(None, [
         geo["dweepa_en"], geo["varsha_en"], geo["khanda_en"], geo["locality_en"]
@@ -178,7 +201,7 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
     full_en = (
         f"Asmin vartamana vyavaharika chandramana {sam} nama samvatsare, "
         f"{ayanam}, {rutu} ritau, {adhika_prefix}{masam_name} mase, "
-        f"{paksham}, {tithi} tithau, {vaaram} vasara yukte, "
+        f"{paksham}, {tithi} tithau, {vasara_en}, "
         f"{nakshatra} nakshatre, {yoga} yoge, {karana} karane, "
         f"{g_parts_en}, asmin shubha muhurte ..."
     )
@@ -195,6 +218,7 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
     nakshatra_te = p["nakshatra"]["te"]
     yoga_te = p["yoga"]["te"]
     karana_te = p["karana"]["te"]
+    vasara_te = _VASARA_TE.get(vaaram, vaaram_te + " వాసరే")
 
     g_parts_te = " ".join(filter(None, [
         geo["dweepa_te"], geo["varsha_te"], geo["khanda_te"], geo["locality_te"]
@@ -203,7 +227,7 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
     full_te = (
         f"అస్మిన్ వర్తమాన వ్యావహారిక చాంద్రమాన {sam_te} నామ సంవత్సరే, "
         f"{ayanam_te}, {rutu_te} ఋతౌ, {adhika_te}{masam_te} మాసే, "
-        f"{paksham_te}, {tithi_te} తిథౌ, {vaaram_te} వాసర యుక్తే, "
+        f"{paksham_te}, {tithi_te} తిథౌ, {vasara_te}, "
         f"{nakshatra_te} నక్షత్రే, {yoga_te} యోగే, {karana_te} కరణే, "
         f"{g_parts_te}, అస్మిన్ శుభ ముహూర్తే ..."
     )
