@@ -174,23 +174,35 @@ def _find_amavasya(jd_ref: float, forward: bool = True) -> float:
 
 def compute_panchang(jd: float, lat: float, lon: float, tz_name: str) -> dict:
     """Compute all panchang fields for the given Julian Day + location.
-    
+
+    jd is used only as a date anchor (solar noon) to locate the correct
+    sunrise. All panchang elements — tithi, nakshatra, yoga, karana,
+    vaaram, masam, etc. — are computed at sunrise, following the
+    traditional South Indian Telugu convention.
+
     Returns a dict with keys: samvatsara, ayanam, rutu, masam, paksham,
     tithi, vaaram, nakshatra, yoga, karana, sunrise, sunset.
     Each value is a dict with 'en' and 'te' keys (plus 'adhika' for masam).
     """
-    dt_local = jd_to_local_datetime(jd, tz_name)
+    # ── Sunrise / Sunset — computed first; all panchang elements use rise_jd ──
+    rise_jd, set_jd = get_sunrise_sunset(jd, lat, lon)
+    rise_local = jd_to_local_datetime(rise_jd, tz_name)
+    set_local  = jd_to_local_datetime(set_jd,  tz_name)
+
+    # Use sunrise as the canonical reference moment for all panchang elements.
+    jd_ref   = rise_jd
+    dt_local = rise_local
 
     # ── Masam + Adhika ──
     # Must be computed before Samvatsara because the Ugadi boundary depends on masam_idx.
     # A0 = new moon that started this lunar month (search backward from yesterday)
     # A1 = next new moon that will end this month (search forward from tomorrow)
-    jd_a0_cand = _find_amavasya(jd - 1, forward=False)
-    if jd - jd_a0_cand > 29.0:
+    jd_a0_cand = _find_amavasya(jd_ref - 1, forward=False)
+    if jd_ref - jd_a0_cand > 29.0:
         jd_a0 = _find_amavasya(jd_a0_cand + 25, forward=True)
     else:
         jd_a0 = jd_a0_cand
-    jd_a1 = _find_amavasya(jd + 1, forward=True)
+    jd_a1 = _find_amavasya(jd_ref + 1, forward=True)
     rashi_a0 = int(sun_longitude(jd_a0) / 30) % 12
     rashi_a1 = int(sun_longitude(jd_a1) / 30) % 12
     if rashi_a0 == rashi_a1:
@@ -217,7 +229,7 @@ def compute_panchang(jd: float, lat: float, lon: float, tz_name: str) -> dict:
     samvatsara = {"en": SAMVATSARA_EN[sam_idx], "te": SAMVATSARA_TE[sam_idx]}
 
     # ── Ayanam ──
-    sun_lon = sun_longitude(jd)
+    sun_lon = sun_longitude(jd_ref)
     ayanam = {
         "en": "Uttarayanam" if sun_lon < 180 else "Dakshinayanam",
         "te": "ఉత్తరాయణం" if sun_lon < 180 else "దక్షిణాయణం",
@@ -228,7 +240,7 @@ def compute_panchang(jd: float, lat: float, lon: float, tz_name: str) -> dict:
     rutu = {"en": RUTU_EN[rutu_idx], "te": RUTU_TE[rutu_idx]}
 
     # ── Elongation-based fields ──
-    elong = moon_sun_elongation(jd)
+    elong = moon_sun_elongation(jd_ref)
 
     # Paksham
     paksham = {
@@ -241,7 +253,7 @@ def compute_panchang(jd: float, lat: float, lon: float, tz_name: str) -> dict:
     tithi = {"en": TITHI_EN[tithi_idx], "te": TITHI_TE[tithi_idx]}
 
     # Nakshatra: 27 nakshatras, each spans 360/27 ≈ 13.333°
-    moon_lon = moon_longitude(jd)
+    moon_lon = moon_longitude(jd_ref)
     naks_idx = int(moon_lon / (360 / 27)) % 27
     nakshatra = {"en": NAKSHATRA_EN[naks_idx], "te": NAKSHATRA_TE[naks_idx]}
 
@@ -291,18 +303,15 @@ def compute_panchang(jd: float, lat: float, lon: float, tz_name: str) -> dict:
         return end_dt.strftime("%H:%M"), end_dt.date() > dt_local.date()
 
     tithi_end_time, tithi_next_day = _end_time_fields(
-        find_next_index_change(jd, _tithi_idx, tithi_idx))
+        find_next_index_change(jd_ref, _tithi_idx, tithi_idx))
     naks_end_time, naks_next_day = _end_time_fields(
-        find_next_index_change(jd, _naks_idx, naks_idx))
+        find_next_index_change(jd_ref, _naks_idx, naks_idx))
     yoga_end_time, yoga_next_day = _end_time_fields(
-        find_next_index_change(jd, _yoga_idx, yoga_idx))
+        find_next_index_change(jd_ref, _yoga_idx, yoga_idx))
     karan_end_time, karan_next_day = _end_time_fields(
-        find_next_index_change(jd, _karana_idx, k_idx))
+        find_next_index_change(jd_ref, _karana_idx, k_idx))
 
     # ── Sunrise / Sunset ──
-    rise_jd, set_jd = get_sunrise_sunset(jd, lat, lon)
-    rise_local = jd_to_local_datetime(rise_jd, tz_name)
-    set_local = jd_to_local_datetime(set_jd, tz_name)
 
     # ── Varjyam + Dur Muhurtam ──
     # Both use PROPORTIONAL muhurtas where the day (sunrise→sunset) is divided
