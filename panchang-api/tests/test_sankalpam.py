@@ -81,3 +81,15 @@ def test_default_fallback():
     assert "Jambu" in s["full_en"]
     assert "geographic" in s
     assert "geographic_te" in s
+    # New preamble and order checks
+    assert s["full_en"].startswith("Shubhe Shobhane Muhurte")
+    assert "Shvetavaraha Kalpe" in s["full_en"]
+    assert "Kaliyuge" in s["full_en"]
+    assert "Meroh Dakshina Digbhage" in s["full_en"]
+    assert s["full_te"].startswith("శుభే శోభనే ముహూర్తే")
+    assert "శ్వేతవరాహ కల్పే" in s["full_te"]
+    assert "మేరోః దక్షిణ దిగ్భాగే" in s["full_te"]
+    # Geographic must appear before panchang year
+    geo_pos = s["full_en"].index("Jambu")
+    year_pos = s["full_en"].index("Parabhava")
+    assert geo_pos < year_pos, "Geographic must precede samvatsara in recitation"

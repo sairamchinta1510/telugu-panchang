@@ -1,6 +1,10 @@
 """
 Sankalpam geographic mapping and full recitation builder.
 Maps lat/lon to Puranic Dweepa/Varsha/Khanda terminology (English + Telugu).
+
+Traditional recitation order:
+  Shubhe Shobhane Muhurte preamble → cosmic context (Kalpa/Manvantara/Yuga) →
+  geographic (Dweepa/Varsha/Khanda/Locality) → Chandramana year → panchang details
 """
 from __future__ import annotations
 
@@ -71,6 +75,24 @@ _GLOBAL_REGIONS = [
      "Tamra Khande", "తామ్ర ఖండే"),
 ]
 
+# ── Preamble constants ───────────────────────────────────────────────────────
+# Fixed cosmic-context lines that open every Sankalpam recitation.
+_PREAMBLE_EN = (
+    "Shubhe Shobhane Muhurte, "
+    "Sri Mahavishnorajnaya Pravartamanasya, "
+    "Adya Brahmanaha Dvitiya Parardhe, "
+    "Shvetavaraha Kalpe, Vaivasvata Manvantare, "
+    "Kaliyuge, Prathamapade, "
+)
+
+_PREAMBLE_TE = (
+    "శుభే శోభనే ముహూర్తే, "
+    "శ్రీ మహావిష్ణోరాజ్ఞయా ప్రవర్తమానస్య, "
+    "అద్య బ్రహ్మణః ద్వితీయ పరార్ధే, "
+    "శ్వేతవరాహ కల్పే, వైవస్వత మన్వంతరే, "
+    "కలియుగే, ప్రథమపాదే, "
+)
+
 _SRISHAILA_LAT = 16.07
 _SRISHAILA_LON = 78.87
 _VINDHYA_LAT = 23.0
@@ -138,8 +160,8 @@ def get_geographic(lat: float, lon: float) -> dict:
             "dweepa_te": "జంబూ ద్వీపే",
             "varsha_en": "Bharata Varshe",
             "varsha_te": "భరత వర్షే",
-            "khanda_en": "Bharata Khande",
-            "khanda_te": "భరత ఖండే",
+            "khanda_en": "Bharata Khande, Meroh Dakshina Digbhage",
+            "khanda_te": "భరత ఖండే, మేరోః దక్షిణ దిగ్భాగే",
             **sub,
         }
 
@@ -194,16 +216,18 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
     karana = p["karana"]["en"]
     vasara_en = _VASARA_EN.get(vaaram, vaaram + " Vasare")
 
-    g_parts_en = " ".join(filter(None, [
+    g_parts_en = ", ".join(filter(None, [
         geo["dweepa_en"], geo["varsha_en"], geo["khanda_en"], geo["locality_en"]
     ]))
 
     full_en = (
+        f"{_PREAMBLE_EN}"
+        f"{g_parts_en}, "
         f"Asmin vartamana vyavaharika chandramana {sam} nama samvatsare, "
         f"{ayanam}, {rutu} ritau, {adhika_prefix}{masam_name} mase, "
         f"{paksham}, {tithi} tithau, {vasara_en}, "
         f"{nakshatra} nakshatre, {yoga} yoge, {karana} karane, "
-        f"{g_parts_en}, asmin shubha muhurte ..."
+        f"shubha muhurte ..."
     )
 
     # Telugu recitation
@@ -220,16 +244,18 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
     karana_te = p["karana"]["te"]
     vasara_te = _VASARA_TE.get(vaaram, vaaram_te + " వాసరే")
 
-    g_parts_te = " ".join(filter(None, [
+    g_parts_te = ", ".join(filter(None, [
         geo["dweepa_te"], geo["varsha_te"], geo["khanda_te"], geo["locality_te"]
     ]))
 
     full_te = (
+        f"{_PREAMBLE_TE}"
+        f"{g_parts_te}, "
         f"అస్మిన్ వర్తమాన వ్యావహారిక చాంద్రమాన {sam_te} నామ సంవత్సరే, "
         f"{ayanam_te}, {rutu_te} ఋతౌ, {adhika_te}{masam_te} మాసే, "
         f"{paksham_te}, {tithi_te} తిథౌ, {vasara_te}, "
         f"{nakshatra_te} నక్షత్రే, {yoga_te} యోగే, {karana_te} కరణే, "
-        f"{g_parts_te}, అస్మిన్ శుభ ముహూర్తే ..."
+        f"శుభ ముహూర్తే ..."
     )
 
     return {
