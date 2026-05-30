@@ -64,6 +64,87 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #fdf6ec; colo
 
 footer { text-align: center; padding: 14px; font-size: 0.7rem; color: #a1887f; }
 
+/* ── Panchang Intro Banner ── */
+.pancha-intro {
+  overflow: hidden;
+  max-height: 220px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background: linear-gradient(150deg, #3e2010 0%, #6d3b1a 55%, #a0622a 100%);
+  border: 1px solid #a0622a;
+  color: #fff;
+  animation: introSlideIn 0.55s ease-out forwards;
+  transform-origin: top center;
+}
+.pancha-intro.hiding {
+  animation: introShrink 0.55s ease-in forwards;
+  pointer-events: none;
+}
+@keyframes introSlideIn {
+  from { opacity: 0; max-height: 0; transform: scaleY(0.85); }
+  to   { opacity: 1; max-height: 220px; transform: scaleY(1); }
+}
+@keyframes introShrink {
+  from { opacity: 1; max-height: 220px; transform: scaleY(1); margin-bottom: 14px; }
+  to   { opacity: 0; max-height: 0; transform: scaleY(0.85); margin-bottom: 0; padding: 0; }
+}
+.pancha-intro-inner { padding: 12px 14px 10px; }
+.pancha-intro-title {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 7px;
+}
+.pancha-intro-title .tagline {
+  font-size: 0.68rem; opacity: 0.75; font-style: italic; text-align: right; max-width: 160px; line-height: 1.35;
+}
+.pancha-intro-title .heading { font-size: 0.88rem; font-weight: 700; letter-spacing: 0.5px; }
+.pancha-intro-title .heading .te { font-size: 0.72rem; opacity: 0.82; font-weight: normal; display: block; margin-top: 1px; }
+.pancha-limbs {
+  display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.pancha-limbs::-webkit-scrollbar { display: none; }
+.pancha-limb {
+  flex: 0 0 auto;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,220,140,0.3);
+  border-radius: 8px;
+  padding: 6px 9px;
+  text-align: center;
+  min-width: 62px;
+  animation: limbPop 0.4s ease-out backwards;
+}
+.pancha-limb:nth-child(1) { animation-delay: 0.1s; }
+.pancha-limb:nth-child(2) { animation-delay: 0.2s; }
+.pancha-limb:nth-child(3) { animation-delay: 0.3s; }
+.pancha-limb:nth-child(4) { animation-delay: 0.4s; }
+.pancha-limb:nth-child(5) { animation-delay: 0.5s; }
+@keyframes limbPop {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.pancha-limb .limb-icon  { font-size: 1.15rem; line-height: 1; margin-bottom: 3px; }
+.pancha-limb .limb-num   { font-size: 0.58rem; opacity: 0.6; margin-bottom: 1px; }
+.pancha-limb .limb-en    { font-size: 0.72rem; font-weight: 700; color: #ffd88a; }
+.pancha-limb .limb-te    { font-size: 0.64rem; opacity: 0.78; margin-top: 1px; }
+.pancha-limb .limb-desc  { font-size: 0.58rem; opacity: 0.6; margin-top: 2px; line-height: 1.3; }
+.pancha-intro-bar {
+  height: 2px;
+  background: rgba(255,220,140,0.25);
+  margin-top: 10px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.pancha-intro-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #d7a96b, #ffd88a);
+  border-radius: 2px;
+  animation: introProgress 6.3s linear forwards;
+}
+@keyframes introProgress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
 .sankalpam-card {
   background: #fff;
   border: 1px solid #d7ccc8;
@@ -159,6 +240,54 @@ footer { text-align: center; padding: 14px; font-size: 0.7rem; color: #a1887f; }
   <div class="telugu-title">నిత్య పంచాంగం</div>
 </div>
 
+<!-- Panchang Intro Banner -->
+<div class="pancha-intro" id="pancha-intro" aria-hidden="true">
+  <div class="pancha-intro-inner">
+    <div class="pancha-intro-title">
+      <div class="heading">🕉 Panchang <span class="te">పంచాంగం · Five Cosmic Limbs</span></div>
+      <div class="tagline" id="pancha-fact" style="transition: opacity 0.3s ease;"></div>
+    </div>
+    <div class="pancha-limbs">
+      <div class="pancha-limb">
+        <div class="limb-icon">🌒</div>
+        <div class="limb-num">① </div>
+        <div class="limb-en">Tithi</div>
+        <div class="limb-te">తిథి</div>
+        <div class="limb-desc">Lunar Day</div>
+      </div>
+      <div class="pancha-limb">
+        <div class="limb-icon">☀️</div>
+        <div class="limb-num">②</div>
+        <div class="limb-en">Vara</div>
+        <div class="limb-te">వారం</div>
+        <div class="limb-desc">Weekday</div>
+      </div>
+      <div class="pancha-limb">
+        <div class="limb-icon">⭐</div>
+        <div class="limb-num">③</div>
+        <div class="limb-en">Nakshatra</div>
+        <div class="limb-te">నక్షత్రం</div>
+        <div class="limb-desc">Star</div>
+      </div>
+      <div class="pancha-limb">
+        <div class="limb-icon">✨</div>
+        <div class="limb-num">④</div>
+        <div class="limb-en">Yoga</div>
+        <div class="limb-te">యోగం</div>
+        <div class="limb-desc">Cosmic Combo</div>
+      </div>
+      <div class="pancha-limb">
+        <div class="limb-icon">⏳</div>
+        <div class="limb-num">⑤</div>
+        <div class="limb-en">Karana</div>
+        <div class="limb-te">కరణం</div>
+        <div class="limb-desc">Half Tithi</div>
+      </div>
+    </div>
+    <div class="pancha-intro-bar"><div class="pancha-intro-bar-fill"></div></div>
+  </div>
+</div>
+
 <div class="error-banner" id="error-banner"></div>
 
 <div class="location-bar" id="location-bar">
@@ -236,6 +365,23 @@ footer { text-align: center; padding: 14px; font-size: 0.7rem; color: #a1887f; }
   </div>
 </div>
 
+
+<!-- Inauspicious Periods Section -->
+<div class="section">
+  <div class="section-header"><span>🕐 Other Timings</span><span class="te">· ఇతర సమయాలు</span></div>
+  <div class="time-row">
+    <span class="icon">🚫</span>
+    <div class="label"><div class="en">Dur Muhurtam</div><div class="te">దుర్ముహూర్తం</div></div>
+    <span class="time-val danger" id="dur-muhurtam"><span class="skel" style="width:160px;display:inline-block"></span></span>
+  </div>
+  <div class="bad-note" id="dur-muhurtam-note" style="display:none;">Avoid starting new work during these periods.</div>
+  <div class="time-row">
+    <span class="icon">⛔</span>
+    <div class="label"><div class="en">Varjyam</div><div class="te">వర్జ్యం</div></div>
+    <span class="time-val danger" id="varjyam"><span class="skel" style="width:130px;display:inline-block"></span></span>
+  </div>
+  <div class="bad-note">Times computed from today's Suryodayam (సూర్యోదయం) at your location.</div>
+</div>
 
 <div class="section">
   <div class="section-header"><span>⏰ Hora Table</span><span class="te">· హోరా పట్టిక</span></div>
@@ -432,6 +578,28 @@ const UI = (() => {
 
     set('abhijit', fmtRangeHHMM(middayMins - 24, middayMins + 24));
 
+    // Helper: convert HH:MM string to 12-hour display (e.g. "14:30" → "2:30 PM")
+    function fmt12(hhmm) {
+      const [h, m] = hhmm.split(':').map(Number);
+      const period = h >= 12 ? 'PM' : 'AM';
+      return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${period}`;
+    }
+    function fmtPeriodStr(start, end) {
+      return `${fmt12(start)} – ${fmt12(end)}`;
+    }
+
+    // Dur Muhurtam — times come directly from API (computed from local Suryodayam)
+    if (p.dur_muhurtam && p.dur_muhurtam.length > 0) {
+      set('dur-muhurtam', p.dur_muhurtam.map(d => fmtPeriodStr(d.start, d.end)).join('<br>'));
+      const noteEl = document.getElementById('dur-muhurtam-note');
+      if (noteEl) noteEl.style.display = 'block';
+    }
+
+    // Varjyam — time comes directly from API (computed from local Suryodayam)
+    if (p.varjyam) {
+      set('varjyam', fmtPeriodStr(p.varjyam.start, p.varjyam.end));
+    }
+
     // ── Hora Table ──
     const PLANETS = [
       { en: 'Saturn',  te: 'శని',   icon: '🪐' },
@@ -557,6 +725,59 @@ function tryLocationAgain() {
     }
   );
 }
+
+// ── Panchang Intro Banner — cycling facts ticker + auto-dismiss ──
+(function() {
+  const facts = [
+    "The Hindu calendar year is ~365.25875 days — accurate to 1 day in 6,000+ years!",
+    "Panchang is lunisolar — it balances both the Moon's phases and the Sun's journey.",
+    "There are 30 Tithis in a lunar month, each governed by a Sun–Moon angle of 12°.",
+    "27 Nakshatras form the backbone of Vedic astrology — the Moon visits each one monthly.",
+    "27 Yogas are formed by the combined longitude of Sun and Moon — each influences the day's energy.",
+    "11 Karanas (half-Tithis) govern the quality of actions taken during that period.",
+    "Panchang accounts for elliptical orbits, axial tilt, precession, and planetary movements.",
+    "The Gregorian calendar drifts 1 day in ~3,300 years. Panchang drifts 1 day in 6,000+ years.",
+    "Ancient Rishis didn't just observe the stars — they understood them mathematically.",
+    "By following Panchang, we follow Rita — the cosmic order governing health and prosperity.",
+    "Panchang connects the Micro (human life) with the Macro (cosmos) — this is Vedic Science.",
+    "Abhijit Muhurta — the 48-min window around solar noon — is universally auspicious every day.",
+    "Hora (hourly planetary ruler) changes every ~60 minutes, guiding ideal timing for actions.",
+  ];
+
+  // Shuffle starting point so sequence varies each page load
+  const start = Math.floor(Math.random() * facts.length);
+  const shuffled = [...facts.slice(start), ...facts.slice(0, start)];
+
+  const factEl = document.getElementById('pancha-fact');
+  const intro  = document.getElementById('pancha-intro');
+  if (!factEl || !intro) return;
+
+  const HOLD_MS   = 1800; // how long each fact stays visible
+  const FADE_MS   = 300;  // fade duration (matches CSS transition: 0.3s)
+  const SHOW_COUNT = 3;   // cycle through 3 facts before dismissing
+
+  let idx = 0;
+
+  function showFact(text) {
+    factEl.style.opacity = '0';
+    setTimeout(() => { factEl.textContent = text; factEl.style.opacity = '1'; }, FADE_MS);
+  }
+
+  function tick() {
+    showFact(shuffled[idx % shuffled.length]);
+    idx++;
+    if (idx < SHOW_COUNT) {
+      setTimeout(tick, HOLD_MS + FADE_MS);
+    } else {
+      setTimeout(() => {
+        intro.classList.add('hiding');
+        intro.addEventListener('animationend', () => intro.remove(), { once: true });
+      }, HOLD_MS);
+    }
+  }
+
+  tick();
+})();
 
 // Check if permission was previously granted — skip dialog if already allowed
 if (navigator.permissions) {

@@ -26,12 +26,7 @@ _GLOBAL_REGIONS = [
      "Bharata Varshe", "భరత వర్షే",
      "Bharata Khande, Vindhyasya pashchima digbhage, Arabia Mahasagara pashchima tate",
      "భరత ఖండే, వింధ్యస్య పశ్చిమ దిగ్భాగే, అరబీ మహాసాగర పశ్చిమ తటే"),
-    # USA / Canada
-    (25.0, 83.0, -168.0, -52.0,
-     "Krauncha Dweepae", "క్రౌంచ ద్వీపే",
-     "Ramanaka Varshe", "రమణక వర్షే",
-     "Aindra Khande, Rocky parvata madhye, Mississippi Missouri nadi madhye",
-     "ఐన్ద్ర ఖండే, రాకీ పర్వత మధ్యే, మిస్సిసిప్పీ మిస్సోరి నదీ మధ్యే"),
+    # USA / Canada — handled separately in get_geographic() via _usa_subregion()
     # Europe
     (35.0, 71.0, -25.0, 40.0,
      "Shalmali Dweepae", "శాల్మలీ ద్వీపే",
@@ -48,6 +43,30 @@ _GLOBAL_REGIONS = [
      "", "",
      "Tamra Khande", "తామ్ర ఖండే"),
 ]
+
+def _usa_subregion(lat: float, lon: float) -> dict:
+    """Return locality strings for a point within USA / Canada.
+
+    Three sub-regions keyed by longitude:
+      West  (lon < -112) — Pacific coast, west of the Rockies
+      East  (lon > -88)  — Atlantic seaboard, east of the Mississippi
+      Central             — between the Rockies and the Mississippi/Missouri
+    """
+    if lon < -112:
+        return {
+            "locality_en": "Rocky parvata pashchima bhage, Pratichina Mahasagara tire",
+            "locality_te": "రాకీ పర్వత పశ్చిమ భాగే, ప్రశాంత మహాసాగర తీరే",
+        }
+    if lon > -88:
+        return {
+            "locality_en": "Mississippi nadi purva bhage, Atlantika Mahasagara tire",
+            "locality_te": "మిస్సిసిప్పీ నదీ పూర్వ భాగే, అట్లాంటిక్ మహాసాగర తీరే",
+        }
+    return {
+        "locality_en": "Rocky parvata madhye, Mississippi Missouri nadi madhye",
+        "locality_te": "రాకీ పర్వత మధ్యే, మిస్సిసిప్పీ మిస్సోరి నదీ మధ్యే",
+    }
+
 
 _SRISHAILA_LAT = 16.07
 _SRISHAILA_LON = 78.87
@@ -121,6 +140,19 @@ def get_geographic(lat: float, lon: float) -> dict:
             **sub,
         }
 
+    # USA / Canada — sub-regions by longitude (west of Rockies / central / east coast)
+    if 25.0 <= lat <= 83.0 and -168.0 <= lon <= -52.0:
+        sub = _usa_subregion(lat, lon)
+        return {
+            "dweepa_en": "Krauncha Dweepae",
+            "dweepa_te": "క్రౌంచ ద్వీపే",
+            "varsha_en": "Ramanaka Varshe",
+            "varsha_te": "రమణక వర్షే",
+            "khanda_en": "Aindra Khande",
+            "khanda_te": "ఐన్ద్ర ఖండే",
+            **sub,
+        }
+
     for (lat_min, lat_max, lon_min, lon_max,
          dweepa_en, dweepa_te, varsha_en, varsha_te,
          khanda_en, khanda_te) in _GLOBAL_REGIONS:
@@ -151,11 +183,18 @@ def get_geographic(lat: float, lon: float) -> dict:
 
 def build_sankalpam(panchang: dict, geo: dict) -> dict:
     """Build full sankalpam recitation strings from panchang + geographic data.
-    
+
+    Traditional order:
+      1. శుభే శోభనే ముహూర్తే (auspicious opening)
+      2. Cosmic time prefix (Brahmanah dvitiya parardhe … Kali Yuge Prathama Pade)
+      3. Geographic location (dweepa → varsha → khanda → locality)
+      4. Samvatsara, Ayanam, Ritu, Masam, Paksham, Tithi, Vaaram, Nakshatra
+      5. అస్మిన్ శుభ ముహూర్తే …
+
     Args:
         panchang: dict from compute_panchang()
         geo: dict from get_geographic()
-    
+
     Returns dict with keys: geographic, geographic_te, full_en, full_te
     """
     p = panchang
@@ -168,19 +207,21 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
     tithi = p["tithi"]["en"]
     vaaram = p["vaaram"]["en"]
     nakshatra = p["nakshatra"]["en"]
-    yoga = p["yoga"]["en"]
-    karana = p["karana"]["en"]
 
     g_parts_en = " ".join(filter(None, [
         geo["dweepa_en"], geo["varsha_en"], geo["khanda_en"], geo["locality_en"]
     ]))
 
     full_en = (
+        "Sri Shubhe Shobhane Muhurthe, "
+        "Sri Maha Vishnoh Ragnaya Pravarthamanasya, "
+        "Adya Brahmanah dvitiya parardhe, Shveta Varaha Kalpe, "
+        "Vaivasvata Manvantare, Ashtavimsatitame Kali Yuge, Prathama Pade, "
+        f"{g_parts_en}, "
         f"Asmin vartamana vyavaharika chandramana {sam} nama samvatsare, "
         f"{ayanam}, {rutu} ritau, {adhika_prefix}{masam_name} mase, "
-        f"{paksham}, {tithi} tithau, {vaaram} vasara yukte, "
-        f"{nakshatra} nakshatre, {yoga} yoge, {karana} karane, "
-        f"{g_parts_en}, asmin shubha muhurte ..."
+        f"{paksham}, {tithi} tithau, {vaaram} vasare, "
+        f"{nakshatra} nakshatre, asmin shubha muhurte ..."
     )
 
     # Telugu recitation
@@ -193,19 +234,21 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
     tithi_te = p["tithi"]["te"]
     vaaram_te = p["vaaram"]["te"]
     nakshatra_te = p["nakshatra"]["te"]
-    yoga_te = p["yoga"]["te"]
-    karana_te = p["karana"]["te"]
 
     g_parts_te = " ".join(filter(None, [
         geo["dweepa_te"], geo["varsha_te"], geo["khanda_te"], geo["locality_te"]
     ]))
 
     full_te = (
+        "శ్రీ శుభే శోభనే ముహూర్తే, "
+        "శ్రీ మహావిష్ణోరాజ్ఞయా ప్రవర్తమానస్య, "
+        "అద్య బ్రాహ్మణః ద్వితీయ పరార్థే, శ్వేత వరాహ కల్పే, "
+        "వైవస్వత మన్వంతరే, అష్టావింశతితమే కలి యుగే, ప్రథమ పాదే, "
+        f"{g_parts_te}, "
         f"అస్మిన్ వర్తమాన వ్యావహారిక చాంద్రమాన {sam_te} నామ సంవత్సరే, "
         f"{ayanam_te}, {rutu_te} ఋతౌ, {adhika_te}{masam_te} మాసే, "
-        f"{paksham_te}, {tithi_te} తిథౌ, {vaaram_te} వాసర యుక్తే, "
-        f"{nakshatra_te} నక్షత్రే, {yoga_te} యోగే, {karana_te} కరణే, "
-        f"{g_parts_te}, అస్మిన్ శుభ ముహూర్తే ..."
+        f"{paksham_te}, {tithi_te} తిథౌ, {vaaram_te} వాసరే, "
+        f"{nakshatra_te} నక్షత్రే, అస్మిన్ శుభ ముహూర్తే ..."
     )
 
     return {
