@@ -31,6 +31,26 @@ _VASARA_TE = {
     "Saturday":  "స్థిర వాసరే",
 }
 
+# Locative (saptami) forms for ayanam and paksham used in sankalpam recitation.
+# The display names (e.g. "Uttarayanam", "Shukla Paksham") use nominative form
+# which is fine for labels, but the sankalpam needs locative (saptami vibhakti).
+_AYANAM_LOCATIVE_EN = {
+    "Uttarayanam":   "Uttarayane",
+    "Dakshinayanam": "Dakshinayane",
+}
+_AYANAM_LOCATIVE_TE = {
+    "ఉత్తరాయణం": "ఉత్తరాయణే",
+    "దక్షిణాయణం": "దక్షిణాయణే",
+}
+_PAKSHAM_LOCATIVE_EN = {
+    "Shukla Paksham":  "Shukla Pakshe",
+    "Krishna Paksham": "Krishna Pakshe",
+}
+_PAKSHAM_LOCATIVE_TE = {
+    "శుక్ల పక్షం":  "శుక్ల పక్షే",
+    "కృష్ణ పక్షం": "కృష్ణ పక్షే",
+}
+
 # ── Global region table ───────────────────────────────────────────────────────
 # Each tuple: (lat_min, lat_max, lon_min, lon_max,
 #              dweepa_en, dweepa_te, varsha_en, varsha_te, khanda_en, khanda_te)
@@ -251,11 +271,12 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
         logging.getLogger(__name__).warning(w)
 
     sam = p["samvatsara"]["en"]
-    ayanam = p["ayanam"]["en"]
+    # Convert display names to locative (saptami) forms for the recitation
+    ayanam = _AYANAM_LOCATIVE_EN.get(p["ayanam"]["en"], p["ayanam"]["en"])
     rutu = p["rutu"]["en"]
     masam_name = p["masam"]["en"]
     adhika_prefix = "Adhika " if p["masam"]["adhika"] else ""
-    paksham = p["paksham"]["en"]
+    paksham = _PAKSHAM_LOCATIVE_EN.get(p["paksham"]["en"], p["paksham"]["en"])
     tithi = p["tithi"]["en"]
     # Use traditional Sanskrit deity name, not the modern colloquial weekday name
     vaaram = p["vaaram"]["sankalpam_en"]
@@ -281,11 +302,11 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
 
     # Telugu recitation
     sam_te = p["samvatsara"]["te"]
-    ayanam_te = p["ayanam"]["te"]
+    ayanam_te = _AYANAM_LOCATIVE_TE.get(p["ayanam"]["te"], p["ayanam"]["te"])
     rutu_te = p["rutu"]["te"]
     masam_te = p["masam"]["te"]
     adhika_te = "అధిక " if p["masam"]["adhika"] else ""
-    paksham_te = p["paksham"]["te"]
+    paksham_te = _PAKSHAM_LOCATIVE_TE.get(p["paksham"]["te"], p["paksham"]["te"])
     tithi_te = p["tithi"]["te"]
     # Use traditional Sanskrit deity name in Telugu script
     vaaram_te = p["vaaram"]["sankalpam_te"]

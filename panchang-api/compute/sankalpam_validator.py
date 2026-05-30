@@ -49,10 +49,10 @@ _VALID_MASAM = {
 # Ritu stems (the suffix "ritau" is added by the template)
 _VALID_RUTU = {"Vasanta", "Grishma", "Varsha", "Sharad", "Hemanta", "Shishira"}
 
-# Paksham (full phrase, used as-is)
+# Paksham (display form — build_sankalpam converts to locative "Pakshe")
 _VALID_PAKSHAM = {"Shukla Paksham", "Krishna Paksham"}
 
-# Ayanam (used as-is, no suffix)
+# Ayanam (display form — build_sankalpam converts to locative "Uttarayane"/"Dakshinayane")
 _VALID_AYANAM = {"Uttarayanam", "Dakshinayanam"}
 
 
