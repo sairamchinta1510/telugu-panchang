@@ -17,7 +17,11 @@ def _init_swe():
 
 
 def local_date_to_jd(year: int, month: int, day: int, tz_name: str) -> float:
-    """Return Julian Day for local solar noon (12:00 in local timezone) of the given date."""
+    """Return Julian Day for local solar noon (12:00 in local timezone) of the given date.
+
+    Used only as a date anchor / search seed for get_sunrise_sunset().
+    All panchang elements are computed at sunrise, not at noon.
+    """
     tz = pytz.timezone(tz_name)
     local_noon = tz.localize(datetime(year, month, day, 12, 0, 0))
     utc_noon = local_noon.astimezone(pytz.utc)

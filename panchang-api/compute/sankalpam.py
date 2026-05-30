@@ -1,9 +1,35 @@
 """
 Sankalpam geographic mapping and full recitation builder.
 Maps lat/lon to Puranic Dweepa/Varsha/Khanda terminology (English + Telugu).
+
+Traditional recitation order:
+  Shubhe Shobhane Muhurte preamble → cosmic context (Kalpa/Manvantara/Yuga) →
+  geographic (Dweepa/Varsha/Khanda/Locality) → Chandramana year → panchang details
 """
 from __future__ import annotations
 from .sankalpam_validator import validate_sankalpam_inputs
+
+# Sanskrit vasara (day-lord) names used in Sankalpam recitation.
+# Keyed by English weekday name (Sunday=0 … Saturday=6).
+_VASARA_EN = {
+    "Sunday":    "Bhaanu Vasare",
+    "Monday":    "Indu Vasare",
+    "Tuesday":   "Bhauma Vasare",
+    "Wednesday": "Saumya Vasare",
+    "Thursday":  "Guru Vasare",
+    "Friday":    "Bhrugu Vasare",
+    "Saturday":  "Sthira Vasare",
+}
+
+_VASARA_TE = {
+    "Sunday":    "భాను వాసరే",
+    "Monday":    "ఇందు వాసరే",
+    "Tuesday":   "భౌమ వాసరే",
+    "Wednesday": "సౌమ్య వాసరే",
+    "Thursday":  "గురు వాసరే",
+    "Friday":    "భృగు వాసరే",
+    "Saturday":  "స్థిర వాసరే",
+}
 
 # ── Global region table ───────────────────────────────────────────────────────
 # Each tuple: (lat_min, lat_max, lon_min, lon_max,
@@ -68,6 +94,24 @@ def _usa_subregion(lat: float, lon: float) -> dict:
         "locality_te": "రాకీ పర్వత మధ్యే, మిస్సిసిప్పీ మిస్సోరి నదీ మధ్యే",
     }
 
+
+# ── Preamble constants ───────────────────────────────────────────────────────
+# Fixed cosmic-context lines that open every Sankalpam recitation.
+_PREAMBLE_EN = (
+    "Shubhe Shobhane Muhurte, "
+    "Sri Mahavishnorajnaya Pravartamanasya, "
+    "Adya Brahmanaha Dvitiya Parardhe, "
+    "Shvetavaraha Kalpe, Vaivasvata Manvantare, "
+    "Kaliyuge, Prathamapade, "
+)
+
+_PREAMBLE_TE = (
+    "శుభే శోభనే ముహూర్తే, "
+    "శ్రీ మహావిష్ణోరాజ్ఞయా ప్రవర్తమానస్య, "
+    "అద్య బ్రహ్మణః ద్వితీయ పరార్ధే, "
+    "శ్వేతవరాహ కల్పే, వైవస్వత మన్వంతరే, "
+    "కలియుగే, ప్రథమపాదే, "
+)
 
 _SRISHAILA_LAT = 16.07
 _SRISHAILA_LON = 78.87
@@ -136,8 +180,8 @@ def get_geographic(lat: float, lon: float) -> dict:
             "dweepa_te": "జంబూ ద్వీపే",
             "varsha_en": "Bharata Varshe",
             "varsha_te": "భరత వర్షే",
-            "khanda_en": "Bharata Khande",
-            "khanda_te": "భరత ఖండే",
+            "khanda_en": "Bharata Khande, Meroh Dakshina Digbhage",
+            "khanda_te": "భరత ఖండే, మేరోః దక్షిణ దిగ్భాగే",
             **sub,
         }
 
@@ -216,21 +260,23 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
     # Use traditional Sanskrit deity name, not the modern colloquial weekday name
     vaaram = p["vaaram"]["sankalpam_en"]
     nakshatra = p["nakshatra"]["en"]
+    yoga = p["yoga"]["en"]
+    karana = p["karana"]["en"]
+    # Lookup full "X Vasare" string from _VASARA_EN (keyed on English day name)
+    vasara_en = _VASARA_EN.get(p["vaaram"]["en"], vaaram + " Vasare")
 
-    g_parts_en = " ".join(filter(None, [
+    g_parts_en = ", ".join(filter(None, [
         geo["dweepa_en"], geo["varsha_en"], geo["khanda_en"], geo["locality_en"]
     ]))
 
     full_en = (
-        "Sri Shubhe Shobhane Muhurthe, "
-        "Sri Maha Vishnoh Ragnaya Pravarthamanasya, "
-        "Adya Brahmanah dvitiya parardhe, Shveta Varaha Kalpe, "
-        "Vaivasvata Manvantare, Ashtavimsatitame Kali Yuge, Prathama Pade, "
+        f"{_PREAMBLE_EN}"
         f"{g_parts_en}, "
         f"Asmin vartamana vyavaharika chandramana {sam} nama samvatsare, "
         f"{ayanam}, {rutu} ritau, {adhika_prefix}{masam_name} mase, "
-        f"{paksham}, {tithi} tithau, {vaaram} vasare, "
-        f"{nakshatra} nakshatre, asmin shubha muhurte ..."
+        f"{paksham}, {tithi} tithau, {vasara_en}, "
+        f"{nakshatra} nakshatre, {yoga} yoge, {karana} karane, "
+        f"shubha muhurte ..."
     )
 
     # Telugu recitation
@@ -244,21 +290,22 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
     # Use traditional Sanskrit deity name in Telugu script
     vaaram_te = p["vaaram"]["sankalpam_te"]
     nakshatra_te = p["nakshatra"]["te"]
+    yoga_te = p["yoga"]["te"]
+    karana_te = p["karana"]["te"]
+    vasara_te = _VASARA_TE.get(p["vaaram"]["en"], vaaram_te + " వాసరే")
 
-    g_parts_te = " ".join(filter(None, [
+    g_parts_te = ", ".join(filter(None, [
         geo["dweepa_te"], geo["varsha_te"], geo["khanda_te"], geo["locality_te"]
     ]))
 
     full_te = (
-        "శ్రీ శుభే శోభనే ముహూర్తే, "
-        "శ్రీ మహావిష్ణోరాజ్ఞయా ప్రవర్తమానస్య, "
-        "అద్య బ్రాహ్మణః ద్వితీయ పరార్థే, శ్వేత వరాహ కల్పే, "
-        "వైవస్వత మన్వంతరే, అష్టావింశతితమే కలి యుగే, ప్రథమ పాదే, "
+        f"{_PREAMBLE_TE}"
         f"{g_parts_te}, "
         f"అస్మిన్ వర్తమాన వ్యావహారిక చాంద్రమాన {sam_te} నామ సంవత్సరే, "
         f"{ayanam_te}, {rutu_te} ఋతౌ, {adhika_te}{masam_te} మాసే, "
-        f"{paksham_te}, {tithi_te} తిథౌ, {vaaram_te} వాసరే, "
-        f"{nakshatra_te} నక్షత్రే, అస్మిన్ శుభ ముహూర్తే ..."
+        f"{paksham_te}, {tithi_te} తిథౌ, {vasara_te}, "
+        f"{nakshatra_te} నక్షత్రే, {yoga_te} యోగే, {karana_te} కరణే, "
+        f"శుభ ముహూర్తే ..."
     )
 
     return {

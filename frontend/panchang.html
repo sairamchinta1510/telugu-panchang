@@ -439,12 +439,19 @@ const Geo = (() => {
     navigator.geolocation.getCurrentPosition(
       async pos => {
         try {
-          const lat  = pos.coords.latitude;
-          const lon  = pos.coords.longitude;
+          const lat    = pos.coords.latitude;
+          const lon    = pos.coords.longitude;
           const latStr = `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}`;
           const lonStr = `${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
-          const city = await reverseGeocode(lat, lon) || `${latStr} ${lonStr}`;
-          onSuccess({ lat, lon, city });
+          // Fire panchang fetch immediately — don't wait for reverse geocode
+          onSuccess({ lat, lon, city: `${latStr} ${lonStr}` });
+          // Update city name in background when Nominatim responds
+          reverseGeocode(lat, lon).then(city => {
+            if (city) {
+              const nameEl = document.getElementById('loc-name');
+              if (nameEl) nameEl.textContent = city;
+            }
+          }).catch(() => {});
         } catch (err) {
           onError('Error processing location. Showing Hyderabad defaults.', DEFAULT);
         }
@@ -795,6 +802,9 @@ if (navigator.permissions) {
       // 'prompt' or 'denied' — show our dialog first
       document.getElementById('loc-modal').style.display = 'flex';
     }
+  }).catch(() => {
+    // Safari may reject the geolocation permissions query — fall back to dialog
+    document.getElementById('loc-modal').style.display = 'flex';
   });
 } else {
   // Browser doesn't support permissions API — show dialog to be safe
