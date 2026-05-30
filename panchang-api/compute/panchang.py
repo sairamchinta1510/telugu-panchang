@@ -113,6 +113,18 @@ KARANA_FIXED_TE = ["కింస్తుఘ్న", "శకుని", "చత�
 VAARAM_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 VAARAM_TE = ["ఆదివారం", "సోమవారం", "మంగళవారం", "బుధవారం", "గురువారం", "శుక్రవారం", "శనివారం"]
 
+# Traditional Sanskrit/Vedic names used in Sankalpam recitation.
+# These are the names of the planetary deities — different from the modern colloquial weekday names:
+#   Sunday  → Bhanu  (Sun epithet)       not "Ravi-varam"
+#   Monday  → Soma   (Moon)              not "Soma-varam" (same root, but no "varam" suffix)
+#   Tuesday → Bhouma (son of Earth/Mars) not "Mangala-varam"
+#   Wed     → Saumya (Mercury, auspicious) not "Budha-varam"
+#   Thu     → Brihaspati (Jupiter/Guru)  not "Guru-varam"
+#   Friday  → Bhrughu (sage Bhrigu, patron of Venus) NOT "Shukra-varam"
+#   Saturday→ Sthira (Saturn, the slow/stable) not "Shani-varam"
+VAARAM_SANKALPAM_EN = ["Bhanu", "Soma", "Bhouma", "Saumya", "Brihaspati", "Bhrughu", "Sthira"]
+VAARAM_SANKALPAM_TE = ["భాను", "సోమ", "భౌమ", "సౌమ్య", "బృహస్పతి", "భృగు", "స్థిర"]
+
 # Varjyam start offset (in proportional ghatikas from sunrise, where 1 ghatika = day/30)
 # for each nakshatra (0=Ashvini … 26=Revati).
 # Table verified against Venkatrama & Co. Telugu Panchangam (Rajahmundry edition).
@@ -269,7 +281,12 @@ def compute_panchang(jd: float, lat: float, lon: float, tz_name: str) -> dict:
     # Hindu vaaram: Sunday=0 … Saturday=6
     weekday = dt_local.weekday()
     sun_idx = (weekday + 1) % 7
-    vaaram = {"en": VAARAM_EN[sun_idx], "te": VAARAM_TE[sun_idx]}
+    vaaram = {
+        "en": VAARAM_EN[sun_idx],
+        "te": VAARAM_TE[sun_idx],
+        "sankalpam_en": VAARAM_SANKALPAM_EN[sun_idx],
+        "sankalpam_te": VAARAM_SANKALPAM_TE[sun_idx],
+    }
 
     # ── End times for tithi, nakshatra, yoga, karana ──
     def _tithi_idx(j):

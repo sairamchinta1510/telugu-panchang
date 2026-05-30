@@ -3,6 +3,7 @@ Sankalpam geographic mapping and full recitation builder.
 Maps lat/lon to Puranic Dweepa/Varsha/Khanda terminology (English + Telugu).
 """
 from __future__ import annotations
+from .sankalpam_validator import validate_sankalpam_inputs
 
 # ── Global region table ───────────────────────────────────────────────────────
 # Each tuple: (lat_min, lat_max, lon_min, lon_max,
@@ -195,9 +196,16 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
         panchang: dict from compute_panchang()
         geo: dict from get_geographic()
 
-    Returns dict with keys: geographic, geographic_te, full_en, full_te
+    Returns dict with keys: geographic, geographic_te, full_en, full_te, validation_warnings
     """
     p = panchang
+
+    # Validate all panchang terms against known-correct Sanskrit forms
+    validation = validate_sankalpam_inputs(p)
+    import logging
+    for w in validation.warnings:
+        logging.getLogger(__name__).warning(w)
+
     sam = p["samvatsara"]["en"]
     ayanam = p["ayanam"]["en"]
     rutu = p["rutu"]["en"]
@@ -205,7 +213,8 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
     adhika_prefix = "Adhika " if p["masam"]["adhika"] else ""
     paksham = p["paksham"]["en"]
     tithi = p["tithi"]["en"]
-    vaaram = p["vaaram"]["en"]
+    # Use traditional Sanskrit deity name, not the modern colloquial weekday name
+    vaaram = p["vaaram"]["sankalpam_en"]
     nakshatra = p["nakshatra"]["en"]
 
     g_parts_en = " ".join(filter(None, [
@@ -232,7 +241,8 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
     adhika_te = "అధిక " if p["masam"]["adhika"] else ""
     paksham_te = p["paksham"]["te"]
     tithi_te = p["tithi"]["te"]
-    vaaram_te = p["vaaram"]["te"]
+    # Use traditional Sanskrit deity name in Telugu script
+    vaaram_te = p["vaaram"]["sankalpam_te"]
     nakshatra_te = p["nakshatra"]["te"]
 
     g_parts_te = " ".join(filter(None, [
@@ -266,4 +276,5 @@ def build_sankalpam(panchang: dict, geo: dict) -> dict:
         },
         "full_en": full_en,
         "full_te": full_te,
+        "validation_warnings": validation.warnings,
     }
