@@ -97,36 +97,62 @@ Computes a person's birth chart from their date, time, and place of birth.
 ---
 
 ### `muhurta_rules.py`
-Encodes ceremony-specific auspiciousness rules derived from the handwritten notes.
+Encodes ceremony-specific auspiciousness rules from South Indian Telugu tradition, verified against Venkatrama & Co. Telugu Panchangam (Rajahmundry edition), Muhurta Chintamani, and Dharmasindhu.
 
-**Exports:** `is_auspicious(panchang: dict, birth_charts: list[dict], ceremony_type: str) -> bool`
+**Exports:**
+- `is_auspicious(naks_idx, tithi_idx, sun_idx, lagna_idx, birth_charts, ceremony_type, masam_name, is_adhika_masam) -> bool`
+- `compute_kalams(rise_mins, set_mins, sun_idx) -> dict` — Rahu Kalam, Yamaganda, Gulika windows
 
-**Rules applied:**
+**Rules applied (in order):**
 
-#### Tara Balam (Nakshatra compatibility — applies to all ceremonies)
-For each person, count from their janma nakshatra to the day's nakshatra (mod 27).
+#### 1. Masa Shuddhi (Month Purity)
+- **Adhika (intercalary) masa**: always forbidden for all samskaras (Dharmasindhu)
+- **Chaturmas core months**: Ashadha, Shravana, Bhadrapada → rejected for Vivaha and Gruha Pravesam; Shravana + Bhadrapada → rejected for Upanayanam
+
+#### 2. Good Nakshatras per Ceremony
+
+| Ceremony | Auspicious Nakshatras | Key Notes |
+|----------|-----------------------|-----------|
+| వివాహం | రోహిణి, మృగశిర, మఘ, ఉత్తర ఫల్గుని, హస్త, స్వాతి, అనూరాధ, మూల*, ఉత్తరాషాఢ, ఉత్తరభాద్ర, రేవతి | **పుష్యమి నిషేధం** (PROHIBITED); "Three Uttaras" are primary |
+| గృహ ప్రవేశం | రోహిణి, మృగశిర, పుష్యమి✓, ఉత్తర ఫల్గుని, హస్త, చిత్ర, స్వాతి, అనూరాధ, ఉత్తరాషాఢ, శ్రావణ, శతభిష, ఉత్తరభాద్ర, రేవతి | Ashlesha, Jyeshtha, Moola = **mula sankraman** — explicitly vetoed |
+| ఉపనయనం | అశ్వని, రోహిణి, మృగశిర, పునర్వసు, పుష్యమి✓, ఉత్తర ఫల్గుని, హస్త, చిత్ర, స్వాతి, అనూరాధ, ఉత్తరాషాఢ, శ్రావణ, ధనిష్ఠ, శతభిష, ఉత్తరభాద్ర, రేవతి | Pushya is EXCELLENT for Upanayanam (Guru-Pushya Yoga) |
+| పూజ | All of the above + Punarvasu, Magha | Only Amavasya hard-rejected |
+
+*Moola 1st pada traditionally forbidden for marriage — first-pada check deferred to future iteration.
+
+#### 3. Bad Tithis — Rikta Tithis (Core Rule)
+Chaturthi, Navami, Chaturdashi in **both** Shukla and Krishna pakshas are universally inauspicious (Rikta = "empty"). Additionally: Ashtami Shukla and Purnima for Vivaha; Purnima for Gruha Pravesam; Amavasya for all.
+
+#### 4. Tara Balam (Nakshatra Compatibility)
+For each person, count from janma nakshatra to the day's nakshatra (1-indexed mod 27).
 Inauspicious positions: 1 (Janma), 3 (Vipat), 5 (Pratyak), 7 (Naidhana).
-A day is rejected if **any** person has an inauspicious tara for that day's nakshatra.
+A day is rejected if **any** person has an inauspicious tara.
 
-#### Panchaka Dosha (from Image 2 — Panchaka Kalarama)
-Panchakam occurs when the moon is in any of the last 5 nakshatras:
-- ధనిష్ఠ (3rd & 4th padas), శతభిష, పూర్వభాద్ర, ఉత్తరభాద్ర, రేవతి
-Formula: `(vaara_num + tithi_num + nakshatra_num + lagna_num) % 9`
-If result is 0, 3, 5, or 7 → Panchaka Dosha → day rejected.
+#### 5. Panchaka Dosha (South Indian formula)
+`(vaara + tithi + nakshatra + lagna) % 9`  — all **1-indexed**, tithi uses **full 1–30** (not mod-15).
+- Safe remainders: 0, 3, 5, 7 (Panchaka Rahita — no dosha)
+- Dosha remainders: 1=Mrityu, 2=Agni, 4=Raja, 6=Chora, 8=Roga
+- Source: Astro-Engine/Astro_Engine_ORGNL `02_SOUTH_INDIAN_TRADITIONS.md`
 
-#### Dur Muhurtam overlap
-Reuse existing `dur_muhurtam` output from `compute_panchang()`. Any proposed time window that overlaps a Dur Muhurtam period is trimmed or rejected.
+#### 6. South Indian Kalam Periods (in output, not rejection criteria)
+Every result day includes computed windows for:
+- **రాహు కాలం** (Rahu Kalam): strictly avoid for all auspicious activities
+- **యమగండ కాలం** (Yamaganda): strongly avoided in South India
+- **గులిక కాలం** (Gulika Kalam): uniquely critical in Telugu/Tamil tradition — "any ceremony during Gulika repeats" (marriage → second marriage)
 
-#### Ceremony-specific rules (from Image 1 — Lagna Sudhi)
+Day divided into 8 equal parts (sunrise→sunset). Segment per weekday:
 
-| Ceremony | Good Nakshatras | Inauspicious Tithis | Notes |
-|----------|----------------|---------------------|-------|
-| వివాహం | రోహిణి, మృగశిర, మఘ, హస్త, స్వాతి, అనూరాధ, మూల, ఉత్తరాషాఢ, ఉత్తరభాద్ర, రేవతి | అష్టమి, నవమి, చతుర్దశి | Shukla Paksha preferred |
-| గృహ ప్రవేశం | రోహిణి, మృగశిర, పుష్యమి, హస్త, చిత్ర, అనూరాధ, శ్రావణ, ధనిష్ఠ | కృష్ణ పక్షం తిథులు | Uttarayana preferred |
-| ఉపనయనం | రోహిణి, మృగశిర, పుష్యమి, హస్త, అనూరాధ, రేవతి | అష్టమి, చతుర్దశి, అమావాస్య | — |
-| పూజ | Any auspicious nakshatra | అమావాస్య | Avoid Varjyam period |
+| Weekday | Rahu | Yamaganda | Gulika |
+|---------|------|-----------|--------|
+| ఆదివారం (Sun) | 8th | 5th | 7th |
+| సోమవారం (Mon) | 2nd | 4th | 6th |
+| మంగళవారం (Tue) | 7th | 3rd | 5th |
+| బుధవారం (Wed) | 5th | 2nd | 4th |
+| గురువారం (Thu) | 6th | 1st | 3rd |
+| శుక్రవారం (Fri) | 4th | 7th | 2nd |
+| శనివారం (Sat) | 3rd | 6th | 1st |
 
-*Note: Full detailed rules to be refined from Image 1 notes during implementation.*
+Source: Venkatrama & Co. + `bidyashish/vedicpanchanga.com` verified tables.
 
 ---
 
