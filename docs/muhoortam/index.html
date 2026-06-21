@@ -2,359 +2,1061 @@
 <html lang="te">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>శుభ ముహూర్తం · Muhoortam.Sanathanadharmas.com</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#7B1E0A">
+<title>శుభ ముహూర్తం</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;600;700&family=Noto+Serif+Telugu:wght@600;700&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: #fdf6ec; color: #3e2723; padding: 16px; min-height: 100vh; max-width: 540px; margin: 0 auto; }
+:root {
+  --saffron: #C1440E;
+  --saffron-dark: #8B2E08;
+  --saffron-light: #F5A623;
+  --gold: #D4A017;
+  --gold-light: #FFF3CC;
+  --maroon: #5D1B1B;
+  --cream: #FFF9F2;
+  --cream2: #FFF3E4;
+  --brown: #3E1F00;
+  --brown-mid: #7A4A2A;
+  --brown-light: #C49A6C;
+  --white: #FFFFFF;
+  --shadow: 0 4px 20px rgba(91,30,0,0.12);
+  --shadow-lg: 0 8px 40px rgba(91,30,0,0.18);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+}
 
-.page-header { text-align: center; padding: 20px 16px 14px; background: linear-gradient(135deg, #5d4037 0%, #8d6e63 60%, #d7a96b 100%); border-radius: 14px; margin-bottom: 18px; color: white; }
-.page-header .om { font-size: 2.4rem; line-height: 1; margin-bottom: 6px; }
-.page-header h1 { font-size: 1.3rem; font-weight: 700; }
-.page-header .sub { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Noto Sans Telugu', 'Segoe UI', system-ui, sans-serif;
+  background: var(--cream);
+  color: var(--brown);
+  min-height: 100vh;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 0 40px;
+}
 
-.step-panel { display: none; }
-.step-panel.active { display: block; }
+/* ════════════════════════════════
+   HEADER
+════════════════════════════════ */
+.header {
+  background: linear-gradient(160deg, var(--maroon) 0%, var(--saffron-dark) 45%, var(--saffron) 100%);
+  padding: 28px 20px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.header-om {
+  font-size: 2.8rem;
+  line-height: 1;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+  animation: pulse 3s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+.header h1 {
+  font-family: 'Noto Serif Telugu', serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.header .sub {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.75);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
 
-.card { background: #fff; border: 1px solid #d7ccc8; border-radius: 12px; padding: 18px; margin-bottom: 14px; }
-.card h2 { font-size: 1rem; color: #5d4037; margin-bottom: 14px; border-bottom: 1px solid #efebe9; padding-bottom: 10px; }
+/* ════════════════════════════════
+   STEP PROGRESS BAR
+════════════════════════════════ */
+.step-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 24px 4px;
+  gap: 0;
+}
+.step-dot {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid #D7CCC8;
+  background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; color: #BCAAA4;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.step-dot.active {
+  background: var(--saffron);
+  border-color: var(--saffron);
+  color: var(--white);
+  box-shadow: 0 0 0 4px rgba(193,68,14,0.2);
+}
+.step-dot.done {
+  background: #4CAF50;
+  border-color: #4CAF50;
+  color: var(--white);
+}
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: #D7CCC8;
+  transition: background var(--transition);
+  max-width: 60px;
+}
+.step-line.done { background: #4CAF50; }
 
-.field { margin-bottom: 12px; }
-.field label { display: block; font-size: 0.8rem; font-weight: 600; color: #5d4037; margin-bottom: 4px; }
-.field input { width: 100%; padding: 9px 12px; border: 1px solid #d7ccc8; border-radius: 8px; font-size: 0.88rem; background: #fdf6ec; color: #3e2723; outline: none; }
-.field input:focus { border-color: #8d6e63; box-shadow: 0 0 0 3px rgba(141,110,99,0.15); }
+/* ════════════════════════════════
+   PANELS
+════════════════════════════════ */
+.panel { display: none; padding: 12px 14px; }
+.panel.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
-.ceremony-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.ceremony-btn { padding: 12px 8px; border: 2px solid #d7ccc8; border-radius: 10px; background: #fff; cursor: pointer; text-align: center; font-size: 0.9rem; color: #5d4037; transition: all 0.2s; }
-.ceremony-btn.selected { border-color: #8B4513; background: #8B4513; color: white; }
+/* ════════════════════════════════
+   SECTION TITLE
+════════════════════════════════ */
+.section-title {
+  font-family: 'Noto Serif Telugu', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--maroon);
+  margin: 4px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--brown-light), transparent);
+}
 
-.person-block { background: #fdf6ec; border: 1px solid #d7ccc8; border-radius: 10px; padding: 14px; margin-bottom: 12px; position: relative; }
-.person-block h3 { font-size: 0.85rem; color: #8d6e63; margin-bottom: 12px; }
-.person-remove { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #bcaaa4; cursor: pointer; font-size: 1.1rem; }
+/* ════════════════════════════════
+   CARDS
+════════════════════════════════ */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(196,154,108,0.2);
+}
+
+/* ════════════════════════════════
+   CEREMONY GRID
+════════════════════════════════ */
+.ceremony-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+.ceremony-card {
+  border: 2px solid #E8D5C4;
+  border-radius: var(--radius-sm);
+  background: var(--cream2);
+  padding: 16px 10px 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: var(--transition);
+  user-select: none;
+}
+.ceremony-card:active { transform: scale(0.97); }
+.ceremony-card.selected {
+  border-color: var(--saffron);
+  background: linear-gradient(135deg, var(--saffron-dark), var(--saffron));
+  box-shadow: 0 4px 16px rgba(193,68,14,0.35);
+}
+.ceremony-card .cer-icon { font-size: 1.8rem; margin-bottom: 6px; display: block; }
+.ceremony-card .cer-name { font-size: 0.9rem; font-weight: 700; color: var(--brown); }
+.ceremony-card.selected .cer-name { color: var(--white); }
+
+/* ════════════════════════════════
+   FIELDS & INPUTS
+════════════════════════════════ */
+.field { margin-bottom: 14px; }
+.field label {
+  display: block; font-size: 0.78rem; font-weight: 700;
+  color: var(--brown-mid); margin-bottom: 6px; letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.field input, .field select {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1.5px solid #E8D5C4;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-family: inherit;
+  background: var(--cream2);
+  color: var(--brown);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  -webkit-appearance: none;
+}
+.field input:focus, .field select:focus {
+  border-color: var(--saffron);
+  box-shadow: 0 0 0 3px rgba(193,68,14,0.15);
+  background: var(--white);
+}
+.input-icon-wrap { position: relative; }
+.input-icon-wrap .icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  font-size: 1rem; pointer-events: none;
+}
+.input-icon-wrap input { padding-left: 38px; }
+
+/* ════════════════════════════════
+   AUTOCOMPLETE
+════════════════════════════════ */
+.ac-wrap { position: relative; }
+.ac-list {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--white); border: 1.5px solid #E8D5C4;
+  border-radius: var(--radius-sm); z-index: 1000;
+  max-height: 220px; overflow-y: auto;
+  box-shadow: var(--shadow-lg); display: none;
+}
+.ac-item {
+  padding: 13px 14px; font-size: 0.86rem; cursor: pointer;
+  border-bottom: 1px solid #F5EDE4; line-height: 1.4; color: var(--brown);
+}
+.ac-item:last-child { border-bottom: none; }
+.ac-item:active, .ac-item.hover { background: var(--cream2); }
+.ac-empty { padding: 12px 14px; font-size: 0.84rem; color: #BCAAA4; text-align: center; }
+
+/* ════════════════════════════════
+   DATE RANGE
+════════════════════════════════ */
+.date-range { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ════════════════════════════════
+   PERSON BLOCK
+════════════════════════════════ */
+.person-block {
+  background: var(--cream2);
+  border: 1.5px solid #E8D5C4;
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  margin-bottom: 12px;
+  position: relative;
+}
+.person-block h3 {
+  font-size: 0.85rem; font-weight: 700; color: var(--saffron-dark);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+}
+.person-remove {
+  position: absolute; top: 10px; right: 10px;
+  background: #FBE9E7; border: none; border-radius: 50%;
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #BF360C; font-size: 0.9rem;
+}
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-.add-person-btn { width: 100%; padding: 10px; border: 2px dashed #d7ccc8; border-radius: 10px; background: none; color: #8d6e63; cursor: pointer; font-size: 0.85rem; margin-bottom: 14px; }
-.add-person-btn:hover { border-color: #8d6e63; color: #5d4037; }
+/* ════════════════════════════════
+   BUTTONS
+════════════════════════════════ */
+.btn-add {
+  width: 100%; padding: 13px;
+  border: 2px dashed #E8D5C4; border-radius: var(--radius-sm);
+  background: none; color: var(--brown-mid); cursor: pointer;
+  font-size: 0.88rem; font-family: inherit; margin-bottom: 14px;
+  transition: var(--transition);
+}
+.btn-add:active { border-color: var(--saffron); color: var(--saffron); }
 
-.btn-primary { width: 100%; padding: 13px; background: #8B4513; color: white; border: none; border-radius: 10px; font-size: 1rem; cursor: pointer; font-weight: 600; }
-.btn-primary:hover { background: #6d3710; }
-.btn-primary:disabled { background: #bcaaa4; cursor: not-allowed; }
+.btn-primary {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, var(--saffron-dark), var(--saffron));
+  color: var(--white); border: none; border-radius: var(--radius-sm);
+  font-size: 1rem; font-family: inherit; cursor: pointer; font-weight: 700;
+  box-shadow: 0 4px 16px rgba(193,68,14,0.4);
+  transition: var(--transition);
+  letter-spacing: 0.02em;
+}
+.btn-primary:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(193,68,14,0.3); }
+.btn-primary:disabled { background: #D7CCC8; box-shadow: none; cursor: not-allowed; }
 
-.progress-wrap { background: #efebe9; border-radius: 8px; height: 10px; overflow: hidden; margin: 16px 0 8px; }
-.progress-bar { height: 100%; background: linear-gradient(90deg, #8B4513, #d7a96b); border-radius: 8px; transition: width 0.4s ease; }
-.progress-label { text-align: center; font-size: 0.8rem; color: #8d6e63; }
+.btn-outline {
+  padding: 12px 22px;
+  background: var(--white); color: var(--brown-mid);
+  border: 1.5px solid #E8D5C4; border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 0.9rem; font-family: inherit;
+  transition: var(--transition);
+}
+.btn-outline:active { background: var(--cream2); }
 
-.results-count { text-align: center; font-size: 1rem; color: #5d4037; margin-bottom: 14px; font-weight: 600; }
-.results-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-.results-table th { background: #8B4513; color: white; padding: 8px 10px; text-align: left; }
-.results-table td { padding: 8px 10px; border-bottom: 1px solid #efebe9; vertical-align: top; }
-.results-table tr:nth-child(even) td { background: #fdf6ec; }
-.results-table tr:hover td { background: #f5e6d3; }
-.kalam-cell { font-size: 0.74rem; color: #bf360c; }
-.time-cell { font-weight: 600; color: #33691e; font-size: 0.78rem; }
+.actions-row { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
 
-.btn-secondary { padding: 10px 20px; background: #efebe9; color: #5d4037; border: 1px solid #d7ccc8; border-radius: 8px; cursor: pointer; font-size: 0.88rem; }
-.actions-row { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+/* ════════════════════════════════
+   PROGRESS / LOADING
+════════════════════════════════ */
+.loading-wrap { text-align: center; padding: 32px 20px; }
+.lotus-spin {
+  font-size: 3rem; display: block; margin-bottom: 14px;
+  animation: spin 3s linear infinite;
+}
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.progress-track { background: #EDE0D4; border-radius: 20px; height: 8px; overflow: hidden; margin: 16px 0 8px; }
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--saffron-dark), var(--saffron-light));
+  border-radius: 20px; transition: width 0.5s ease;
+}
+.progress-label { font-size: 0.88rem; color: var(--brown-mid); font-weight: 600; }
+.progress-sub { font-size: 0.76rem; color: #BCAAA4; margin-top: 4px; }
 
-.error-msg { background: #fbe9e7; border: 1px solid #ffccbc; border-radius: 8px; padding: 10px 14px; color: #bf360c; font-size: 0.82rem; margin-bottom: 12px; display: none; }
+/* ════════════════════════════════
+   RESULTS
+════════════════════════════════ */
+.results-hero {
+  text-align: center;
+  padding: 4px 0 16px;
+}
+.results-hero .ceremony-tag {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--saffron-dark), var(--saffron));
+  color: var(--white);
+  padding: 5px 16px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.results-hero h2 {
+  font-family: 'Noto Serif Telugu', serif;
+  font-size: 1.2rem;
+  color: var(--maroon);
+}
+.results-hero .count {
+  font-size: 0.84rem;
+  color: var(--brown-mid);
+  margin-top: 4px;
+}
+.kalam-banner {
+  background: linear-gradient(135deg, #FFF8E1, #FFF3CD);
+  border: 1px solid #FFD54F;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 0.78rem;
+  color: #5D4037;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
 
-.kalam-note { font-size: 0.74rem; color: #795548; background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 8px 10px; margin-top: 10px; }
+/* Result Cards */
+.result-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(196,154,108,0.15);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.result-card:active { transform: scale(0.99); }
+.result-card-header {
+  background: linear-gradient(135deg, var(--maroon) 0%, var(--saffron-dark) 100%);
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.result-date { color: var(--white); }
+.result-date .day { font-size: 1.1rem; font-weight: 700; font-family: 'Noto Serif Telugu', serif; }
+.result-date .vaaram { font-size: 0.76rem; opacity: 0.8; margin-top: 1px; }
+.result-badge {
+  background: rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  color: var(--white);
+  text-align: right;
+}
+.result-body { padding: 14px 16px; }
+.result-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.result-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--cream2);
+  border: 1px solid #E8D5C4;
+  border-radius: 20px;
+  padding: 5px 11px;
+  font-size: 0.78rem;
+  color: var(--brown);
+}
+.result-chip .chip-label { color: var(--brown-mid); font-size: 0.7rem; }
+.result-kalam {
+  background: #FFF8E1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+}
+.kalam-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: #BF360C;
+  padding: 2px 0;
+}
+.btn-details {
+  width: 100%;
+  padding: 11px;
+  background: var(--cream2);
+  border: 1.5px solid #E8D5C4;
+  border-radius: 10px;
+  color: var(--saffron-dark);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-details:active {
+  background: var(--gold-light);
+  border-color: var(--saffron);
+}
+
+/* ════════════════════════════════
+   MODAL (bottom sheet)
+════════════════════════════════ */
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(30,10,0,0.55);
+  backdrop-filter: blur(3px);
+  z-index: 3000;
+  align-items: flex-end;
+  justify-content: center;
+}
+.overlay.open { display: flex; }
+.sheet {
+  background: var(--white);
+  border-radius: 22px 22px 0 0;
+  padding: 0 0 env(safe-area-inset-bottom, 24px);
+  width: 100%; max-width: 560px;
+  max-height: 88vh; display: flex; flex-direction: column;
+  animation: sheetUp 0.28s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes sheetUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.sheet-handle-wrap { padding: 12px 20px 0; }
+.sheet-handle { width: 44px; height: 4px; background: #E0D0C8; border-radius: 2px; margin: 0 auto; }
+.sheet-header {
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid #F0E6DF;
+}
+.sheet-title { font-family: 'Noto Serif Telugu', serif; font-size: 1.05rem; font-weight: 700; color: var(--maroon); }
+.sheet-date { font-size: 0.8rem; color: var(--brown-mid); margin-top: 2px; }
+.sheet-body { overflow-y: auto; padding: 16px 20px; flex: 1; }
+.sheet-footer { padding: 12px 20px; border-top: 1px solid #F0E6DF; }
+
+/* Detail sections */
+.detail-section { margin-bottom: 16px; }
+.detail-section-title {
+  font-size: 0.7rem; font-weight: 700; color: var(--brown-light);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.detail-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 10px 12px;
+  background: var(--cream2);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.detail-item .di-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+.detail-item .di-label { font-size: 0.72rem; color: var(--brown-mid); font-weight: 600; margin-bottom: 2px; }
+.detail-item .di-val { font-size: 0.9rem; color: var(--brown); font-weight: 600; }
+.detail-item .di-sub { font-size: 0.73rem; color: var(--brown-mid); margin-top: 3px; line-height: 1.4; }
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  border-radius: 20px; padding: 3px 9px;
+  font-size: 0.7rem; font-weight: 700; margin-top: 5px;
+}
+.badge-green { background: #E8F5E9; color: #2E7D32; }
+.badge-red   { background: #FBE9E7; color: #C62828; }
+.kalam-grid { display: flex; flex-direction: column; gap: 6px; }
+.kalam-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #FFF3E0; border-radius: 8px;
+  padding: 8px 12px;
+}
+.kalam-name { font-size: 0.78rem; color: #E65100; font-weight: 600; }
+.kalam-time { font-size: 0.82rem; color: var(--brown); font-weight: 700; }
+
+/* ════════════════════════════════
+   ERROR TOAST
+════════════════════════════════ */
+.error-toast {
+  display: none;
+  background: #FFEBEE;
+  border: 1.5px solid #FFCDD2;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  color: #B71C1C;
+  font-size: 0.85rem;
+  margin: 0 14px 12px;
+  line-height: 1.5;
+}
+
+/* ════════════════════════════════
+   EMPTY STATE
+════════════════════════════════ */
+.empty-state {
+  text-align: center; padding: 40px 20px;
+}
+.empty-state .e-icon { font-size: 3rem; margin-bottom: 12px; display: block; }
+.empty-state h3 { font-size: 1rem; color: var(--maroon); margin-bottom: 6px; }
+.empty-state p { font-size: 0.84rem; color: var(--brown-mid); line-height: 1.6; }
 
 @media print {
-  .page-header, .actions-row, .btn-primary { display: none !important; }
-  body { background: white; padding: 0; }
-  .results-table th { background: #333 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .header, .step-bar, .actions-row, .btn-details, .btn-primary, .overlay { display: none !important; }
+  body { background: white; }
+  .result-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
 }
 </style>
 </head>
 <body>
 
-<div class="page-header">
-  <div class="om">🕉</div>
+<!-- ══ HEADER ══ -->
+<div class="header">
+  <div class="header-om">🕉</div>
   <h1>శుభ ముహూర్తం</h1>
   <div class="sub">Muhoortam.Sanathanadharmas.com</div>
 </div>
 
-<div id="errorMsg" class="error-msg"></div>
+<!-- ══ STEP PROGRESS ══ -->
+<div class="step-bar">
+  <div class="step-dot active" id="sd1">1</div>
+  <div class="step-line" id="sl1"></div>
+  <div class="step-dot" id="sd2">2</div>
+  <div class="step-line" id="sl2"></div>
+  <div class="step-dot" id="sd3">3</div>
+  <div class="step-line" id="sl3"></div>
+  <div class="step-dot" id="sd4">4</div>
+</div>
 
-<!-- Step 1: Ceremony Details -->
-<div id="step1" class="step-panel active">
+<div id="errorToast" class="error-toast"></div>
+
+<!-- ══════════════════════════════════════════════════
+     PANEL 1 — Ceremony Details
+══════════════════════════════════════════════════ -->
+<div id="panel1" class="panel active">
+  <div class="section-title">వేడుక వివరాలు</div>
+
   <div class="card">
-    <h2>దశ 1 — వేడుక వివరాలు</h2>
     <div class="field">
-      <label>వేడుక రకం ఎంచుకోండి</label>
-      <div class="ceremony-grid" style="margin-top:8px">
-        <button class="ceremony-btn" data-type="vivaha" onclick="selectCeremony(this)">💒 వివాహం</button>
-        <button class="ceremony-btn" data-type="gruha_pravesam" onclick="selectCeremony(this)">🏠 గృహ ప్రవేశం</button>
-        <button class="ceremony-btn" data-type="upanayanam" onclick="selectCeremony(this)">🪡 ఉపనయనం</button>
-        <button class="ceremony-btn" data-type="pooja" onclick="selectCeremony(this)">🪔 పూజ</button>
+      <label>వేడుక రకం</label>
+      <div class="ceremony-grid">
+        <div class="ceremony-card" data-type="vivaha" onclick="selectCeremony(this)">
+          <span class="cer-icon">💒</span>
+          <div class="cer-name">వివాహం</div>
+        </div>
+        <div class="ceremony-card" data-type="gruha_pravesam" onclick="selectCeremony(this)">
+          <span class="cer-icon">🏠</span>
+          <div class="cer-name">గృహ ప్రవేశం</div>
+        </div>
+        <div class="ceremony-card" data-type="upanayanam" onclick="selectCeremony(this)">
+          <span class="cer-icon">🪡</span>
+          <div class="cer-name">ఉపనయనం</div>
+        </div>
+        <div class="ceremony-card" data-type="pooja" onclick="selectCeremony(this)">
+          <span class="cer-icon">🪔</span>
+          <div class="cer-name">పూజ</div>
+        </div>
       </div>
     </div>
+
     <div class="field">
-      <label>వేడుక నగరం</label>
-      <input type="text" id="ceremonyCity" placeholder="ఉదా: Hyderabad, Vijayawada">
+      <label>వేడుక జరిగే స్థలం</label>
+      <div class="ac-wrap">
+        <div class="input-icon-wrap">
+          <span class="icon">📍</span>
+          <input type="text" id="ceremonyPlace" placeholder="నగరం వెతకండి... (ఉదా: Hyderabad)"
+                 oninput="acSearch(this,'acCeremony')" autocomplete="off">
+        </div>
+        <div class="ac-list" id="acCeremony"></div>
+      </div>
     </div>
+
     <div class="field">
-      <label>దేశం</label>
-      <input type="text" id="ceremonyCountry" placeholder="ఉదా: India, USA">
+      <label>ముహూర్తం కావాల్సిన తేదీ పరిధి</label>
+      <div class="date-range">
+        <div>
+          <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 నుండి</label>
+          <input type="date" id="rangeFrom">
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 వరకు</label>
+          <input type="date" id="rangeTo">
+        </div>
+      </div>
     </div>
-    <button class="btn-primary" onclick="goStep2()">తదుపరి →</button>
   </div>
+
+  <button class="btn-primary" onclick="goPanel2()">తదుపరి దశ →</button>
 </div>
 
-<!-- Step 2: Birth Details -->
-<div id="step2" class="step-panel">
+<!-- ══════════════════════════════════════════════════
+     PANEL 2 — Birth Details
+══════════════════════════════════════════════════ -->
+<div id="panel2" class="panel">
+  <div class="section-title">జన్మ వివరాలు</div>
+  <div id="personList"></div>
+  <button class="btn-add" id="addPersonBtn" onclick="addPerson()">
+    ＋ మరో వ్యక్తిని జోడించండి (గరిష్టం 6)
+  </button>
+  <button class="btn-primary" onclick="startCompute()">శుభ ముహూర్తాలు వెతకండి 🔍</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PANEL 3 — Computing
+══════════════════════════════════════════════════ -->
+<div id="panel3" class="panel">
   <div class="card">
-    <h2>దశ 2 — జన్మ వివరాలు</h2>
-    <div id="personList"></div>
-    <button class="add-person-btn" id="addPersonBtn" onclick="addPerson()">
-      + మరో వ్యక్తిని జోడించండి (గరిష్టం 6)
-    </button>
-    <button class="btn-primary" onclick="startCompute()">ముహూర్తాలు వెతకండి →</button>
+    <div class="loading-wrap">
+      <span class="lotus-spin">🌸</span>
+      <div class="progress-label" id="progressLabel">సిద్ధంగా ఉంది</div>
+      <div class="progress-track"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
+      <div class="progress-sub" id="progressSub"></div>
+    </div>
   </div>
 </div>
 
-<!-- Step 3: Computing -->
-<div id="step3" class="step-panel">
-  <div class="card" style="text-align:center;padding:32px 18px">
-    <div style="font-size:2.5rem;margin-bottom:12px">🕉</div>
-    <div style="font-size:1.05rem;font-weight:600;margin-bottom:6px">శుభ ముహూర్తాలు వెతుకుతున్నాం...</div>
-    <div id="progressLabel" class="progress-label">సిద్ధంగా ఉంది</div>
-    <div class="progress-wrap"><div id="progressBar" class="progress-bar" style="width:0%"></div></div>
-    <div id="progressDetail" style="font-size:0.78rem;color:#bcaaa4;margin-top:4px"></div>
+<!-- ══════════════════════════════════════════════════
+     PANEL 4 — Results
+══════════════════════════════════════════════════ -->
+<div id="panel4" class="panel">
+  <div class="results-hero">
+    <div id="ceremonyTag" class="ceremony-tag"></div>
+    <h2 id="resultsTitle"></h2>
+    <div id="resultsCount" class="count"></div>
+  </div>
+  <div class="kalam-banner">
+    ⚠️ <strong>గమనిక:</strong> రాహు కాలం, యమగండ కాలం మరియు గులిక కాలం సమయంలో వేడుకలు నిర్వహించవద్దు.
+    గులిక కాలంలో వివాహం చేస్తే పునర్వివాహం జరుగుతుందని పెద్దలు చెప్తారు.
+    ప్రతి ముహూర్తం మీద <strong>"వివరాలు చూడండి"</strong> నొక్కి మరింత సమాచారం తెలుసుకోండి.
+  </div>
+  <div id="resultsList"></div>
+  <div class="actions-row">
+    <button class="btn-outline" onclick="window.print()">🖨 PDF</button>
+    <button class="btn-outline" onclick="resetWizard()">↩ మళ్ళీ వెతకండి</button>
   </div>
 </div>
 
-<!-- Step 4: Results -->
-<div id="step4" class="step-panel">
-  <div class="card">
-    <h2>దశ 4 — శుభ ముహూర్తాలు</h2>
-    <div id="resultsCount" class="results-count"></div>
-    <div class="kalam-note">
-      ⚠️ <strong>గమనిక:</strong> రాహు కాలం, యమగండ కాలం, గులిక కాలం సమయంలో వేడుకలు నిర్వహించవద్దు. గులిక కాలంలో వివాహం చేస్తే పునర్వివాహం జరుగుతుందని పెద్దలు చెప్తారు.
+<!-- ══════════════════════════════════════════════════
+     DETAIL MODAL
+══════════════════════════════════════════════════ -->
+<div class="overlay" id="overlay" onclick="closeOverlay(event)">
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-header">
+      <div class="sheet-title" id="sheetTitle">ముహూర్తం వివరాలు</div>
+      <div class="sheet-date" id="sheetDate"></div>
     </div>
-    <div style="overflow-x:auto;margin-top:10px">
-      <table class="results-table">
-        <thead>
-          <tr>
-            <th>తేదీ</th>
-            <th>వారం</th>
-            <th>తిథి · నక్షత్రం</th>
-            <th>సమయం</th>
-            <th>నిషేధ కాలాలు</th>
-          </tr>
-        </thead>
-        <tbody id="resultsBody"></tbody>
-      </table>
-    </div>
-    <div class="actions-row">
-      <button class="btn-secondary" onclick="window.print()">🖨 PDF</button>
-      <button class="btn-secondary" onclick="resetWizard()">మళ్ళీ వెతకండి</button>
+    <div class="sheet-body" id="sheetBody"></div>
+    <div class="sheet-footer">
+      <button class="btn-primary" onclick="closeSheet()">మూసివేయి ✕</button>
     </div>
   </div>
 </div>
 
 <script>
-// Replace with deployed API URL before going live (sam deploy output)
 const API_BASE = "https://h3dp7amvn9.execute-api.ap-south-1.amazonaws.com";
 
-let selectedCeremony = null;
-let allResults = [];
-let personCount = 0;
+const CEREMONY_NAMES = { vivaha:"వివాహం", gruha_pravesam:"గృహ ప్రవేశం", upanayanam:"ఉపనయనం", pooja:"పూజ" };
+const CEREMONY_NAK_REASON = {
+  vivaha:         "వివాహానికి సంప్రదాయం ప్రకారం ఎంపిక చేసిన శుభ నక్షత్రం",
+  gruha_pravesam: "గృహ ప్రవేశానికి అనుకూలమైన నక్షత్రం — ఇంటిలో సుఖ శాంతులు కలుగుతాయి",
+  upanayanam:     "ఉపనయనానికి శుభమైన నక్షత్రం — విద్యాభివృద్ధి కలుగుతుంది",
+  pooja:          "పూజకు అనుకూలమైన నక్షత్రం — అమ్మవారి అనుగ్రహం కలుగుతుంది",
+};
+const MONTHS_TE = ["జనవరి","ఫిబ్రవరి","మార్చి","ఏప్రిల్","మే","జూన్","జులై","ఆగస్టు","సెప్టెంబర్","అక్టోబర్","నవంబర్","డిసెంబర్"];
 
-// ── Step navigation ──────────────────────────────────────────────────────────
+let selectedCeremony = null, allResults = [], personCount = 0;
 
-function showStep(n) {
-  document.querySelectorAll(".step-panel").forEach(p => p.classList.remove("active"));
-  document.getElementById("step" + n).classList.add("active");
+// Default dates
+(function() {
+  const t = new Date(), n = new Date(t); n.setFullYear(n.getFullYear()+1);
+  const f = d => d.toISOString().slice(0,10);
+  document.getElementById("rangeFrom").value = f(t);
+  document.getElementById("rangeTo").value   = f(n);
+  document.getElementById("rangeFrom").min   = f(t);
+})();
+
+// ── Step progress ─────────────────────────────────────────────────────────────
+function setStep(n) {
+  [1,2,3,4].forEach(i => {
+    const d = document.getElementById("sd"+i);
+    d.classList.remove("active","done");
+    if(i < n) d.classList.add("done");
+    else if(i === n) d.classList.add("active");
+  });
+  [1,2,3].forEach(i => {
+    const l = document.getElementById("sl"+i);
+    l.classList.toggle("done", i < n);
+  });
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.getElementById("panel"+n).classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+// ── Error toast ───────────────────────────────────────────────────────────────
 function showError(msg) {
-  const el = document.getElementById("errorMsg");
-  el.textContent = msg;
-  el.style.display = msg ? "block" : "none";
+  const t = document.getElementById("errorToast");
+  t.textContent = msg; t.style.display = msg ? "block" : "none";
+  if(msg) t.scrollIntoView({ behavior:"smooth", block:"center" });
 }
 
-// ── Step 1 ───────────────────────────────────────────────────────────────────
-
-function selectCeremony(btn) {
-  document.querySelectorAll(".ceremony-btn").forEach(b => b.classList.remove("selected"));
-  btn.classList.add("selected");
-  selectedCeremony = btn.dataset.type;
+// ── Ceremony select ───────────────────────────────────────────────────────────
+function selectCeremony(el) {
+  document.querySelectorAll(".ceremony-card").forEach(c => c.classList.remove("selected"));
+  el.classList.add("selected");
+  selectedCeremony = el.dataset.type;
 }
 
-function goStep2() {
+// ── Autocomplete ──────────────────────────────────────────────────────────────
+const acTimers = {};
+function acSearch(input, listId) {
+  const q = input.value.trim(), list = document.getElementById(listId);
+  clearTimeout(acTimers[listId]);
+  if(q.length < 3) { list.style.display = "none"; return; }
+  list.innerHTML = '<div class="ac-empty">వెతుకుతున్నాం...</div>';
+  list.style.display = "block";
+  acTimers[listId] = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6`,
+        { headers: {"Accept-Language":"te,en"} });
+      const data = await res.json();
+      if(!data.length) { list.innerHTML = '<div class="ac-empty">ఏమీ కనుగొనబడలేదు</div>'; return; }
+      list.innerHTML = data.map(p =>
+        `<div class="ac-item" onclick="acPick('${input.id}','${listId}',this)" data-val="${p.display_name.replace(/"/g,'&quot;')}">
+          📍 ${p.display_name}
+        </div>`
+      ).join("");
+    } catch { list.innerHTML = '<div class="ac-empty">లోపం జరిగింది</div>'; }
+  }, 400);
+}
+function acPick(inputId, listId, el) {
+  document.getElementById(inputId).value = el.dataset.val;
+  document.getElementById(listId).style.display = "none";
+}
+document.addEventListener("click", e => {
+  document.querySelectorAll(".ac-list").forEach(l => {
+    if(!l.contains(e.target)) l.style.display = "none";
+  });
+});
+
+// ── Panel 1 → 2 ───────────────────────────────────────────────────────────────
+function goPanel2() {
   showError("");
-  if (!selectedCeremony) { showError("వేడుక రకం ఎంచుకోండి"); return; }
-  if (!document.getElementById("ceremonyCity").value.trim()) { showError("వేడుక నగరం నమోదు చేయండి"); return; }
-  if (!document.getElementById("ceremonyCountry").value.trim()) { showError("దేశం నమోదు చేయండి"); return; }
-  if (personCount === 0) addPerson();
-  showStep(2);
+  if(!selectedCeremony) { showError("వేడుక రకం ఎంచుకోండి"); return; }
+  if(!document.getElementById("ceremonyPlace").value.trim()) { showError("వేడుక స్థలం నమోదు చేయండి"); return; }
+  const from = document.getElementById("rangeFrom").value;
+  const to   = document.getElementById("rangeTo").value;
+  if(!from || !to)  { showError("తేదీ పరిధి నమోదు చేయండి"); return; }
+  if(from > to)     { showError("'నుండి' తేదీ 'వరకు' తేదీ కంటే తర్వాత ఉండకూడదు"); return; }
+  if(personCount === 0) addPerson();
+  setStep(2);
 }
 
-// ── Step 2 ───────────────────────────────────────────────────────────────────
-
+// ── Person blocks ─────────────────────────────────────────────────────────────
 function addPerson() {
-  if (personCount >= 6) return;
+  if(personCount >= 6) return;
   personCount++;
-  const idx = personCount;
-  const div = document.createElement("div");
-  div.className = "person-block";
-  div.id = "person" + idx;
+  const idx = personCount, div = document.createElement("div");
+  div.className = "person-block"; div.id = "person"+idx;
   div.innerHTML = `
     <h3>👤 వ్యక్తి ${idx}</h3>
-    ${idx > 1 ? `<button class="person-remove" onclick="removePerson(${idx})">✕</button>` : ""}
+    ${idx>1?`<button class="person-remove" onclick="removePerson(${idx})">✕</button>`:""}
     <div class="two-col">
-      <div class="field">
+      <div class="field" style="margin-bottom:0">
         <label>జన్మ తేదీ</label>
-        <input type="date" id="dob${idx}">
+        <input type="date" id="dob${idx}" style="padding:11px 10px;font-size:15px">
       </div>
-      <div class="field">
+      <div class="field" style="margin-bottom:0">
         <label>జన్మ సమయం</label>
-        <input type="time" id="time${idx}">
+        <input type="time" id="time${idx}" style="padding:11px 10px;font-size:15px">
       </div>
     </div>
-    <div class="field">
-      <label>జన్మ స్థలం (నగరం, దేశం)</label>
-      <input type="text" id="place${idx}" placeholder="ఉదా: Hyderabad, India">
+    <div class="field" style="margin-top:10px;margin-bottom:0">
+      <label>జన్మ స్థలం</label>
+      <div class="ac-wrap">
+        <div class="input-icon-wrap">
+          <span class="icon">📍</span>
+          <input type="text" id="place${idx}" placeholder="నగరం వెతకండి..."
+                 oninput="acSearch(this,'acP${idx}')" autocomplete="off">
+        </div>
+        <div class="ac-list" id="acP${idx}"></div>
+      </div>
     </div>`;
   document.getElementById("personList").appendChild(div);
-  document.getElementById("addPersonBtn").style.display = personCount >= 6 ? "none" : "block";
+  document.getElementById("addPersonBtn").style.display = personCount>=6?"none":"block";
 }
-
 function removePerson(idx) {
-  document.getElementById("person" + idx)?.remove();
+  document.getElementById("person"+idx)?.remove();
   personCount = document.querySelectorAll(".person-block").length;
-  document.getElementById("addPersonBtn").style.display = personCount >= 6 ? "none" : "block";
+  document.getElementById("addPersonBtn").style.display = personCount>=6?"none":"block";
 }
 
+// ── Compute ───────────────────────────────────────────────────────────────────
 async function startCompute() {
   showError("");
   const blocks = document.querySelectorAll(".person-block");
-  if (blocks.length === 0) { showError("కనీసం ఒక వ్యక్తి వివరాలు నమోదు చేయండి"); return; }
+  if(!blocks.length) { showError("కనీసం ఒక వ్యక్తి వివరాలు నమోదు చేయండి"); return; }
 
   const persons = [];
-  for (const block of blocks) {
-    const id = block.id.replace("person", "");
-    const dobRaw = document.getElementById("dob"   + id)?.value.trim();
-    const time  = document.getElementById("time"  + id)?.value.trim();
-    const place = document.getElementById("place" + id)?.value.trim();
-    if (!dobRaw || !time || !place) { showError("అన్ని వ్యక్తుల వివరాలు పూరించండి"); return; }
-    // Convert YYYY-MM-DD (date input) → DD/MM/YYYY (API format)
-    const [y, m, d] = dobRaw.split("-");
-    const dob = `${d}/${m}/${y}`;
-    persons.push({ dob, time, place });
+  for(const b of blocks) {
+    const id = b.id.replace("person","");
+    const dobRaw = document.getElementById("dob"+id)?.value.trim();
+    const time   = document.getElementById("time"+id)?.value.trim();
+    const place  = document.getElementById("place"+id)?.value.trim();
+    if(!dobRaw || !time || !place) { showError("అన్ని వ్యక్తుల వివరాలు పూరించండి"); return; }
+    const [y,m,d] = dobRaw.split("-");
+    persons.push({ dob:`${d}/${m}/${y}`, time, place });
   }
 
-  showStep(3);
-  setProgress(0, "జన్మ వివరాలు లెక్కిస్తున్నాం...", "");
+  setStep(3); setProgress(0,"జన్మ వివరాలు లెక్కిస్తున్నాం...","");
 
-  // Fetch birth charts
   const birthCharts = [];
-  for (let i = 0; i < persons.length; i++) {
+  for(let i=0; i<persons.length; i++) {
     try {
-      const resp = await fetch(API_BASE + "/muhoortam/birth-chart", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(persons[i]),
-      });
-      if (!resp.ok) throw new Error(await resp.text());
-      birthCharts.push(await resp.json());
-    } catch (e) {
-      showStep(2);
-      showError("వ్యక్తి " + (i + 1) + " వివరాలు లెక్కించడం సాధ్యం కాలేదు: " + e.message);
-      return;
+      const r = await fetch(API_BASE+"/muhoortam/birth-chart",
+        {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(persons[i])});
+      if(!r.ok) throw new Error(await r.text());
+      birthCharts.push(await r.json());
+    } catch(e) {
+      setStep(2); showError("వ్యక్తి "+(i+1)+" వివరాలు లెక్కించడం సాధ్యం కాలేదు: "+e.message); return;
     }
   }
 
-  // Scan 12 months from today
-  const ceremonyPlace = document.getElementById("ceremonyCity").value.trim() + ", " +
-                        document.getElementById("ceremonyCountry").value.trim();
+  const fromDate = new Date(document.getElementById("rangeFrom").value);
+  const toDate   = new Date(document.getElementById("rangeTo").value);
+  const months = [];
+  let cur = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
+  while(cur <= toDate) { months.push({year:cur.getFullYear(),month:cur.getMonth()+1}); cur.setMonth(cur.getMonth()+1); }
+
+  const place = document.getElementById("ceremonyPlace").value.trim();
   allResults = [];
-  const now = new Date();
-  let yr = now.getFullYear(), mo = now.getMonth() + 1;
-
-  for (let i = 0; i < 12; i++) {
-    const pct = Math.round(((i + 1) / 12) * 100);
-    setProgress(pct, `${MONTHS_TE[mo - 1]} ${yr} స్కాన్ అవుతోంది`, `${i + 1}/12 నెలలు`);
+  for(let i=0; i<months.length; i++) {
+    const {year,month} = months[i];
+    setProgress(Math.round(((i+1)/months.length)*100), `${MONTHS_TE[month-1]} ${year} స్కాన్ అవుతోంది`, `${i+1}/${months.length} నెలలు`);
     try {
-      const resp = await fetch(API_BASE + "/muhoortam/find", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          year: yr, month: mo,
-          ceremony_type: selectedCeremony,
-          ceremony_place: ceremonyPlace,
-          birth_charts: birthCharts,
-        }),
-      });
-      if (!resp.ok) throw new Error(await resp.text());
-      const data = await resp.json();
-      allResults = allResults.concat(data.results || []);
-    } catch (e) {
-      console.warn("Month scan failed:", yr, mo, e);
-    }
-    mo++;
-    if (mo > 12) { mo = 1; yr++; }
+      const r = await fetch(API_BASE+"/muhoortam/find",
+        {method:"POST",headers:{"Content-Type":"application/json"},
+         body:JSON.stringify({year,month,ceremony_type:selectedCeremony,ceremony_place:place,birth_charts:birthCharts})});
+      if(!r.ok) throw new Error(await r.text());
+      const d = await r.json();
+      for(const x of (d.results||[])) {
+        const dt = parseTeDate(x.date_te);
+        if(dt>=fromDate && dt<=toDate) allResults.push(x);
+      }
+    } catch(e) { console.warn("Scan failed:",year,month,e); }
   }
-
   showResults();
 }
 
-function setProgress(pct, label, detail) {
-  document.getElementById("progressBar").style.width = pct + "%";
+function parseTeDate(s) {
+  const p = s.split(" ");
+  return new Date(+p[2], MONTHS_TE.indexOf(p[1]), +p[0]);
+}
+function setProgress(pct,label,sub) {
+  document.getElementById("progressBar").style.width = pct+"%";
   document.getElementById("progressLabel").textContent = label;
-  document.getElementById("progressDetail").textContent = detail;
+  document.getElementById("progressSub").textContent = sub;
 }
 
-// ── Step 4 ───────────────────────────────────────────────────────────────────
-
-const MONTHS_TE = ["జనవరి","ఫిబ్రవరి","మార్చి","ఏప్రిల్","మే","జూన్",
-                   "జులై","ఆగస్టు","సెప్టెంబర్","అక్టోబర్","నవంబర్","డిసెంబర్"];
-
+// ── Results ───────────────────────────────────────────────────────────────────
 function showResults() {
-  const tbody = document.getElementById("resultsBody");
-  tbody.innerHTML = "";
-
+  const cName = CEREMONY_NAMES[selectedCeremony]||selectedCeremony;
+  document.getElementById("ceremonyTag").textContent = cName;
+  document.getElementById("resultsTitle").textContent =
+    allResults.length ? `${allResults.length} శుభ ముహూర్తాలు` : "ముహూర్తాలు దొరకలేదు";
   document.getElementById("resultsCount").textContent =
-    allResults.length > 0
-      ? `${allResults.length} శుభ ముహూర్తాలు దొరికాయి`
-      : "శుభ ముహూర్తాలు దొరకలేదు — వేరే సమయంలో తిరిగి ప్రయత్నించండి";
+    allResults.length
+      ? `${document.getElementById("rangeFrom").value.split("-").reverse().join("/")} నుండి ${document.getElementById("rangeTo").value.split("-").reverse().join("/")} వరకు`
+      : "తేదీ పరిధి పెంచి మళ్ళీ ప్రయత్నించండి";
 
-  for (const r of allResults) {
-    const timeNote = r.sunrise + " – " + r.sunset;
-    const kalamLines = [];
-    if (r.rahu_kalam)   kalamLines.push(`రాహు: ${r.rahu_kalam.start}–${r.rahu_kalam.end}`);
-    if (r.yamaganda)    kalamLines.push(`యమగండ: ${r.yamaganda.start}–${r.yamaganda.end}`);
-    if (r.gulika_kalam) kalamLines.push(`గులిక: ${r.gulika_kalam.start}–${r.gulika_kalam.end}`);
+  const list = document.getElementById("resultsList");
+  list.innerHTML = "";
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${r.date_te}</td>
-      <td>${r.vaaram_te}</td>
-      <td>${r.tithi_te}<br><small style="color:#8d6e63">${r.nakshatra_te}</small></td>
-      <td class="time-cell">${timeNote}</td>
-      <td class="kalam-cell">${kalamLines.join("<br>")}</td>`;
-    tbody.appendChild(tr);
+  if(!allResults.length) {
+    list.innerHTML = `<div class="empty-state">
+      <span class="e-icon">🔍</span>
+      <h3>ముహూర్తాలు దొరకలేదు</h3>
+      <p>ఎంచుకున్న తేదీ పరిధిలో శుభ ముహూర్తాలు లేవు.<br>తేదీ పరిధి పెంచి మళ్ళీ ప్రయత్నించండి.</p>
+    </div>`;
+    setStep(4); return;
   }
 
-  showStep(4);
+  allResults.forEach((r,i) => {
+    const kalamHtml = [
+      r.rahu_kalam   && `<div class="kalam-item">🔴 రాహు కాలం: <strong>${r.rahu_kalam.start}–${r.rahu_kalam.end}</strong></div>`,
+      r.yamaganda    && `<div class="kalam-item">🔴 యమగండ: <strong>${r.yamaganda.start}–${r.yamaganda.end}</strong></div>`,
+      r.gulika_kalam && `<div class="kalam-item">⚠️ గులిక కాలం: <strong>${r.gulika_kalam.start}–${r.gulika_kalam.end}</strong></div>`,
+    ].filter(Boolean).join("");
+
+    const card = document.createElement("div");
+    card.className = "result-card";
+    card.innerHTML = `
+      <div class="result-card-header">
+        <div class="result-date">
+          <div class="day">${r.date_te}</div>
+          <div class="vaaram">${r.vaaram_te}</div>
+        </div>
+        <div class="result-badge">
+          ${r.nakshatra_te}<br>${r.tithi_te}
+        </div>
+      </div>
+      <div class="result-body">
+        <div class="result-row">
+          <div class="result-chip">🌅 <span>${r.sunrise}</span></div>
+          <div class="result-chip">🌇 <span>${r.sunset}</span></div>
+          <div class="result-chip">✨ <span>${r.yoga_te}</span></div>
+        </div>
+        ${kalamHtml ? `<div class="result-kalam">${kalamHtml}</div>` : ""}
+        <button class="btn-details" onclick="showDetail(${i})">
+          🔍 ముహూర్తం వివరాలు చూడండి
+        </button>
+      </div>`;
+    list.appendChild(card);
+  });
+  setStep(4);
 }
 
+// ── Detail sheet ──────────────────────────────────────────────────────────────
+function showDetail(i) {
+  const r = allResults[i];
+  const cName = CEREMONY_NAMES[selectedCeremony]||selectedCeremony;
+  document.getElementById("sheetTitle").textContent = `${r.date_te} · ${r.vaaram_te}`;
+  document.getElementById("sheetDate").textContent  = `${cName} ముహూర్తం వివరాలు`;
+
+  document.getElementById("sheetBody").innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-title">పంచాంగ వివరాలు</div>
+      <div class="detail-item">
+        <div class="di-icon">🌟</div>
+        <div>
+          <div class="di-label">నక్షత్రం</div>
+          <div class="di-val">${r.nakshatra_te}</div>
+          <div class="di-sub">${CEREMONY_NAK_REASON[selectedCeremony]||""}</div>
+          <span class="badge badge-green">✅ శుభమైన నక్షత్రం</span>
+        </div>
+      </div>
+      <div class="detail-item">
+        <div class="di-icon">📅</div>
+        <div>
+          <div class="di-label">తిథి</div>
+          <div class="di-val">${r.tithi_te}</div>
+          <div class="di-sub">ఋక్త తిథి లేదు — సంప్రదాయం ప్రకారం అనుకూలమైన తిథి</div>
+          <span class="badge badge-green">✅ అనుకూలమైన తిథి</span>
+        </div>
+      </div>
+      <div class="detail-item">
+        <div class="di-icon">✨</div>
+        <div>
+          <div class="di-label">యోగం</div>
+          <div class="di-val">${r.yoga_te}</div>
+        </div>
+      </div>
+      <div class="detail-item">
+        <div class="di-icon">☀️</div>
+        <div>
+          <div class="di-label">సూర్యోదయం — అస్తమయం</div>
+          <div class="di-val">${r.sunrise} — ${r.sunset}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">జ్యోతిష్య పరీక్షలు</div>
+      <div class="detail-item">
+        <div class="di-icon">⭐</div>
+        <div>
+          <div class="di-label">తార బలం</div>
+          <div class="di-val">అందరికీ అనుకూలం</div>
+          <div class="di-sub">జన్మ నక్షత్రం నుండి లెక్కించిన తార స్థానం శుభంగా ఉంది</div>
+          <span class="badge badge-green">✅ తార బలం సరి</span>
+        </div>
+      </div>
+      <div class="detail-item">
+        <div class="di-icon">🔯</div>
+        <div>
+          <div class="di-label">పంచక దోషం</div>
+          <div class="di-val">పంచక దోషం లేదు</div>
+          <div class="di-sub">(వారం+తిథి+నక్షత్రం+లగ్నం) % 9 = పంచక రహిత</div>
+          <span class="badge badge-green">✅ పంచక రహిత</span>
+        </div>
+      </div>
+      <div class="detail-item">
+        <div class="di-icon">🌙</div>
+        <div>
+          <div class="di-label">రాశి శుద్ధి</div>
+          <div class="di-val">రాశి స్థానం అనుకూలం</div>
+          <div class="di-sub">సప్తమ / అష్టమ స్థాన దోషం లేదు</div>
+          <span class="badge badge-green">✅ రాశి శుద్ధి సరి</span>
+        </div>
+      </div>
+      <div class="detail-item">
+        <div class="di-icon">📿</div>
+        <div>
+          <div class="di-label">మాస శుద్ధి</div>
+          <div class="di-val">మాసం అనుకూలం</div>
+          <div class="di-sub">చాతుర్మాస్య దోషం లేదు, అధిక మాసం కాదు</div>
+          <span class="badge badge-green">✅ మాస శుద్ధి సరి</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">నివారించాల్సిన సమయాలు</div>
+      <div class="kalam-grid">
+        ${r.rahu_kalam?`<div class="kalam-row"><span class="kalam-name">🔴 రాహు కాలం</span><span class="kalam-time">${r.rahu_kalam.start} – ${r.rahu_kalam.end}</span></div>`:""}
+        ${r.yamaganda?`<div class="kalam-row"><span class="kalam-name">🔴 యమగండ కాలం</span><span class="kalam-time">${r.yamaganda.start} – ${r.yamaganda.end}</span></div>`:""}
+        ${r.gulika_kalam?`<div class="kalam-row"><span class="kalam-name">⚠️ గులిక కాలం</span><span class="kalam-time">${r.gulika_kalam.start} – ${r.gulika_kalam.end}</span></div>`:""}
+      </div>
+    </div>`;
+
+  document.getElementById("overlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeSheet() {
+  document.getElementById("overlay").classList.remove("open");
+  document.body.style.overflow = "";
+}
+function closeOverlay(e) { if(e.target===document.getElementById("overlay")) closeSheet(); }
+
+// ── Reset ─────────────────────────────────────────────────────────────────────
 function resetWizard() {
-  showError("");
-  selectedCeremony = null;
-  allResults = [];
-  personCount = 0;
-  document.querySelectorAll(".ceremony-btn").forEach(b => b.classList.remove("selected"));
-  document.getElementById("ceremonyCity").value = "";
-  document.getElementById("ceremonyCountry").value = "";
-  document.getElementById("personList").innerHTML = "";
-  document.getElementById("addPersonBtn").style.display = "block";
-  showStep(1);
+  showError(""); selectedCeremony=null; allResults=[]; personCount=0;
+  document.querySelectorAll(".ceremony-card").forEach(c=>c.classList.remove("selected"));
+  document.getElementById("ceremonyPlace").value="";
+  document.getElementById("personList").innerHTML="";
+  document.getElementById("addPersonBtn").style.display="block";
+  setStep(1);
 }
 
-// Initialise with one person block
 addPerson();
 </script>
 </body>
