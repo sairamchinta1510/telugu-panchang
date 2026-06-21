@@ -986,7 +986,8 @@ function addPerson() {
       </div>
       <div class="field" style="margin-bottom:0">
         <label>జన్మ సమయం</label>
-        <input type="time" id="time${idx}" style="padding:11px 10px;font-size:15px">
+        <input type="time" id="time${idx}" style="padding:11px 10px;font-size:15px"
+               onchange="delete savedProfileCharts[${idx}]">
       </div>
     </div>
     <div class="field" style="margin-top:10px;margin-bottom:0">
@@ -995,7 +996,7 @@ function addPerson() {
         <div class="input-icon-wrap">
           <span class="icon">📍</span>
           <input type="text" id="place${idx}" placeholder="నగరం వెతకండి..."
-                 oninput="acSearch(this,'acP${idx}')" autocomplete="off">
+                 oninput="acSearch(this,'acP${idx}');delete savedProfileCharts[${idx}]" autocomplete="off">
         </div>
         <div class="ac-list" id="acP${idx}"></div>
       </div>
@@ -1003,11 +1004,13 @@ function addPerson() {
     <button class="save-profile-btn" style="margin-top:8px;background:var(--gold-light);border:1px solid var(--gold);border-radius:8px;padding:6px 14px;font-size:0.75rem;font-family:inherit;color:var(--brown);cursor:pointer" onclick="savePersonProfile(${idx})">💾 Save Profile</button>`;
   document.getElementById("personList").appendChild(div);
   flatpickr(`#dob${idx}`, { dateFormat: "Y-m-d", maxDate: new Date(), disableMobile: true,
-    allowInput: false, onOpen(_, __, fp) { fp.input.blur(); } });
+    allowInput: false, onOpen(_, __, fp) { fp.input.blur(); },
+    onChange() { delete savedProfileCharts[idx]; } });
   document.getElementById("addPersonBtn").style.display = personCount>=6?"none":"block";
 }
 function removePerson(idx) {
   document.getElementById("person"+idx)?.remove();
+  delete savedProfileCharts[idx];
   personCount = document.querySelectorAll(".person-block").length;
   document.getElementById("addPersonBtn").style.display = personCount>=6?"none":"block";
 }
