@@ -241,6 +241,12 @@ body {
    DATE RANGE
 ════════════════════════════════ */
 .date-range { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.date-tab {
+  flex: 1; padding: 9px 4px; border: none; background: transparent; border-radius: 8px;
+  font-family: inherit; font-size: 0.8rem; font-weight: 600; color: var(--brown-mid); cursor: pointer;
+  transition: var(--transition);
+}
+.date-tab.active { background: var(--saffron); color: white; box-shadow: 0 2px 8px rgba(193,68,14,0.3); }
 
 /* ════════════════════════════════
    PERSON BLOCK
@@ -605,6 +611,90 @@ body {
 </div>
 
 <!-- ══════════════════════════════════════════════════
+     PANEL 2 — Event Details
+══════════════════════════════════════════════════ -->
+<div id="panel2" class="panel">
+  <div class="section-title">వేడుక వివరాలు</div>
+
+  <div class="card">
+    <div class="field">
+      <label>వేడుక రకం</label>
+      <div class="ceremony-grid">
+        <div class="ceremony-card" data-type="vivaha" onclick="selectCeremony(this)">
+          <span class="cer-icon">💒</span>
+          <div class="cer-name">వివాహం</div>
+        </div>
+        <div class="ceremony-card" data-type="gruha_pravesam" onclick="selectCeremony(this)">
+          <span class="cer-icon">🏠</span>
+          <div class="cer-name">గృహ ప్రవేశం</div>
+        </div>
+        <div class="ceremony-card" data-type="upanayanam" onclick="selectCeremony(this)">
+          <span class="cer-icon">🪡</span>
+          <div class="cer-name">ఉపనయనం</div>
+        </div>
+        <div class="ceremony-card" data-type="pooja" onclick="selectCeremony(this)">
+          <span class="cer-icon">🪔</span>
+          <div class="cer-name">పూజ</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>వేడుక జరిగే స్థలం</label>
+      <div class="ac-wrap">
+        <div class="input-icon-wrap">
+          <span class="icon">📍</span>
+          <input type="text" id="ceremonyPlace" placeholder="నగరం వెతకండి... (ఉదా: Hyderabad)"
+                 oninput="acSearch(this,'acCeremony')" autocomplete="off">
+        </div>
+        <div class="ac-list" id="acCeremony"></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>తేదీ ఎంచుకోండి</label>
+      <div style="display:flex;background:var(--cream2);border-radius:10px;padding:3px;margin-bottom:10px">
+        <button id="tabRange" class="date-tab active" onclick="setDateMode('range')">📅 తేదీ పరిధి</button>
+        <button id="tabSingle" class="date-tab" onclick="setDateMode('single')">🔍 నిర్దిష్ట తేదీ తనిఖీ</button>
+      </div>
+
+      <!-- Range mode -->
+      <div id="dateRangeFields">
+        <div class="date-range">
+          <div>
+            <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 నుండి</label>
+            <input type="text" id="rangeFrom" placeholder="తేదీ ఎంచుకోండి" style="cursor:pointer">
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 వరకు</label>
+            <input type="text" id="rangeTo" placeholder="తేదీ ఎంచుకోండి" style="cursor:pointer">
+          </div>
+        </div>
+      </div>
+
+      <!-- Single date mode -->
+      <div id="dateSingleFields" style="display:none">
+        <div class="two-col">
+          <div class="field" style="margin-bottom:0">
+            <label>తనిఖీ చేయాల్సిన తేదీ</label>
+            <input type="text" id="checkDate" placeholder="తేదీ ఎంచుకోండి" style="cursor:pointer">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>సమయం (ఐచ్ఛికం)</label>
+            <input type="time" id="checkTime" style="padding:11px 10px;font-size:15px">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-top:4px">
+    <button class="btn-outline" style="flex:0 0 auto" onclick="setStep(1);showError('')">← వెనక్కి</button>
+    <button id="findBtn" class="btn-primary" style="flex:1" onclick="startCompute()">ముహూర్తాలు వెతకండి 🔍</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
      PANEL 3 — Computing
 ══════════════════════════════════════════════════ -->
 <div id="panel3" class="panel">
@@ -670,6 +760,18 @@ const CEREMONY_NAK_REASON = {
 const MONTHS_TE = ["జనవరి","ఫిబ్రవరి","మార్చి","ఏప్రిల్","మే","జూన్","జులై","ఆగస్టు","సెప్టెంబర్","అక్టోబర్","నవంబర్","డిసెంబర్"];
 
 let selectedCeremony = null, allResults = [], personCount = 0;
+let dateMode = "range"; // "range" | "single"
+
+function setDateMode(mode) {
+  dateMode = mode;
+  document.getElementById("tabRange").classList.toggle("active", mode === "range");
+  document.getElementById("tabSingle").classList.toggle("active", mode === "single");
+  document.getElementById("dateRangeFields").style.display = mode === "range" ? "" : "none";
+  document.getElementById("dateSingleFields").style.display = mode === "single" ? "" : "none";
+  document.getElementById("findBtn").textContent =
+    mode === "range" ? "ముహూర్తాలు వెతకండి 🔍" : "తనిఖీ చేయండి ✓";
+}
+
 let savedBirthCharts = [], savedPersons = [];
 
 let savedProfileCharts = {};   // personBlockId → pre-computed birth chart
@@ -769,8 +871,9 @@ async function savePersonProfile(idx) {
   const todayStr = f(t), endStr = f(n);
   const fpOpts = { dateFormat: "Y-m-d", disableMobile: true, allowInput: false,
     onOpen(_, __, fp) { fp.input.blur(); } };
-  flatpickr("#rangeFrom", { ...fpOpts, minDate: "today", defaultDate: todayStr });
-  flatpickr("#rangeTo",   { ...fpOpts, minDate: "today", defaultDate: endStr });
+  flatpickr("#rangeFrom", { ...fpOpts, defaultDate: todayStr });
+  flatpickr("#rangeTo",   { ...fpOpts, defaultDate: endStr });
+  flatpickr("#checkDate", { ...fpOpts });
 })();
 
 // ── Step progress ─────────────────────────────────────────────────────────────
