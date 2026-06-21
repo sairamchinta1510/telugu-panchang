@@ -7,6 +7,8 @@
 <title>శుభ ముహూర్తం</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;600;700&family=Noto+Serif+Telugu:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <style>
 :root {
   --saffron: #C1440E;
@@ -535,6 +537,35 @@ body {
   body { background: white; }
   .result-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
 }
+
+/* ── Flatpickr theme ─────────────────────────────────────────────────── */
+.flatpickr-calendar {
+  font-family: 'Noto Sans Telugu', 'Segoe UI', system-ui, sans-serif !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 32px rgba(91,30,0,0.22) !important;
+  border: 1px solid rgba(196,154,108,0.35) !important;
+  background: var(--white) !important;
+}
+.flatpickr-months { background: var(--maroon) !important; border-radius: 14px 14px 0 0 !important; }
+.flatpickr-months .flatpickr-month { background: transparent !important; color: #fff !important; }
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month .flatpickr-monthDropdown-months option {
+  background: var(--maroon) !important; color: #fff !important;
+}
+.flatpickr-current-month input.cur-year { color: #fff !important; font-weight: 700 !important; }
+.flatpickr-months .flatpickr-prev-month svg, .flatpickr-months .flatpickr-next-month svg { fill: #fff !important; }
+.flatpickr-weekday { background: var(--cream2) !important; color: var(--brown-mid) !important; font-weight: 700; font-size: 0.75rem; }
+.flatpickr-day { border-radius: 8px !important; color: var(--brown) !important; }
+.flatpickr-day:hover, .flatpickr-day:focus { background: var(--cream2) !important; border-color: var(--gold) !important; }
+.flatpickr-day.selected, .flatpickr-day.selected:hover {
+  background: var(--saffron) !important; border-color: var(--saffron) !important; color: #fff !important;
+}
+.flatpickr-day.today { border-color: var(--saffron-light) !important; font-weight: 700; }
+.flatpickr-day.flatpickr-disabled, .flatpickr-day.flatpickr-disabled:hover {
+  color: #ccc !important; background: transparent !important;
+}
+.numInputWrapper span.arrowUp, .numInputWrapper span.arrowDown { border-color: rgba(196,154,108,0.5) !important; }
+.flatpickr-input { cursor: pointer !important; }
 </style>
 </head>
 <body>
@@ -605,11 +636,11 @@ body {
       <div class="date-range">
         <div>
           <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 నుండి</label>
-          <input type="date" id="rangeFrom">
+          <input type="text" id="rangeFrom" placeholder="తేదీ ఎంచుకోండి" readonly style="cursor:pointer">
         </div>
         <div>
           <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 వరకు</label>
-          <input type="date" id="rangeTo">
+          <input type="text" id="rangeTo" placeholder="తేదీ ఎంచుకోండి" readonly style="cursor:pointer">
         </div>
       </div>
     </div>
@@ -627,7 +658,10 @@ body {
   <button class="btn-add" id="addPersonBtn" onclick="addPerson()">
     ＋ మరో వ్యక్తిని జోడించండి (గరిష్టం 6)
   </button>
-  <button class="btn-primary" onclick="startCompute()">శుభ ముహూర్తాలు వెతకండి 🔍</button>
+  <div style="display:flex;gap:10px;margin-top:4px">
+    <button class="btn-outline" style="flex:0 0 auto" onclick="setStep(1);showError('')">← వెనక్కి</button>
+    <button class="btn-primary" style="flex:1" onclick="startCompute()">శుభ ముహూర్తాలు వెతకండి 🔍</button>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════
@@ -661,7 +695,8 @@ body {
   <div id="resultsList"></div>
   <div class="actions-row">
     <button class="btn-outline" onclick="window.print()">🖨 PDF</button>
-    <button class="btn-outline" onclick="resetWizard()">↩ మళ్ళీ వెతకండి</button>
+    <button class="btn-outline" onclick="setStep(2);showError('')">← వివరాలు మార్చండి</button>
+    <button class="btn-outline" onclick="resetWizard()">↺ కొత్తగా</button>
   </div>
 </div>
 
@@ -697,13 +732,19 @@ const MONTHS_TE = ["జనవరి","ఫిబ్రవరి","మార్చ
 let selectedCeremony = null, allResults = [], personCount = 0;
 let savedBirthCharts = [], savedPersons = [];
 
-// Default dates
+// Default dates + Flatpickr for range pickers
 (function() {
   const t = new Date(), n = new Date(t); n.setMonth(n.getMonth()+3);
   const f = d => d.toISOString().slice(0,10);
-  document.getElementById("rangeFrom").value = f(t);
-  document.getElementById("rangeTo").value   = f(n);
-  document.getElementById("rangeFrom").min   = f(t);
+  const todayStr = f(t), endStr = f(n);
+  flatpickr("#rangeFrom", {
+    dateFormat: "Y-m-d", minDate: "today", defaultDate: todayStr, disableMobile: true,
+    onReady(_, __, fp) { fp.input.value = todayStr; }
+  });
+  flatpickr("#rangeTo", {
+    dateFormat: "Y-m-d", minDate: "today", defaultDate: endStr, disableMobile: true,
+    onReady(_, __, fp) { fp.input.value = endStr; }
+  });
 })();
 
 // ── Step progress ─────────────────────────────────────────────────────────────
@@ -799,7 +840,8 @@ function addPerson() {
     <div class="two-col">
       <div class="field" style="margin-bottom:0">
         <label>జన్మ తేదీ</label>
-        <input type="date" id="dob${idx}" style="padding:11px 10px;font-size:15px">
+        <input type="text" id="dob${idx}" placeholder="తేదీ ఎంచుకోండి" readonly
+               style="padding:11px 10px;font-size:15px;cursor:pointer">
       </div>
       <div class="field" style="margin-bottom:0">
         <label>జన్మ సమయం</label>
@@ -818,6 +860,7 @@ function addPerson() {
       </div>
     </div>`;
   document.getElementById("personList").appendChild(div);
+  flatpickr(`#dob${idx}`, { dateFormat: "Y-m-d", maxDate: new Date(), disableMobile: true });
   document.getElementById("addPersonBtn").style.display = personCount>=6?"none":"block";
 }
 function removePerson(idx) {
