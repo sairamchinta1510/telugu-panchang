@@ -42,7 +42,7 @@ jobs:
         run: |
           sam deploy \
             --stack-name telugu-panchang \
-            --s3-bucket-prefix telugu-panchang \
+            --s3-prefix telugu-panchang \
             --capabilities CAPABILITY_IAM \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
