@@ -584,8 +584,6 @@ body {
   <div class="step-dot" id="sd2">2</div>
   <div class="step-line" id="sl2"></div>
   <div class="step-dot" id="sd3">3</div>
-  <div class="step-line" id="sl3"></div>
-  <div class="step-dot" id="sd4">4</div>
 </div>
 
 <div id="errorToast" class="error-toast"></div>
@@ -745,13 +743,13 @@ let savedBirthCharts = [], savedPersons = [];
 
 // ── Step progress ─────────────────────────────────────────────────────────────
 function setStep(n) {
-  [1,2,3,4].forEach(i => {
+  [1,2,3].forEach(i => {
     const d = document.getElementById("sd"+i);
     d.classList.remove("active","done");
     if(i < n) d.classList.add("done");
     else if(i === n) d.classList.add("active");
   });
-  [1,2,3].forEach(i => {
+  [1,2].forEach(i => {
     const l = document.getElementById("sl"+i);
     l.classList.toggle("done", i < n);
   });
