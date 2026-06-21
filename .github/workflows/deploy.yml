@@ -35,7 +35,7 @@ jobs:
 
       - name: SAM build
         working-directory: panchang-api
-        run: sam build
+        run: sam build --use-container
 
       - name: SAM deploy
         working-directory: panchang-api
