@@ -975,7 +975,7 @@ function addPerson() {
   div.className = "person-block"; div.id = "person"+idx;
   div.innerHTML = `
     <h3>👤 వ్యక్తి ${idx}</h3>
-    ${idx>1?`<button class="person-remove" onclick="removePerson(${idx})">✕</button>`:""}
+    <button class="person-remove" onclick="removePerson(${idx})">✕</button>
     <div class="field" style="margin-bottom:10px">
       <label>పేరు</label>
       <input type="text" id="pname${idx}" placeholder="వ్యక్తి పేరు నమోదు చేయండి"
@@ -1010,12 +1010,18 @@ function addPerson() {
     allowInput: false, onOpen(_, __, fp) { fp.input.blur(); },
     onChange() { delete savedProfileCharts[idx]; } });
   document.getElementById("addPersonBtn").style.display = personCount>=6?"none":"block";
+  _updateRemoveBtns();
 }
 function removePerson(idx) {
   document.getElementById("person"+idx)?.remove();
   delete savedProfileCharts[idx];
   personCount = document.querySelectorAll(".person-block").length;
   document.getElementById("addPersonBtn").style.display = personCount>=6?"none":"block";
+  _updateRemoveBtns();
+}
+function _updateRemoveBtns() {
+  const btns = document.querySelectorAll(".person-remove");
+  btns.forEach(b => b.style.display = btns.length > 1 ? "" : "none");
 }
 
 // ── Compute ───────────────────────────────────────────────────────────────────
