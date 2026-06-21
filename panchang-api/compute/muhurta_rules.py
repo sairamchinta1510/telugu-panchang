@@ -188,3 +188,60 @@ def is_auspicious(
     if not _panchaka_ok(naks_idx, sun_idx, tithi_idx, lagna_idx):
         return False
     return True
+
+
+# ── Choghadiya ────────────────────────────────────────────────────────────────
+# Index mapping: 0=Amrit, 1=Char, 2=Labh, 3=Shubh, 4=Udveg, 5=Kaal, 6=Rog
+_CHO_TE   = ["అమృత", "చర", "లాభ", "శుభ", "ఉద్వేగ", "కాల", "రోగ"]
+_CHO_RANK = [6,       3,     4,     5,      1,         1,      1    ]
+
+# Rows = weekday (0=Sun … 6=Sat); columns = 8 day slots
+_DAY_CHO = [
+    [4, 1, 2, 0, 5, 3, 6, 4],  # Sun
+    [0, 5, 3, 6, 4, 1, 2, 0],  # Mon
+    [6, 4, 1, 2, 0, 5, 3, 6],  # Tue
+    [2, 0, 5, 3, 6, 4, 1, 2],  # Wed
+    [3, 6, 4, 1, 2, 0, 5, 3],  # Thu
+    [1, 2, 0, 5, 3, 6, 4, 1],  # Fri
+    [5, 3, 6, 4, 1, 2, 0, 5],  # Sat
+]
+# 8 night slots
+_NIGHT_CHO = [
+    [3, 0, 1, 6, 5, 4, 2, 3],  # Sun
+    [1, 6, 5, 4, 2, 3, 0, 1],  # Mon
+    [5, 4, 2, 3, 0, 1, 6, 5],  # Tue
+    [4, 2, 3, 0, 1, 6, 5, 4],  # Wed
+    [0, 1, 6, 5, 4, 2, 3, 0],  # Thu
+    [6, 5, 4, 2, 3, 0, 1, 6],  # Fri
+    [2, 3, 0, 1, 6, 5, 4, 2],  # Sat
+]
+
+
+def compute_choghadiya_slots(
+    rise_jd: float,
+    set_jd: float,
+    next_rise_jd: float,
+    weekday_idx: int,        # 0=Sun … 6=Sat
+) -> list[dict]:
+    """Return all 16 Choghadiya slots (8 day + 8 night) for a given date.
+
+    Each slot dict: {from_jd, to_jd, quality_te, quality_rank}
+    """
+    day_slot   = (set_jd      - rise_jd)      / 8
+    night_slot = (next_rise_jd - set_jd)       / 8
+    slots: list[dict] = []
+    for i, ci in enumerate(_DAY_CHO[weekday_idx]):
+        slots.append({
+            "from_jd":      rise_jd + i * day_slot,
+            "to_jd":        rise_jd + (i + 1) * day_slot,
+            "quality_te":   _CHO_TE[ci],
+            "quality_rank": _CHO_RANK[ci],
+        })
+    for i, ci in enumerate(_NIGHT_CHO[weekday_idx]):
+        slots.append({
+            "from_jd":      set_jd + i * night_slot,
+            "to_jd":        set_jd + (i + 1) * night_slot,
+            "quality_te":   _CHO_TE[ci],
+            "quality_rank": _CHO_RANK[ci],
+        })
+    return slots

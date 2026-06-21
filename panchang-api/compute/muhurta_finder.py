@@ -16,7 +16,7 @@ from .astro import (
 from .panchang import compute_panchang, NAKSHATRA_TE, TITHI_TE
 from .birth_chart import compute_lagna, RASHI_TE
 from .muhurta_rules import (
-    is_auspicious, compute_kalams,
+    is_auspicious, compute_kalams, compute_choghadiya_slots,
     _masam_ok, _GOOD_NAKSHATRAS, _BAD_TITHIS,
     _tara_ok, _rashi_shuddhi_ok, _panchaka_ok,
     _RASHI_SHUDDHI_FORBIDDEN,
@@ -37,6 +37,7 @@ _CEREMONY_TE = {
 
 def _find_good_windows(
     rise_jd: float,
+    set_jd: float,
     lat: float, lon: float, tz_name: str,
     ceremony_type: str,
     birth_charts: list[dict],
@@ -49,9 +50,12 @@ def _find_good_windows(
 
     Tithi, nakshatra, AND lagna change during the day; each segment between
     transitions is evaluated independently with the actual lagna at that time.
+    Within each good segment the best Choghadiya slot is identified to give
+    the exact recommended start time.
 
-    Returns list of {"from": "HH:MM", "to": "HH:MM"} in local time.
-    Each window is guaranteed to be at least 1 minute long.
+    Returns list of dicts sorted best-first (highest Choghadiya rank, then longest).
+    Each dict: {from, to, duration_mins, nakshatra_te, tithi_te, lagna_te,
+                best_time, choghadiya_te, choghadiya_rank}
     """
     def _ti(j): return int(moon_sun_elongation(j) / 12) % 30
     def _ni(j): return int(moon_longitude(j) / (360.0 / 27)) % 27
@@ -59,6 +63,9 @@ def _find_good_windows(
 
     EPSILON = 1.0 / (24 * 60)   # 1 minute in JD
     end_jd  = rise_jd + 1.0     # exactly 24 hours
+
+    # Pre-compute Choghadiya slots for the full day/night
+    cho_slots = compute_choghadiya_slots(rise_jd, set_jd, end_jd, sun_idx)
 
     good_windows: list[dict] = []
     jd = rise_jd
@@ -69,15 +76,12 @@ def _find_good_windows(
         naks_idx      = int(ml / (360.0 / 27)) % 27
         tithi_idx     = int(elong / 12) % 30
         day_rashi_idx = int(ml / 30) % 12
-        # Recompute lagna at the start of each sub-window (changes every ~2 h)
         win_lagna_idx = compute_lagna(jd, lat, lon)
 
         t_change = find_next_index_change(jd, _ti, tithi_idx, step_hours=1.0, max_hours=26)
         n_change = find_next_index_change(jd, _ni, naks_idx,  step_hours=1.0, max_hours=26)
-        # Lagna changes every ~2 h; use small step to catch it accurately
         l_change = find_next_index_change(jd, _li, win_lagna_idx, step_hours=0.25, max_hours=3)
 
-        # Window ends at the earliest upcoming transition (capped at 24 h boundary)
         candidates = [c for c in [t_change, n_change, l_change] if c is not None and c < end_jd]
         window_end_jd = min(candidates) if candidates else end_jd
 
@@ -95,24 +99,44 @@ def _find_good_windows(
             h_to,   m_to   = map(int, to_str.split(":"))
             total_from = h_from * 60 + m_from
             total_to   = h_to   * 60 + m_to
-            if total_to <= total_from:   # crosses midnight
+            if total_to <= total_from:
                 total_to += 24 * 60
+
+            # Find best Choghadiya slot overlapping this window
+            best_cho_rank = -1
+            best_cho_te   = ""
+            best_time_str = from_str
+            for slot in cho_slots:
+                overlap_start = max(slot["from_jd"], jd)
+                overlap_end   = min(slot["to_jd"],   window_end_jd)
+                if overlap_end - overlap_start < EPSILON:
+                    continue
+                if slot["quality_rank"] > best_cho_rank:
+                    best_cho_rank = slot["quality_rank"]
+                    best_cho_te   = slot["quality_te"]
+                    # Recommend start of the best Choghadiya slot (clamped to window start)
+                    best_time_str = jd_to_local_datetime(
+                        max(slot["from_jd"], jd), tz_name
+                    ).strftime("%H:%M")
+
             good_windows.append({
-                "from":          from_str,
-                "to":            to_str,
-                "duration_mins": total_to - total_from,
-                "nakshatra_te":  NAKSHATRA_TE[naks_idx],
-                "tithi_te":      TITHI_TE[tithi_idx],
-                "lagna_te":      RASHI_TE[win_lagna_idx],
+                "from":            from_str,
+                "to":              to_str,
+                "duration_mins":   total_to - total_from,
+                "nakshatra_te":    NAKSHATRA_TE[naks_idx],
+                "tithi_te":        TITHI_TE[tithi_idx],
+                "lagna_te":        RASHI_TE[win_lagna_idx],
+                "best_time":       best_time_str,
+                "choghadiya_te":   best_cho_te,
+                "choghadiya_rank": best_cho_rank,
             })
 
-        # Always advance by at least EPSILON to prevent infinite loop
         jd = max(window_end_jd, jd + EPSILON) + EPSILON
         if jd >= end_jd:
             break
 
-    # Sort best (longest) window first
-    good_windows.sort(key=lambda w: w["duration_mins"], reverse=True)
+    # Sort: best Choghadiya first, then longest window
+    good_windows.sort(key=lambda w: (w["choghadiya_rank"], w["duration_mins"]), reverse=True)
     return good_windows
 
 
@@ -169,7 +193,7 @@ def find_muhurtas_for_month(
                 good_windows = []   # good all day — no restriction
             else:
                 good_windows = _find_good_windows(
-                    rise_jd, lat, lon, tz_name,
+                    rise_jd, set_jd, lat, lon, tz_name,
                     ceremony_type, birth_charts, masam_name, is_adhika,
                     sun_idx, lagna_idx,
                 )
@@ -303,7 +327,7 @@ def check_muhurta_day(
     )
 
     good_windows = _find_good_windows(
-        rise_jd, lat, lon, tz_name,
+        rise_jd, set_jd, lat, lon, tz_name,
         ceremony_type, birth_charts, masam_name, is_adhika,
         sun_idx, lagna_idx,
     )

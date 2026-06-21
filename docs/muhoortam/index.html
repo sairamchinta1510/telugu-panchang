@@ -1337,8 +1337,9 @@ function showCheckResult(data) {
       ${data.good_windows && data.good_windows.length ? `
       <div style="margin-top:14px;background:rgba(255,255,255,0.75);border:1.5px solid ${v.border};border-radius:12px;padding:10px 14px;display:inline-block;text-align:left">
         <div style="font-size:0.65rem;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">⏰ ఉత్తమ ముహూర్తం</div>
-        <div style="font-size:1.15rem;font-weight:800;color:${v.color}">${data.good_windows[0].from} – ${data.good_windows[0].to}</div>
-        <div style="font-size:0.78rem;color:var(--brown-mid);margin-top:4px">
+        <div style="font-size:1.3rem;font-weight:800;color:${v.color}">${data.good_windows[0].best_time || data.good_windows[0].from}</div>
+        <div style="font-size:0.8rem;color:${v.color};margin-top:2px;font-weight:600">${data.good_windows[0].choghadiya_te ? data.good_windows[0].choghadiya_te + ' చోఘడియ' : ''} &nbsp;·&nbsp; ${data.good_windows[0].from}–${data.good_windows[0].to}</div>
+        <div style="font-size:0.75rem;color:var(--brown-mid);margin-top:4px">
           ⭐ ${data.good_windows[0].nakshatra_te} &nbsp;·&nbsp; 📅 ${data.good_windows[0].tithi_te} &nbsp;·&nbsp; 🌅 ${data.good_windows[0].lagna_te} లగ్నం
         </div>
       </div>` : ""}
@@ -1366,11 +1367,15 @@ function showCheckResult(data) {
     <div style="background:#E8F5E9;border-radius:12px;padding:14px;margin-bottom:10px">
       <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">⏰ శుభ ముహూర్త సమయాలు</div>
       ${data.good_windows.map((w,i)=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i<data.good_windows.length-1?'border-bottom:1px solid #C8E6C9':''}">
-        ${i===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:4px;padding:2px 6px;font-weight:700;white-space:nowrap">ఉత్తమం</span>':'<span style="font-size:0.65rem;background:#A5D6A7;color:#1B5E20;border-radius:4px;padding:2px 6px;font-weight:600;white-space:nowrap">${i+1}వ ముహూర్తం</span>'}
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;${i<data.good_windows.length-1?'border-bottom:1px solid #C8E6C9':''}">
+        ${i===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:4px;padding:2px 6px;font-weight:700;white-space:nowrap">ఉత్తమం</span>':'<span style="font-size:0.65rem;background:#A5D6A7;color:#1B5E20;border-radius:4px;padding:2px 6px;font-weight:600;white-space:nowrap">${i+1}వ</span>'}
         <div>
-          <div style="font-size:0.9rem;font-weight:700;color:#1B5E20">${w.from} – ${w.to}</div>
-          <div style="font-size:0.75rem;color:#388E3C;margin-top:2px">
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span style="font-size:1.05rem;font-weight:800;color:#1B5E20">${w.best_time||w.from}</span>
+            ${w.choghadiya_te?`<span style="font-size:0.72rem;background:#C8E6C9;color:#1B5E20;border-radius:10px;padding:1px 7px;font-weight:600">${w.choghadiya_te}</span>`:''}
+            <span style="font-size:0.72rem;color:#666">(${w.from}–${w.to})</span>
+          </div>
+          <div style="font-size:0.73rem;color:#388E3C;margin-top:2px">
             ⭐ ${w.nakshatra_te||''} &nbsp;|&nbsp; 📅 ${w.tithi_te||''} &nbsp;|&nbsp; 🌅 ${w.lagna_te||''} లగ్నం
           </div>
         </div>
