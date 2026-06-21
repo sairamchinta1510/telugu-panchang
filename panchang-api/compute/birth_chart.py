@@ -63,9 +63,14 @@ def compute_birth_chart(
     rashi_idx = int(moon_lon / 30) % 12
     lagna_idx = compute_lagna(jd, lat, lon)
 
+    # Nakshatra padam: each nakshatra = 13°20', each padam = 3°20'
+    nak_start = nak_idx * (360.0 / 27)
+    padam = int((moon_lon - nak_start) / (360.0 / 108)) + 1  # 1–4
+
     return {
         "janma_nakshatra_idx": nak_idx,
         "janma_nakshatra_te":  NAKSHATRA_TE[nak_idx],
+        "janma_nakshatra_padam": padam,
         "janma_rashi_idx":     rashi_idx,
         "janma_rashi_te":      RASHI_TE[rashi_idx],
         "lagna_idx":           lagna_idx,
