@@ -1334,12 +1334,6 @@ function showCheckResult(data) {
       <div style="font-size:2.8rem">${v.icon}</div>
       <div style="font-weight:800;font-size:1.15rem;color:${v.color};margin-top:6px">${v.label}</div>
       <div style="font-size:0.88rem;color:var(--brown-mid);margin-top:6px">${data.date_te} — ${data.vaaram_te}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:10px">
-        <span style="background:var(--gold-light);border:1px solid var(--gold);border-radius:20px;padding:3px 10px;font-size:0.76rem;color:var(--brown)">🌟 ${data.nakshatra_te}</span>
-        <span style="background:#EDE7F6;border:1px solid #B39DDB;border-radius:20px;padding:3px 10px;font-size:0.76rem;color:#4A148C">📅 ${data.tithi_te}</span>
-        <span style="background:#E3F2FD;border:1px solid #90CAF9;border-radius:20px;padding:3px 10px;font-size:0.76rem;color:#0D47A1">☀️ ${data.masam_te}</span>
-      </div>
-      <div style="font-size:0.78rem;color:var(--brown-mid);margin-top:8px">🌅 ${data.sunrise} — 🌇 ${data.sunset}</div>
       ${data.good_windows && data.good_windows.length ? `
       <div style="margin-top:14px;background:rgba(255,255,255,0.75);border:1.5px solid ${v.border};border-radius:12px;padding:10px 14px;display:inline-block;text-align:left">
         <div style="font-size:0.65rem;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">⏰ ఉత్తమ ముహూర్తం</div>
