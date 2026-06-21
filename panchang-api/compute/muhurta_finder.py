@@ -13,8 +13,8 @@ from .astro import (
     jd_to_local_datetime, moon_longitude, moon_sun_elongation,
     find_next_index_change,
 )
-from .panchang import compute_panchang
-from .birth_chart import compute_lagna
+from .panchang import compute_panchang, NAKSHATRA_TE, TITHI_TE
+from .birth_chart import compute_lagna, RASHI_TE
 from .muhurta_rules import (
     is_auspicious, compute_kalams,
     _masam_ok, _GOOD_NAKSHATRAS, _BAD_TITHIS,
@@ -91,13 +91,28 @@ def _find_good_windows(
         if good:
             from_str = jd_to_local_datetime(jd,            tz_name).strftime("%H:%M")
             to_str   = jd_to_local_datetime(window_end_jd, tz_name).strftime("%H:%M")
-            good_windows.append({"from": from_str, "to": to_str})
+            h_from, m_from = map(int, from_str.split(":"))
+            h_to,   m_to   = map(int, to_str.split(":"))
+            total_from = h_from * 60 + m_from
+            total_to   = h_to   * 60 + m_to
+            if total_to <= total_from:   # crosses midnight
+                total_to += 24 * 60
+            good_windows.append({
+                "from":          from_str,
+                "to":            to_str,
+                "duration_mins": total_to - total_from,
+                "nakshatra_te":  NAKSHATRA_TE[naks_idx],
+                "tithi_te":      TITHI_TE[tithi_idx],
+                "lagna_te":      RASHI_TE[win_lagna_idx],
+            })
 
         # Always advance by at least EPSILON to prevent infinite loop
         jd = max(window_end_jd, jd + EPSILON) + EPSILON
         if jd >= end_jd:
             break
 
+    # Sort best (longest) window first
+    good_windows.sort(key=lambda w: w["duration_mins"], reverse=True)
     return good_windows
 
 

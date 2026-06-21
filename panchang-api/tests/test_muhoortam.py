@@ -305,6 +305,9 @@ def _load_finder(days_auspicious: set):
 
     fake_bc = types.ModuleType("compute.birth_chart")
     fake_bc.compute_lagna = fake_compute_lagna
+    fake_bc.RASHI_TE = ["మేషం", "వృషభం", "మిథునం", "కర్కాటకం",
+                        "సింహం", "కన్య", "తులం", "వృశ్చికం",
+                        "ధనుస్సు", "మకరం", "కుంభం", "మీనం"]
     sys.modules["compute.birth_chart"] = fake_bc
 
     # muhurta_rules must also be importable

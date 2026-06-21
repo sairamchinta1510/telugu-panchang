@@ -1277,8 +1277,14 @@ function showResults() {
           <div class="result-chip">🌇 <span>${r.sunset}</span></div>
         </div>
         ${r.good_windows && r.good_windows.length ? `
-        <div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:8px;padding:6px 10px;margin-top:6px;font-size:0.78rem;color:#2E7D32;font-weight:600">
-          ⏰ శుభ సమయాలు: ${r.good_windows.map(w=>w.from+'–'+w.to).join(', ')}
+        <div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:8px;padding:6px 10px;margin-top:6px">
+          <div style="font-size:0.68rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px">⏰ శుభ ముహూర్తాలు</div>
+          ${r.good_windows.map((w,wi)=>`
+          <div style="display:flex;align-items:center;gap:6px;padding:3px 0;${wi<r.good_windows.length-1?'border-bottom:1px solid #C8E6C9':''}">
+            ${wi===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:3px;padding:1px 4px;font-weight:700">ఉత్తమం</span>':'<span style="font-size:0.65rem;color:#666;min-width:32px"></span>'}
+            <span style="font-size:0.8rem;font-weight:700;color:#1B5E20">${w.from}–${w.to}</span>
+            <span style="font-size:0.72rem;color:#388E3C">${w.nakshatra_te||''} · ${w.tithi_te||''} · ${w.lagna_te||''} లగ్నం</span>
+          </div>`).join('')}
         </div>` : ""}
         <button class="btn-details" onclick="showDetail(${i})">
           🔍 ముహూర్తం వివరాలు చూడండి
@@ -1356,8 +1362,17 @@ function showCheckResult(data) {
 
     ${data.good_windows && data.good_windows.length ? `
     <div style="background:#E8F5E9;border-radius:12px;padding:14px;margin-bottom:10px">
-      <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">⏰ శుభ ముహూర్త సమయాలు</div>
-      ${data.good_windows.map(w=>`<div style="font-size:0.85rem;color:#1B5E20;padding:4px 0;font-weight:600">${w.from} – ${w.to}</div>`).join("")}
+      <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">⏰ శుభ ముహూర్త సమయాలు</div>
+      ${data.good_windows.map((w,i)=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i<data.good_windows.length-1?'border-bottom:1px solid #C8E6C9':''}">
+        ${i===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:4px;padding:2px 6px;font-weight:700;white-space:nowrap">ఉత్తమం</span>':'<span style="font-size:0.65rem;background:#A5D6A7;color:#1B5E20;border-radius:4px;padding:2px 6px;font-weight:600;white-space:nowrap">${i+1}వ ముహూర్తం</span>'}
+        <div>
+          <div style="font-size:0.9rem;font-weight:700;color:#1B5E20">${w.from} – ${w.to}</div>
+          <div style="font-size:0.75rem;color:#388E3C;margin-top:2px">
+            ⭐ ${w.nakshatra_te||''} &nbsp;|&nbsp; 📅 ${w.tithi_te||''} &nbsp;|&nbsp; 🌅 ${w.lagna_te||''} లగ్నం
+          </div>
+        </div>
+      </div>`).join('')}
     </div>` : ""}
 
     <div style="background:white;border-radius:12px;padding:14px;border:1px solid rgba(196,154,108,0.2)">
