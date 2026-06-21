@@ -1276,6 +1276,10 @@ function showResults() {
           <div class="result-chip">🌅 <span>${r.sunrise}</span></div>
           <div class="result-chip">🌇 <span>${r.sunset}</span></div>
         </div>
+        ${r.good_windows && r.good_windows.length ? `
+        <div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:8px;padding:6px 10px;margin-top:6px;font-size:0.78rem;color:#2E7D32;font-weight:600">
+          ⏰ శుభ సమయాలు: ${r.good_windows.map(w=>w.from+'–'+w.to).join(', ')}
+        </div>` : ""}
         <button class="btn-details" onclick="showDetail(${i})">
           🔍 ముహూర్తం వివరాలు చూడండి
         </button>
@@ -1348,6 +1352,12 @@ function showCheckResult(data) {
     <div style="background:#FFF3E0;border-radius:12px;padding:14px;margin-bottom:10px">
       <div style="font-size:0.7rem;font-weight:700;color:#E65100;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">⏰ సమయ విశ్లేషణ</div>
       ${data.time_issues.map(f=>`<div style="font-size:0.82rem;color:#BF360C;padding:5px 0">${f}</div>`).join("")}
+    </div>` : ""}
+
+    ${data.good_windows && data.good_windows.length ? `
+    <div style="background:#E8F5E9;border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">⏰ శుభ ముహూర్త సమయాలు</div>
+      ${data.good_windows.map(w=>`<div style="font-size:0.85rem;color:#1B5E20;padding:4px 0;font-weight:600">${w.from} – ${w.to}</div>`).join("")}
     </div>` : ""}
 
     <div style="background:white;border-radius:12px;padding:14px;border:1px solid rgba(196,154,108,0.2)">

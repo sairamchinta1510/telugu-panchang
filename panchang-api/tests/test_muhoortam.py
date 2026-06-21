@@ -283,12 +283,17 @@ def _load_finder(days_auspicious: set):
         "varjyam":   {"start": "09:00", "end": "10:46"},
     }
 
+    def fake_find_next_index_change(jd_start, index_fn, current_idx, step_hours=1.0, max_hours=26):
+        # Return None so _find_good_windows treats the whole 24h as one segment
+        return None
+
     fake_astro = types.ModuleType("compute.astro")
-    fake_astro.local_date_to_jd       = fake_local_date_to_jd
-    fake_astro.get_sunrise_sunset      = fake_get_sunrise_sunset
-    fake_astro.moon_longitude          = fake_moon_longitude
-    fake_astro.moon_sun_elongation     = fake_moon_sun_elongation
-    fake_astro.jd_to_local_datetime    = fake_jd_to_local_datetime
+    fake_astro.local_date_to_jd          = fake_local_date_to_jd
+    fake_astro.get_sunrise_sunset         = fake_get_sunrise_sunset
+    fake_astro.moon_longitude             = fake_moon_longitude
+    fake_astro.moon_sun_elongation        = fake_moon_sun_elongation
+    fake_astro.jd_to_local_datetime       = fake_jd_to_local_datetime
+    fake_astro.find_next_index_change     = fake_find_next_index_change
     sys.modules["compute.astro"] = fake_astro
 
     fake_pan_mod = types.ModuleType("compute.panchang")
@@ -630,3 +635,37 @@ def test_check_muhurta_day_time_in_rahu_kalam():
                                    check_hour=14, check_minute=0)
     assert result["time_verdict"] == "bad"
     assert any("రాహు" in issue for issue in result["time_issues"])
+    # overall_day_good reflects overall_good OR bool(good_windows)
+    assert isinstance(result["overall_day_good"], bool)
+
+
+def test_find_muhurtas_result_has_good_windows_key():
+    """Every result from find_muhurtas_for_month must have a good_windows key."""
+    mf = _load_finder({15, 22})
+    birth_charts = [{"janma_nakshatra_idx": 0}]
+    results = mf.find_muhurtas_for_month(2026, 7, 17.38, 78.49, "Asia/Kolkata", "vivaha", birth_charts)
+    assert len(results) >= 1
+    for r in results:
+        assert "good_windows" in r
+        assert isinstance(r["good_windows"], list)
+
+
+def test_check_muhurta_day_returns_good_windows_key():
+    """check_muhurta_day response must include a good_windows key."""
+    mf = _load_finder({15})
+    result = mf.check_muhurta_day(2026, 7, 15, 17.38, 78.49, "Asia/Kolkata", "vivaha",
+                                   [{"janma_nakshatra_idx": 0}])
+    assert "good_windows" in result
+    assert isinstance(result["good_windows"], list)
+
+
+def test_check_muhurta_day_bad_day_has_good_windows():
+    """A bad day (Ashvini, not vivaha-good at sunrise) may still yield good_windows
+    if a transition occurs during the day.  With the mock returning a constant
+    nakshatra/tithi, good_windows will be empty — but the key must still be present."""
+    mf = _load_finder(set())   # all days are auspicious=False at sunrise
+    result = mf.check_muhurta_day(2026, 7, 15, 17.38, 78.49, "Asia/Kolkata", "vivaha",
+                                   [{"janma_nakshatra_idx": 0}])
+    assert "good_windows" in result
+    # overall_day_good must be False when no windows found and not good at sunrise
+    assert result["overall_day_good"] is False

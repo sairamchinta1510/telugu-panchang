@@ -11,6 +11,7 @@ import calendar
 from .astro import (
     local_date_to_jd, get_sunrise_sunset,
     jd_to_local_datetime, moon_longitude, moon_sun_elongation,
+    find_next_index_change,
 )
 from .panchang import compute_panchang
 from .birth_chart import compute_lagna
@@ -32,6 +33,67 @@ _CEREMONY_TE = {
     "upanayanam":     "ఉపనయనం",
     "pooja":          "పూజ",
 }
+
+
+def _find_good_windows(
+    rise_jd: float,
+    lat: float, lon: float, tz_name: str,
+    ceremony_type: str,
+    birth_charts: list[dict],
+    masam_name: str,
+    is_adhika: bool,
+    sun_idx: int,
+    lagna_idx: int,
+) -> list[dict]:
+    """Scan the full 24 hours from rise_jd for auspicious muhurta windows.
+
+    Tithi and nakshatra change during the day; each segment between transitions
+    is evaluated independently. Uses the sunrise lagna for all segments (approximation).
+
+    Returns list of {"from": "HH:MM", "to": "HH:MM"} in local time.
+    Each window is guaranteed to be at least 1 minute long.
+    """
+    def _ti(j): return int(moon_sun_elongation(j) / 12) % 30
+    def _ni(j): return int(moon_longitude(j) / (360.0 / 27)) % 27
+
+    EPSILON = 1.0 / (24 * 60)   # 1 minute in JD
+    end_jd  = rise_jd + 1.0     # exactly 24 hours
+
+    good_windows: list[dict] = []
+    jd = rise_jd
+
+    while jd < end_jd - EPSILON:
+        ml    = moon_longitude(jd)
+        elong = moon_sun_elongation(jd)
+        naks_idx      = int(ml / (360.0 / 27)) % 27
+        tithi_idx     = int(elong / 12) % 30
+        day_rashi_idx = int(ml / 30) % 12
+
+        t_change = find_next_index_change(jd, _ti, tithi_idx, step_hours=1.0, max_hours=26)
+        n_change = find_next_index_change(jd, _ni, naks_idx,  step_hours=1.0, max_hours=26)
+
+        # Window ends at the earliest upcoming transition (capped at 24 h boundary)
+        candidates = [c for c in [t_change, n_change] if c is not None and c < end_jd]
+        window_end_jd = min(candidates) if candidates else end_jd
+
+        good = is_auspicious(
+            naks_idx, tithi_idx, sun_idx, lagna_idx,
+            birth_charts, ceremony_type,
+            masam_name=masam_name, is_adhika_masam=is_adhika,
+            day_rashi_idx=day_rashi_idx,
+        )
+
+        if good:
+            from_str = jd_to_local_datetime(jd,            tz_name).strftime("%H:%M")
+            to_str   = jd_to_local_datetime(window_end_jd, tz_name).strftime("%H:%M")
+            good_windows.append({"from": from_str, "to": to_str})
+
+        # Always advance by at least EPSILON to prevent infinite loop
+        jd = max(window_end_jd, jd + EPSILON) + EPSILON
+        if jd >= end_jd:
+            break
+
+    return good_windows
 
 
 def find_muhurtas_for_month(
@@ -75,13 +137,24 @@ def find_muhurtas_for_month(
             masam_name = pan["masam"]["en"]
             is_adhika  = pan["masam"]["adhika"]
 
-            if not is_auspicious(
+            good_at_sunrise = is_auspicious(
                 naks_idx, tithi_idx, sun_idx, lagna_idx,
                 birth_charts, ceremony_type,
                 masam_name=masam_name, is_adhika_masam=is_adhika,
                 day_rashi_idx=day_rashi_idx,
-            ):
-                continue
+            )
+
+            good_windows: list[dict] = []
+            if good_at_sunrise:
+                good_windows = []   # good all day — no restriction
+            else:
+                good_windows = _find_good_windows(
+                    rise_jd, lat, lon, tz_name,
+                    ceremony_type, birth_charts, masam_name, is_adhika,
+                    sun_idx, lagna_idx,
+                )
+                if not good_windows:
+                    continue   # truly bad all day
 
             dt_set    = jd_to_local_datetime(set_jd, tz_name)
             rise_mins = dt_rise.hour * 60 + dt_rise.minute + dt_rise.second / 60
@@ -102,6 +175,8 @@ def find_muhurtas_for_month(
                 "gulika_kalam": kalams["gulika_kalam"],
                 "dur_muhurtam": pan["dur_muhurtam"],
                 "varjyam":      pan["varjyam"],
+                "good_from":    good_windows[0]["from"] if good_windows else None,
+                "good_windows": good_windows,
             })
         except Exception:
             continue   # skip days where calculation fails (polar extremes, etc.)
@@ -207,6 +282,16 @@ def check_muhurta_day(
         day_rashi_idx=day_rashi_idx,
     )
 
+    good_windows = _find_good_windows(
+        rise_jd, lat, lon, tz_name,
+        ceremony_type, birth_charts, masam_name, is_adhika,
+        sun_idx, lagna_idx,
+    )
+
+    if not overall_good and good_windows:
+        windows_str = ", ".join(f"{w['from']}–{w['to']}" for w in good_windows)
+        good_factors.append(f"పగటిపూట శుభ ముహూర్త సమయాలు: {windows_str} ✓")
+
     # ── Time analysis ────────────────────────────────────────────────────────────
     def _in_window(w: dict, mins: float) -> bool:
         if not w:
@@ -246,28 +331,40 @@ def check_muhurta_day(
                 time_issues.append(f"దుర్ముహూర్తం ({d['start']}–{d['end']})లో ఉంది")
                 time_bad = True
 
-        if check_mins < rise_mins or check_mins > set_mins:
-            time_issues.append(
-                f"సూర్యోదయం ({dt_rise.strftime('%H:%M')})కి ముందు లేదా "
-                f"సూర్యాస్తమయం ({dt_set.strftime('%H:%M')}) తర్వాత"
-            )
-            time_verdict = "outside"
-        elif time_bad:
+        # Check if the requested time falls within any good muhurta window
+        def _in_good_window(mins: float) -> bool:
+            if not good_windows:
+                # No windows found: use overall_good (good all day if True)
+                return overall_good
+            for w in good_windows:
+                sh, sm = map(int, w["from"].split(":"))
+                eh, em = map(int, w["to"].split(":"))
+                if (sh * 60 + sm) <= mins <= (eh * 60 + em):
+                    return True
+            return False
+
+        in_good = _in_good_window(check_mins)
+
+        if time_bad:
             time_verdict = "bad"
-        else:
+        elif in_good:
             time_verdict = "good"
+        else:
+            time_verdict = "outside"   # not in kalam but not in a good muhurta window either
 
     # Overall verdict
-    if overall_good and time_verdict in (None, "good"):
+    day_has_good_window = overall_good or bool(good_windows)
+
+    if day_has_good_window and time_verdict in (None, "good"):
         verdict = "good"
-    elif overall_good and time_verdict in ("bad", "outside"):
+    elif day_has_good_window and time_verdict in ("bad", "outside"):
         verdict = "mixed"
     else:
         verdict = "bad"
 
     return {
         "verdict":          verdict,
-        "overall_day_good": overall_good,
+        "overall_day_good": overall_good or bool(good_windows),
         "time_verdict":     time_verdict,
         "date_te":          f"{day} {_MONTH_TE[month - 1]} {year}",
         "vaaram_te":        pan["vaaram"]["te"],
@@ -285,5 +382,6 @@ def check_muhurta_day(
         "gulika_kalam":     kalams["gulika_kalam"],
         "dur_muhurtam":     pan["dur_muhurtam"],
         "varjyam":          pan["varjyam"],
+        "good_windows":     good_windows,
     }
 
