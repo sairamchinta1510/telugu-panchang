@@ -7,8 +7,8 @@
 <title>శుభ ముహూర్తం</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;600;700&family=Noto+Serif+Telugu:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <style>
 :root {
   --saffron: #C1440E;
@@ -636,11 +636,11 @@ body {
       <div class="date-range">
         <div>
           <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 నుండి</label>
-          <input type="text" id="rangeFrom" placeholder="తేదీ ఎంచుకోండి" readonly style="cursor:pointer">
+          <input type="text" id="rangeFrom" placeholder="తేదీ ఎంచుకోండి" style="cursor:pointer">
         </div>
         <div>
           <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 వరకు</label>
-          <input type="text" id="rangeTo" placeholder="తేదీ ఎంచుకోండి" readonly style="cursor:pointer">
+          <input type="text" id="rangeTo" placeholder="తేదీ ఎంచుకోండి" style="cursor:pointer">
         </div>
       </div>
     </div>
@@ -737,14 +737,10 @@ let savedBirthCharts = [], savedPersons = [];
   const t = new Date(), n = new Date(t); n.setMonth(n.getMonth()+3);
   const f = d => d.toISOString().slice(0,10);
   const todayStr = f(t), endStr = f(n);
-  flatpickr("#rangeFrom", {
-    dateFormat: "Y-m-d", minDate: "today", defaultDate: todayStr, disableMobile: true,
-    onReady(_, __, fp) { fp.input.value = todayStr; }
-  });
-  flatpickr("#rangeTo", {
-    dateFormat: "Y-m-d", minDate: "today", defaultDate: endStr, disableMobile: true,
-    onReady(_, __, fp) { fp.input.value = endStr; }
-  });
+  const fpOpts = { dateFormat: "Y-m-d", disableMobile: true, allowInput: false,
+    onOpen(_, __, fp) { fp.input.blur(); } };
+  flatpickr("#rangeFrom", { ...fpOpts, minDate: "today", defaultDate: todayStr });
+  flatpickr("#rangeTo",   { ...fpOpts, minDate: "today", defaultDate: endStr });
 })();
 
 // ── Step progress ─────────────────────────────────────────────────────────────
@@ -840,7 +836,7 @@ function addPerson() {
     <div class="two-col">
       <div class="field" style="margin-bottom:0">
         <label>జన్మ తేదీ</label>
-        <input type="text" id="dob${idx}" placeholder="తేదీ ఎంచుకోండి" readonly
+        <input type="text" id="dob${idx}" placeholder="తేదీ ఎంచుకోండి"
                style="padding:11px 10px;font-size:15px;cursor:pointer">
       </div>
       <div class="field" style="margin-bottom:0">
@@ -860,7 +856,8 @@ function addPerson() {
       </div>
     </div>`;
   document.getElementById("personList").appendChild(div);
-  flatpickr(`#dob${idx}`, { dateFormat: "Y-m-d", maxDate: new Date(), disableMobile: true });
+  flatpickr(`#dob${idx}`, { dateFormat: "Y-m-d", maxDate: new Date(), disableMobile: true,
+    allowInput: false, onOpen(_, __, fp) { fp.input.blur(); } });
   document.getElementById("addPersonBtn").style.display = personCount>=6?"none":"block";
 }
 function removePerson(idx) {
