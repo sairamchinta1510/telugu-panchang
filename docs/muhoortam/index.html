@@ -1340,6 +1340,14 @@ function showCheckResult(data) {
         <span style="background:#E3F2FD;border:1px solid #90CAF9;border-radius:20px;padding:3px 10px;font-size:0.76rem;color:#0D47A1">☀️ ${data.masam_te}</span>
       </div>
       <div style="font-size:0.78rem;color:var(--brown-mid);margin-top:8px">🌅 ${data.sunrise} — 🌇 ${data.sunset}</div>
+      ${data.good_windows && data.good_windows.length ? `
+      <div style="margin-top:14px;background:rgba(255,255,255,0.75);border:1.5px solid ${v.border};border-radius:12px;padding:10px 14px;display:inline-block;text-align:left">
+        <div style="font-size:0.65rem;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">⏰ ఉత్తమ ముహూర్తం</div>
+        <div style="font-size:1.15rem;font-weight:800;color:${v.color}">${data.good_windows[0].from} – ${data.good_windows[0].to}</div>
+        <div style="font-size:0.78rem;color:var(--brown-mid);margin-top:4px">
+          ⭐ ${data.good_windows[0].nakshatra_te} &nbsp;·&nbsp; 📅 ${data.good_windows[0].tithi_te} &nbsp;·&nbsp; 🌅 ${data.good_windows[0].lagna_te} లగ్నం
+        </div>
+      </div>` : ""}
     </div>
 
     ${data.good_factors.length ? `
