@@ -207,11 +207,11 @@ function addPerson() {
     <div class="two-col">
       <div class="field">
         <label>జన్మ తేదీ</label>
-        <input type="text" id="dob${idx}" placeholder="DD/MM/YYYY">
+        <input type="date" id="dob${idx}">
       </div>
       <div class="field">
         <label>జన్మ సమయం</label>
-        <input type="text" id="time${idx}" placeholder="HH:MM">
+        <input type="time" id="time${idx}">
       </div>
     </div>
     <div class="field">
@@ -236,10 +236,13 @@ async function startCompute() {
   const persons = [];
   for (const block of blocks) {
     const id = block.id.replace("person", "");
-    const dob   = document.getElementById("dob"   + id)?.value.trim();
+    const dobRaw = document.getElementById("dob"   + id)?.value.trim();
     const time  = document.getElementById("time"  + id)?.value.trim();
     const place = document.getElementById("place" + id)?.value.trim();
-    if (!dob || !time || !place) { showError("అన్ని వ్యక్తుల వివరాలు పూరించండి"); return; }
+    if (!dobRaw || !time || !place) { showError("అన్ని వ్యక్తుల వివరాలు పూరించండి"); return; }
+    // Convert YYYY-MM-DD (date input) → DD/MM/YYYY (API format)
+    const [y, m, d] = dobRaw.split("-");
+    const dob = `${d}/${m}/${y}`;
     persons.push({ dob, time, place });
   }
 
