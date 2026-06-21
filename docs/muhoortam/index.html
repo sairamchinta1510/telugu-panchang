@@ -1015,60 +1015,127 @@ function removePerson(idx) {
 // ── Compute ───────────────────────────────────────────────────────────────────
 async function startCompute() {
   showError("");
-  const blocks = document.querySelectorAll(".person-block");
-  if(!blocks.length) { showError("కనీసం ఒక వ్యక్తి వివరాలు నమోదు చేయండి"); return; }
 
+  // Validate event details
+  if (!selectedCeremony) { showError("వేడుక రకం ఎంచుకోండి"); return; }
+  if (!document.getElementById("ceremonyPlace").value.trim()) { showError("వేడుక స్థలం నమోదు చేయండి"); return; }
+  if (dateMode === "range") {
+    const from = document.getElementById("rangeFrom").value;
+    const to   = document.getElementById("rangeTo").value;
+    if (!from || !to) { showError("తేదీ పరిధి నమోదు చేయండి"); return; }
+    if (from > to) { showError("'నుండి' తేదీ 'వరకు' తేదీ కంటే తర్వాత ఉండకూడదు"); return; }
+  } else {
+    if (!document.getElementById("checkDate").value) { showError("తనిఖీ చేయాల్సిన తేదీ నమోదు చేయండి"); return; }
+  }
+
+  // Collect persons
+  const blocks = document.querySelectorAll(".person-block");
+  if (!blocks.length) { showError("కనీసం ఒక వ్యక్తి వివరాలు నమోదు చేయండి"); return; }
   const persons = [];
-  for(const b of blocks) {
+  for (const b of blocks) {
     const id = b.id.replace("person","");
     const name   = document.getElementById("pname"+id)?.value.trim() || `వ్యక్తి ${id}`;
     const dobRaw = document.getElementById("dob"+id)?.value.trim();
     const time   = document.getElementById("time"+id)?.value.trim();
     const place  = document.getElementById("place"+id)?.value.trim();
-    if(!dobRaw || !time || !place) { showError("అన్ని వ్యక్తుల వివరాలు పూరించండి"); return; }
+    if (!dobRaw || !time || !place) { showError("అన్ని వ్యక్తుల వివరాలు పూరించండి"); return; }
     const [y,m,d] = dobRaw.split("-");
-    persons.push({ name, dob:`${d}/${m}/${y}`, time, place });
+    persons.push({ id, name, dob:`${d}/${m}/${y}`, time, place });
   }
 
-  setStep(3); setProgress(0,"జన్మ వివరాలు లెక్కిస్తున్నాం...","");
+  setStep(3);
+  showLoading(true);
+  setProgress(0, "జన్మ వివరాలు లెక్కిస్తున్నాం...", "");
 
+  // Compute / retrieve birth charts
   const birthCharts = [];
-  for(let i=0; i<persons.length; i++) {
-    try {
-      const r = await fetch(API_BASE+"/muhoortam/birth-chart",
-        {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(persons[i])});
-      if(!r.ok) throw new Error(await r.text());
-      birthCharts.push(await r.json());
-    } catch(e) {
-      setStep(2); showError((persons[i].name||`వ్యక్తి ${i+1}`)+" వివరాలు లెక్కించడం సాధ్యం కాలేదు: "+e.message); return;
+  for (let i = 0; i < persons.length; i++) {
+    const p = persons[i];
+    if (savedProfileCharts[p.id]) {
+      birthCharts.push({ ...savedProfileCharts[p.id], name: p.name });
+    } else {
+      try {
+        const r = await fetch(API_BASE+"/muhoortam/birth-chart", {
+          method:"POST", headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ name: p.name, dob: p.dob, time: p.time, place: p.place })
+        });
+        if (!r.ok) throw new Error(await r.text());
+        birthCharts.push({ ...await r.json(), name: p.name });
+      } catch(e) {
+        showLoading(false);
+        setStep(2);
+        showError((p.name)+" వివరాలు లెక్కించడం సాధ్యం కాలేదు: "+e.message);
+        return;
+      }
     }
   }
   savedBirthCharts = birthCharts;
   savedPersons = persons;
 
+  if (dateMode === "single") {
+    await _runCheck(birthCharts);
+  } else {
+    await _runFind(birthCharts);
+  }
+}
+
+async function _runCheck(birthCharts) {
+  const dateRaw = document.getElementById("checkDate").value;
+  const time    = document.getElementById("checkTime").value;
+  const place   = document.getElementById("ceremonyPlace").value.trim();
+  const [y,m,d] = dateRaw.split("-");
+  try {
+    const r = await fetch(API_BASE+"/muhoortam/check", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        date: `${d}/${m}/${y}`,
+        ...(time ? { time } : {}),
+        ceremony_place: place,
+        ceremony_type: selectedCeremony,
+        birth_charts: birthCharts,
+      })
+    });
+    if (!r.ok) throw new Error(await r.text());
+    const data = await r.json();
+    showLoading(false);
+    showCheckResult(data);
+  } catch(e) {
+    showLoading(false);
+    setStep(2);
+    showError("తనిఖీ విఫలమైంది: "+e.message);
+  }
+}
+
+async function _runFind(birthCharts) {
   const fromDate = new Date(document.getElementById("rangeFrom").value);
   const toDate   = new Date(document.getElementById("rangeTo").value);
   const months = [];
   let cur = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
-  while(cur <= toDate) { months.push({year:cur.getFullYear(),month:cur.getMonth()+1}); cur.setMonth(cur.getMonth()+1); }
-
+  while (cur <= toDate) {
+    months.push({ year: cur.getFullYear(), month: cur.getMonth()+1 });
+    cur.setMonth(cur.getMonth()+1);
+  }
   const place = document.getElementById("ceremonyPlace").value.trim();
   allResults = [];
-  for(let i=0; i<months.length; i++) {
-    const {year,month} = months[i];
+  for (let i = 0; i < months.length; i++) {
+    const { year, month } = months[i];
     setProgress(Math.round(((i+1)/months.length)*100), `${MONTHS_TE[month-1]} ${year} స్కాన్ అవుతోంది`, `${i+1}/${months.length} నెలలు`);
     try {
-      const r = await fetch(API_BASE+"/muhoortam/find",
-        {method:"POST",headers:{"Content-Type":"application/json"},
-         body:JSON.stringify({year,month,ceremony_type:selectedCeremony,ceremony_place:place,birth_charts:birthCharts})});
-      if(!r.ok) throw new Error(await r.text());
-      const d = await r.json();
-      for(const x of (d.results||[])) {
-        const dt = parseTeDate(x.date_te);
-        if(dt>=fromDate && dt<=toDate) allResults.push(x);
-      }
-    } catch(e) { console.warn("Scan failed:",year,month,e); }
+      const r = await fetch(API_BASE+"/muhoortam/find", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ year, month, ceremony_type: selectedCeremony, ceremony_place: place, birth_charts: birthCharts })
+      });
+      if (!r.ok) throw new Error(await r.text());
+      const data = await r.json();
+      allResults.push(...(data.results||[]));
+    } catch(e) {
+      showLoading(false);
+      setStep(2);
+      showError("లెక్కింపులో లోపం: "+e.message);
+      return;
+    }
   }
+  showLoading(false);
   showResults();
 }
 
