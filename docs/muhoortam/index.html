@@ -589,77 +589,19 @@ body {
 <div id="errorToast" class="error-toast"></div>
 
 <!-- ══════════════════════════════════════════════════
-     PANEL 1 — Ceremony Details
+     PANEL 1 — People
 ══════════════════════════════════════════════════ -->
 <div id="panel1" class="panel active">
-  <div class="section-title">వేడుక వివరాలు</div>
+  <div class="section-title">వ్యక్తుల వివరాలు</div>
 
-  <div class="card">
-    <div class="field">
-      <label>వేడుక రకం</label>
-      <div class="ceremony-grid">
-        <div class="ceremony-card" data-type="vivaha" onclick="selectCeremony(this)">
-          <span class="cer-icon">💒</span>
-          <div class="cer-name">వివాహం</div>
-        </div>
-        <div class="ceremony-card" data-type="gruha_pravesam" onclick="selectCeremony(this)">
-          <span class="cer-icon">🏠</span>
-          <div class="cer-name">గృహ ప్రవేశం</div>
-        </div>
-        <div class="ceremony-card" data-type="upanayanam" onclick="selectCeremony(this)">
-          <span class="cer-icon">🪡</span>
-          <div class="cer-name">ఉపనయనం</div>
-        </div>
-        <div class="ceremony-card" data-type="pooja" onclick="selectCeremony(this)">
-          <span class="cer-icon">🪔</span>
-          <div class="cer-name">పూజ</div>
-        </div>
-      </div>
-    </div>
+  <!-- Saved profiles chips (hidden until profiles exist) -->
+  <div id="profileChips" style="display:none;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:12px;border:1px solid rgba(196,154,108,0.2)"></div>
 
-    <div class="field">
-      <label>వేడుక జరిగే స్థలం</label>
-      <div class="ac-wrap">
-        <div class="input-icon-wrap">
-          <span class="icon">📍</span>
-          <input type="text" id="ceremonyPlace" placeholder="నగరం వెతకండి... (ఉదా: Hyderabad)"
-                 oninput="acSearch(this,'acCeremony')" autocomplete="off">
-        </div>
-        <div class="ac-list" id="acCeremony"></div>
-      </div>
-    </div>
-
-    <div class="field">
-      <label>ముహూర్తం కావాల్సిన తేదీ పరిధి</label>
-      <div class="date-range">
-        <div>
-          <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 నుండి</label>
-          <input type="text" id="rangeFrom" placeholder="తేదీ ఎంచుకోండి" style="cursor:pointer">
-        </div>
-        <div>
-          <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 వరకు</label>
-          <input type="text" id="rangeTo" placeholder="తేదీ ఎంచుకోండి" style="cursor:pointer">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <button class="btn-primary" onclick="goPanel2()">తదుపరి దశ →</button>
-</div>
-
-<!-- ══════════════════════════════════════════════════
-     PANEL 2 — Birth Details
-══════════════════════════════════════════════════ -->
-<div id="panel2" class="panel">
-  <div class="section-title">జన్మ వివరాలు</div>
   <div id="personList"></div>
   <button class="btn-add" id="addPersonBtn" onclick="addPerson()">
     ＋ మరో వ్యక్తిని జోడించండి (గరిష్టం 6)
   </button>
-  <div style="display:flex;gap:10px;margin-top:4px">
-    <button class="btn-outline" style="flex:0 0 auto" onclick="setStep(1);showError('')">← వెనక్కి</button>
-    <button class="btn-primary" style="flex:1" onclick="startCompute()">శుభ ముహూర్తాలు వెతకండి 🔍</button>
-  </div>
+  <button class="btn-primary" onclick="goPanel2()">తదుపరి దశ →</button>
 </div>
 
 <!-- ══════════════════════════════════════════════════
@@ -897,13 +839,15 @@ document.addEventListener("click", e => {
 // ── Panel 1 → 2 ───────────────────────────────────────────────────────────────
 function goPanel2() {
   showError("");
-  if(!selectedCeremony) { showError("వేడుక రకం ఎంచుకోండి"); return; }
-  if(!document.getElementById("ceremonyPlace").value.trim()) { showError("వేడుక స్థలం నమోదు చేయండి"); return; }
-  const from = document.getElementById("rangeFrom").value;
-  const to   = document.getElementById("rangeTo").value;
-  if(!from || !to)  { showError("తేదీ పరిధి నమోదు చేయండి"); return; }
-  if(from > to)     { showError("'నుండి' తేదీ 'వరకు' తేదీ కంటే తర్వాత ఉండకూడదు"); return; }
-  if(personCount === 0) addPerson();
+  const blocks = document.querySelectorAll(".person-block");
+  if (!blocks.length) { showError("కనీసం ఒక వ్యక్తి వివరాలు నమోదు చేయండి"); return; }
+  for (const b of blocks) {
+    const id = b.id.replace("person","");
+    const dobRaw = document.getElementById("dob"+id)?.value.trim();
+    const time   = document.getElementById("time"+id)?.value.trim();
+    const place  = document.getElementById("place"+id)?.value.trim();
+    if (!dobRaw || !time || !place) { showError("అన్ని వ్యక్తుల వివరాలు పూరించండి"); return; }
+  }
   setStep(2);
 }
 
@@ -942,7 +886,8 @@ function addPerson() {
         </div>
         <div class="ac-list" id="acP${idx}"></div>
       </div>
-    </div>`;
+    </div>
+    <button class="save-profile-btn" style="margin-top:8px;background:var(--gold-light);border:1px solid var(--gold);border-radius:8px;padding:6px 14px;font-size:0.75rem;font-family:inherit;color:var(--brown);cursor:pointer" onclick="savePersonProfile(${idx})">💾 Save Profile</button>`;
   document.getElementById("personList").appendChild(div);
   flatpickr(`#dob${idx}`, { dateFormat: "Y-m-d", maxDate: new Date(), disableMobile: true,
     allowInput: false, onOpen(_, __, fp) { fp.input.blur(); } });
@@ -1256,6 +1201,7 @@ function resetWizard() {
 }
 
 addPerson();
+renderProfileChips();
 </script>
 </body>
 </html>
