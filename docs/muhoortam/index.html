@@ -730,6 +730,96 @@ const MONTHS_TE = ["జనవరి","ఫిబ్రవరి","మార్చ
 let selectedCeremony = null, allResults = [], personCount = 0;
 let savedBirthCharts = [], savedPersons = [];
 
+let savedProfileCharts = {};   // personBlockId → pre-computed birth chart
+const PROFILES_KEY = "muhurta_profiles";
+
+function loadProfiles() {
+  try { return JSON.parse(localStorage.getItem(PROFILES_KEY) || "[]"); }
+  catch { return []; }
+}
+
+function saveProfileToStorage(profile) {
+  const profiles = loadProfiles();
+  const idx = profiles.findIndex(p => p.name === profile.name);
+  if (idx >= 0) profiles[idx] = profile;
+  else profiles.push(profile);
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+  renderProfileChips();
+}
+
+function deleteProfile(name) {
+  if (!confirm(`"${name}" ని తొలగించాలా?`)) return;
+  const profiles = loadProfiles().filter(p => p.name !== name);
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+  renderProfileChips();
+}
+
+function renderProfileChips() {
+  const container = document.getElementById("profileChips");
+  if (!container) return;
+  const profiles = loadProfiles();
+  if (!profiles.length) { container.style.display = "none"; return; }
+  container.style.display = "";
+  container.innerHTML = `
+    <div style="font-size:0.7rem;font-weight:700;color:var(--brown-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">💾 Saved Profiles</div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:4px">
+      ${profiles.map((p,i) => `
+        <div style="background:var(--gold-light);border:1.5px solid var(--gold);border-radius:12px;padding:8px 10px;flex-shrink:0;min-width:110px">
+          <div style="font-weight:700;font-size:0.82rem;color:var(--maroon);cursor:pointer" onclick="addFromProfile(${i})">${p.name}</div>
+          ${p.birthChart ? `<div style="font-size:0.7rem;color:var(--brown-mid);cursor:pointer" onclick="addFromProfile(${i})">🌟 ${p.birthChart.janma_nakshatra_te}${p.birthChart.janma_nakshatra_padam ? " "+p.birthChart.janma_nakshatra_padam+"వ పాదం" : ""}</div>` : ""}
+          <div style="font-size:0.65rem;color:var(--brown-light);margin-top:4px;cursor:pointer" onclick="deleteProfile('${p.name.replace(/'/g,"\\'")}')">✕ తొలగించు</div>
+        </div>`).join("")}
+    </div>`;
+}
+
+function addFromProfile(idx) {
+  const profiles = loadProfiles();
+  const p = profiles[idx];
+  if (!p) return;
+  addPerson();
+  const id = personCount;
+  document.getElementById("pname"+id).value = p.name;
+  if (p.dob) {
+    const input = document.getElementById("dob"+id);
+    const fp = input._flatpickr;
+    if (fp) fp.setDate(p.dob, true); else input.value = p.dob;
+  }
+  if (p.time) document.getElementById("time"+id).value = p.time;
+  if (p.place) {
+    const placeEl = document.getElementById("place"+id);
+    if (placeEl) placeEl.value = p.place;
+  }
+  if (p.birthChart) savedProfileCharts[id] = p.birthChart;
+}
+
+async function savePersonProfile(idx) {
+  showError("");
+  const name   = document.getElementById("pname"+idx)?.value.trim();
+  const dobRaw = document.getElementById("dob"+idx)?.value.trim();
+  const time   = document.getElementById("time"+idx)?.value.trim();
+  const place  = document.getElementById("place"+idx)?.value.trim();
+  if (!name || !dobRaw || !time || !place) {
+    showError("పేరు, తేదీ, సమయం మరియు స్థలం నమోదు చేయండి");
+    return;
+  }
+  const [y,m,d] = dobRaw.split("-");
+  const btn = document.querySelector(`#person${idx} .save-profile-btn`);
+  if (btn) btn.textContent = "⏳ ...";
+  try {
+    const r = await fetch(API_BASE+"/muhoortam/birth-chart", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ name, dob:`${d}/${m}/${y}`, time, place })
+    });
+    if (!r.ok) throw new Error(await r.text());
+    const birthChart = await r.json();
+    saveProfileToStorage({ name, dob: dobRaw, time, place, birthChart });
+    if (btn) { btn.textContent = "✓ Saved!"; setTimeout(()=>{ btn.textContent="💾 Save Profile"; },2500); }
+  } catch(e) {
+    if (btn) btn.textContent = "💾 Save Profile";
+    showError("Profile save failed: " + e.message);
+  }
+}
+
 // Default dates + Flatpickr for range pickers
 (function() {
   const t = new Date(), n = new Date(t); n.setMonth(n.getMonth()+3);
