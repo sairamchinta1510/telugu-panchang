@@ -59,11 +59,11 @@ jobs:
           echo "Deployed API: $API_URL"
 
           # Replace placeholder in muhoortam/index.html if still present
-          if grep -q '__MUHOORTAM_API_URL__' ../muhoortam/index.html; then
-            sed -i "s|__MUHOORTAM_API_URL__|$API_URL|g" ../muhoortam/index.html
+          if grep -q '__MUHOORTAM_API_URL__' ../docs/muhoortam/index.html; then
+            sed -i "s|__MUHOORTAM_API_URL__|$API_URL|g" ../docs/muhoortam/index.html
             git config user.name  "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add ../muhoortam/index.html
+            git add ../docs/muhoortam/index.html
             git commit -m "chore: set API_BASE to deployed URL [skip ci]"
             git push
           fi
