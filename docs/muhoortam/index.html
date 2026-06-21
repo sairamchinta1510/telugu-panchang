@@ -1230,7 +1230,7 @@ function showResults() {
     empty.className = "empty-state";
     empty.innerHTML = `<span class="e-icon">🔍</span><h3>ముహూర్తాలు దొరకలేదు</h3><p>ఎంచుకున్న తేదీ పరిధిలో శుభ ముహూర్తాలు లేవు.<br>తేదీ పరిధి పెంచి మళ్ళీ ప్రయత్నించండి.</p>`;
     list.appendChild(empty);
-    setStep(4); return;
+    setStep(3); return;
   }
 
   allResults.forEach((r,i) => {
@@ -1270,7 +1270,7 @@ function showResults() {
       </div>`;
     list.appendChild(card);
   });
-  setStep(4);
+  setStep(3);
 }
 
 function showCheckResult(data) {
