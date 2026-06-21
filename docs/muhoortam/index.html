@@ -695,10 +695,11 @@ body {
 </div>
 
 <!-- ══════════════════════════════════════════════════
-     PANEL 3 — Computing
+     PANEL 3 — Results (loading + results)
 ══════════════════════════════════════════════════ -->
 <div id="panel3" class="panel">
-  <div class="card">
+  <!-- Loading area -->
+  <div id="loadingArea" class="card" style="display:none">
     <div class="loading-wrap">
       <span class="lotus-spin">🌸</span>
       <div class="progress-label" id="progressLabel">సిద్ధంగా ఉంది</div>
@@ -706,24 +707,25 @@ body {
       <div class="progress-sub" id="progressSub"></div>
     </div>
   </div>
-</div>
 
-<!-- ══════════════════════════════════════════════════
-     PANEL 4 — Results
-══════════════════════════════════════════════════ -->
-<div id="panel4" class="panel">
-  <div class="results-hero">
+  <!-- Results hero (range mode) -->
+  <div id="resultsHero" class="results-hero" style="display:none">
     <div id="ceremonyTag" class="ceremony-tag"></div>
     <h2 id="resultsTitle"></h2>
     <div id="resultsCount" class="count"></div>
   </div>
-  <div class="kalam-banner">
+
+  <!-- Kalam warning banner (range mode) -->
+  <div class="kalam-banner" id="kalamBanner" style="display:none">
     ⚠️ <strong>గమనిక:</strong> రాహు కాలం, యమగండ కాలం మరియు గులిక కాలం సమయంలో వేడుకలు నిర్వహించవద్దు.
-    గులిక కాలంలో వివాహం చేస్తే పునర్వివాహం జరుగుతుందని పెద్దలు చెప్తారు.
     ప్రతి ముహూర్తం మీద <strong>"వివరాలు చూడండి"</strong> నొక్కి మరింత సమాచారం తెలుసుకోండి.
   </div>
+
+  <!-- Results list (both modes) -->
   <div id="resultsList"></div>
-  <div class="actions-row">
+
+  <!-- Actions row -->
+  <div class="actions-row" id="resultsActions" style="display:none">
     <button class="btn-outline" onclick="window.print()">🖨 PDF</button>
     <button class="btn-outline" onclick="setStep(2);showError('')">← వివరాలు మార్చండి</button>
     <button class="btn-outline" onclick="resetWizard()">↺ కొత్తగా</button>
@@ -891,6 +893,14 @@ function setStep(n) {
   document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
   document.getElementById("panel"+n).classList.add("active");
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function showLoading(on) {
+  document.getElementById("loadingArea").style.display = on ? "" : "none";
+  document.getElementById("resultsHero").style.display = "none";
+  document.getElementById("kalamBanner").style.display = "none";
+  document.getElementById("resultsActions").style.display = "none";
+  if (on) document.getElementById("resultsList").innerHTML = "";
 }
 
 // ── Error toast ───────────────────────────────────────────────────────────────
