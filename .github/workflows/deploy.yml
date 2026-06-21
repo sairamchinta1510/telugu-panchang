@@ -1,0 +1,75 @@
+name: Deploy Panchang API
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'panchang-api/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:   # allow manual trigger from GitHub UI
+
+permissions:
+  contents: write      # needed to write back the API URL to index.html
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up SAM CLI
+        uses: aws-actions/setup-sam@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ap-south-1
+
+      - name: SAM build
+        working-directory: panchang-api
+        run: sam build
+
+      - name: SAM deploy
+        working-directory: panchang-api
+        run: |
+          sam deploy \
+            --stack-name telugu-panchang \
+            --s3-bucket-prefix telugu-panchang \
+            --capabilities CAPABILITY_IAM \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --resolve-s3
+
+      - name: Get API URL and update frontend
+        working-directory: panchang-api
+        run: |
+          API_URL=$(aws cloudformation describe-stacks \
+            --stack-name telugu-panchang \
+            --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue' \
+            --output text | sed 's|/panchang||')
+          echo "API_URL=$API_URL" >> $GITHUB_ENV
+          echo "Deployed API: $API_URL"
+
+          # Replace placeholder in muhoortam/index.html if still present
+          if grep -q '__MUHOORTAM_API_URL__' ../muhoortam/index.html; then
+            sed -i "s|__MUHOORTAM_API_URL__|$API_URL|g" ../muhoortam/index.html
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add ../muhoortam/index.html
+            git commit -m "chore: set API_BASE to deployed URL [skip ci]"
+            git push
+          fi
+
+      - name: Print deployed URLs
+        run: |
+          echo "✅ Panchang API : ${{ env.API_URL }}/panchang"
+          echo "✅ Muhoortam BC : ${{ env.API_URL }}/muhoortam/birth-chart"
+          echo "✅ Muhoortam Find: ${{ env.API_URL }}/muhoortam/find"
