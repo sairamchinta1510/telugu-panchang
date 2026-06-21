@@ -43,18 +43,19 @@ def _find_good_windows(
     masam_name: str,
     is_adhika: bool,
     sun_idx: int,
-    lagna_idx: int,
+    lagna_idx: int,   # kept for API compat; actual per-window lagna is recomputed
 ) -> list[dict]:
     """Scan the full 24 hours from rise_jd for auspicious muhurta windows.
 
-    Tithi and nakshatra change during the day; each segment between transitions
-    is evaluated independently. Uses the sunrise lagna for all segments (approximation).
+    Tithi, nakshatra, AND lagna change during the day; each segment between
+    transitions is evaluated independently with the actual lagna at that time.
 
     Returns list of {"from": "HH:MM", "to": "HH:MM"} in local time.
     Each window is guaranteed to be at least 1 minute long.
     """
     def _ti(j): return int(moon_sun_elongation(j) / 12) % 30
     def _ni(j): return int(moon_longitude(j) / (360.0 / 27)) % 27
+    def _li(j): return compute_lagna(j, lat, lon)
 
     EPSILON = 1.0 / (24 * 60)   # 1 minute in JD
     end_jd  = rise_jd + 1.0     # exactly 24 hours
@@ -68,16 +69,20 @@ def _find_good_windows(
         naks_idx      = int(ml / (360.0 / 27)) % 27
         tithi_idx     = int(elong / 12) % 30
         day_rashi_idx = int(ml / 30) % 12
+        # Recompute lagna at the start of each sub-window (changes every ~2 h)
+        win_lagna_idx = compute_lagna(jd, lat, lon)
 
         t_change = find_next_index_change(jd, _ti, tithi_idx, step_hours=1.0, max_hours=26)
         n_change = find_next_index_change(jd, _ni, naks_idx,  step_hours=1.0, max_hours=26)
+        # Lagna changes every ~2 h; use small step to catch it accurately
+        l_change = find_next_index_change(jd, _li, win_lagna_idx, step_hours=0.25, max_hours=3)
 
         # Window ends at the earliest upcoming transition (capped at 24 h boundary)
-        candidates = [c for c in [t_change, n_change] if c is not None and c < end_jd]
+        candidates = [c for c in [t_change, n_change, l_change] if c is not None and c < end_jd]
         window_end_jd = min(candidates) if candidates else end_jd
 
         good = is_auspicious(
-            naks_idx, tithi_idx, sun_idx, lagna_idx,
+            naks_idx, tithi_idx, sun_idx, win_lagna_idx,
             birth_charts, ceremony_type,
             masam_name=masam_name, is_adhika_masam=is_adhika,
             day_rashi_idx=day_rashi_idx,
