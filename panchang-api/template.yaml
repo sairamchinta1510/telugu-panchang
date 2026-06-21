@@ -35,9 +35,31 @@ Resources:
           - "*"
         AllowMethods:
           - GET
+          - POST
           - OPTIONS
         AllowHeaders:
           - "*"
+
+  MuhoortamFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: handler_muhoortam.lambda_handler
+      Description: Telugu Muhoortam computation API
+      Timeout: 30
+      Events:
+        MuhoortamBirthChart:
+          Type: HttpApi
+          Properties:
+            Path: /muhoortam/birth-chart
+            Method: POST
+            ApiId: !Ref PanchangHttpApi
+        MuhoortamFind:
+          Type: HttpApi
+          Properties:
+            Path: /muhoortam/find
+            Method: POST
+            ApiId: !Ref PanchangHttpApi
 
 Outputs:
   ApiEndpoint:
