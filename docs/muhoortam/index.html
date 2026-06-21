@@ -695,10 +695,11 @@ const CEREMONY_NAK_REASON = {
 const MONTHS_TE = ["జనవరి","ఫిబ్రవరి","మార్చి","ఏప్రిల్","మే","జూన్","జులై","ఆగస్టు","సెప్టెంబర్","అక్టోబర్","నవంబర్","డిసెంబర్"];
 
 let selectedCeremony = null, allResults = [], personCount = 0;
+let savedBirthCharts = [], savedPersons = [];
 
 // Default dates
 (function() {
-  const t = new Date(), n = new Date(t); n.setFullYear(n.getFullYear()+1);
+  const t = new Date(), n = new Date(t); n.setMonth(n.getMonth()+3);
   const f = d => d.toISOString().slice(0,10);
   document.getElementById("rangeFrom").value = f(t);
   document.getElementById("rangeTo").value   = f(n);
@@ -850,6 +851,8 @@ async function startCompute() {
       setStep(2); showError("వ్యక్తి "+(i+1)+" వివరాలు లెక్కించడం సాధ్యం కాలేదు: "+e.message); return;
     }
   }
+  savedBirthCharts = birthCharts;
+  savedPersons = persons;
 
   const fromDate = new Date(document.getElementById("rangeFrom").value);
   const toDate   = new Date(document.getElementById("rangeTo").value);
@@ -887,6 +890,34 @@ function setProgress(pct,label,sub) {
   document.getElementById("progressSub").textContent = sub;
 }
 
+// ── Best muhurta window (excludes all bad periods + varjyam) ─────────────────
+function toMins(t) { const [h,m]=t.split(":").map(Number); return h*60+m; }
+function toTime(m) { return `${String(Math.floor(m/60)%24).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`; }
+
+function bestWindow(r) {
+  if(!r.sunrise||!r.sunset) return null;
+  const rise=toMins(r.sunrise), set=toMins(r.sunset);
+  const bad=[];
+  function addBad(s,e){
+    s=Math.max(toMins(s),rise); e=Math.min(toMins(e),set);
+    if(s<e) bad.push([s,e]);
+  }
+  ["rahu_kalam","yamaganda","gulika_kalam"].forEach(k=>{if(r[k]?.start)addBad(r[k].start,r[k].end);});
+  if(r.varjyam?.start) addBad(r.varjyam.start, r.varjyam.end);
+  if(Array.isArray(r.dur_muhurtam)) r.dur_muhurtam.forEach(d=>{if(d?.start)addBad(d.start,d.end);});
+  bad.sort((a,b)=>a[0]-b[0]);
+  const merged=[];
+  for(const [s,e] of bad){
+    if(merged.length&&s<=merged.at(-1)[1]) merged.at(-1)[1]=Math.max(merged.at(-1)[1],e);
+    else merged.push([s,e]);
+  }
+  const good=[]; let cur=rise;
+  for(const [s,e] of merged){ if(cur<s) good.push([cur,s]); cur=Math.max(cur,e); }
+  if(cur<set) good.push([cur,set]);
+  if(!good.length) return null;
+  return good.reduce((b,w)=>(w[1]-w[0]>b[1]-b[0])?w:b, good[0]);
+}
+
 // ── Results ───────────────────────────────────────────────────────────────────
 function showResults() {
   const cName = CEREMONY_NAMES[selectedCeremony]||selectedCeremony;
@@ -901,21 +932,54 @@ function showResults() {
   const list = document.getElementById("resultsList");
   list.innerHTML = "";
 
+  // ── Birth chart summary panel ──────────────────────────────────────────────
+  if(savedBirthCharts.length) {
+    const bcDiv = document.createElement("div");
+    bcDiv.style.cssText = "background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px;border:1px solid rgba(196,154,108,0.2)";
+    bcDiv.innerHTML = `
+      <div style="font-size:0.7rem;font-weight:700;color:var(--brown-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">
+        ముహూర్తం లెక్కించిన వ్యక్తుల జన్మ వివరాలు
+      </div>
+      ${savedBirthCharts.map((bc,i)=>`
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px;background:var(--cream2);border-radius:10px;margin-bottom:8px">
+          <div style="font-size:1.3rem;flex-shrink:0">👤</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:0.88rem;color:var(--maroon);margin-bottom:6px">వ్యక్తి ${i+1}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span style="background:var(--gold-light);border:1px solid var(--gold);border-radius:20px;padding:3px 10px;font-size:0.76rem;color:var(--brown)">
+                🌟 జన్మ నక్షత్రం: <strong>${bc.janma_nakshatra_te}</strong>
+              </span>
+              <span style="background:#EDE7F6;border:1px solid #B39DDB;border-radius:20px;padding:3px 10px;font-size:0.76rem;color:#4A148C">
+                ♈ జన్మ రాశి: <strong>${bc.janma_rashi_te}</strong>
+              </span>
+              <span style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:20px;padding:3px 10px;font-size:0.76rem;color:#1B5E20">
+                ⬆️ లగ్నం: <strong>${bc.lagna_te}</strong>
+              </span>
+            </div>
+          </div>
+        </div>`).join("")}`;
+    list.appendChild(bcDiv);
+  }
+
   if(!allResults.length) {
-    list.innerHTML = `<div class="empty-state">
-      <span class="e-icon">🔍</span>
-      <h3>ముహూర్తాలు దొరకలేదు</h3>
-      <p>ఎంచుకున్న తేదీ పరిధిలో శుభ ముహూర్తాలు లేవు.<br>తేదీ పరిధి పెంచి మళ్ళీ ప్రయత్నించండి.</p>
-    </div>`;
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.innerHTML = `<span class="e-icon">🔍</span><h3>ముహూర్తాలు దొరకలేదు</h3><p>ఎంచుకున్న తేదీ పరిధిలో శుభ ముహూర్తాలు లేవు.<br>తేదీ పరిధి పెంచి మళ్ళీ ప్రయత్నించండి.</p>`;
+    list.appendChild(empty);
     setStep(4); return;
   }
 
   allResults.forEach((r,i) => {
-    const kalamHtml = [
-      r.rahu_kalam   && `<div class="kalam-item">🔴 రాహు కాలం: <strong>${r.rahu_kalam.start}–${r.rahu_kalam.end}</strong></div>`,
-      r.yamaganda    && `<div class="kalam-item">🔴 యమగండ: <strong>${r.yamaganda.start}–${r.yamaganda.end}</strong></div>`,
-      r.gulika_kalam && `<div class="kalam-item">⚠️ గులిక కాలం: <strong>${r.gulika_kalam.start}–${r.gulika_kalam.end}</strong></div>`,
-    ].filter(Boolean).join("");
+    const win = bestWindow(r);
+    const winHtml = win
+      ? `<div style="background:linear-gradient(135deg,#E8F5E9,#F1F8E9);border:1.5px solid #A5D6A7;border-radius:10px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
+           <span style="font-size:1.4rem">🕐</span>
+           <div>
+             <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.05em">శుభ సమయం (వర్జ్యం మినహా)</div>
+             <div style="font-size:1.05rem;font-weight:700;color:#1B5E20">${toTime(win[0])} – ${toTime(win[1])}</div>
+           </div>
+         </div>`
+      : `<div style="background:#FFF3E0;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:0.78rem;color:#E65100">⚠️ ఈ రోజు ఖాళీ సమయం తక్కువగా ఉంది — పండితుల సలహా తీసుకోండి</div>`;
 
     const card = document.createElement("div");
     card.className = "result-card";
@@ -930,12 +994,12 @@ function showResults() {
         </div>
       </div>
       <div class="result-body">
+        ${winHtml}
         <div class="result-row">
+          <div class="result-chip">✨ <span>${r.yoga_te}</span></div>
           <div class="result-chip">🌅 <span>${r.sunrise}</span></div>
           <div class="result-chip">🌇 <span>${r.sunset}</span></div>
-          <div class="result-chip">✨ <span>${r.yoga_te}</span></div>
         </div>
-        ${kalamHtml ? `<div class="result-kalam">${kalamHtml}</div>` : ""}
         <button class="btn-details" onclick="showDetail(${i})">
           🔍 ముహూర్తం వివరాలు చూడండి
         </button>
