@@ -82,7 +82,7 @@ for mod in list(sys.modules):
     if "muhurta_rules" in mod:
         del sys.modules[mod]
 
-from compute.muhurta_rules import is_auspicious, _tara_ok, _panchaka_ok
+from compute.muhurta_rules import is_auspicious, _tara_ok, _panchaka_ok, _rashi_shuddhi_ok
 
 
 def test_tara_ok_good():
@@ -173,6 +173,62 @@ def test_is_auspicious_rejects_chaturmas():
     # Shravana month → rejected for vivaha (Chaturmas)
     assert is_auspicious(3, 0, 4, 3, birth_charts, "vivaha",
                          masam_name="Shravana", is_adhika_masam=False) is False
+
+
+# ── Rashi Shuddhi tests (Image 1 — Lagna Shuddhi) ───────────────────────────
+
+def test_rashi_shuddhi_saptama_forbidden_vivaha():
+    # day_rashi=6 (Tula), janma_rashi=0 (Mesha): pos=6 → 7th = Saptama → forbidden for Vivaha
+    assert _rashi_shuddhi_ok(6, 0, "vivaha") is False
+
+
+def test_rashi_shuddhi_safe_position_vivaha():
+    # day_rashi=3 (Kataka), janma_rashi=0: pos=3 → 4th = Kshema → allowed for Vivaha
+    assert _rashi_shuddhi_ok(3, 0, "vivaha") is True
+
+
+def test_rashi_shuddhi_ashtama_forbidden_upanayanam():
+    # day_rashi=7 (Vrischika), janma_rashi=0 (Mesha): pos=7 → 8th = Ashtama → forbidden for Upanayanam
+    assert _rashi_shuddhi_ok(7, 0, "upanayanam") is False
+
+
+def test_rashi_shuddhi_saptama_allowed_upanayanam():
+    # 7th (Saptama) is only forbidden for Vivaha, not Upanayanam
+    assert _rashi_shuddhi_ok(6, 0, "upanayanam") is True
+
+
+def test_rashi_shuddhi_wrap_around():
+    # janma_rashi=10 (Kumbha), day_rashi=4 (Simha): pos=(4-10)%12=6 → 7th → forbidden for Vivaha
+    assert _rashi_shuddhi_ok(4, 10, "vivaha") is False
+
+
+def test_is_auspicious_vivaha_rejects_saptama_rashi():
+    # Same-day values that pass all other checks, but day_rashi is 7th from janma_rashi → rejected
+    birth_charts = [{"janma_nakshatra_idx": 0, "janma_rashi_idx": 0}]
+    # naks=3 (Rohini ✓), tithi=0 (Prathama ✓), sun=4 (Thu), lagna=3, tara=(3-0)%27+1=4 ✓
+    # panchaka would pass, but rashi shuddhi (pos=6 → Saptama) → rejected
+    assert is_auspicious(3, 0, 4, 3, birth_charts, "vivaha", day_rashi_idx=6) is False
+
+
+def test_is_auspicious_upanayanam_rejects_ashtama_rashi():
+    # Pushya day (naks=7, excellent for Upanayanam) but Moon in 8th rashi → rejected
+    birth_charts = [{"janma_nakshatra_idx": 0, "janma_rashi_idx": 0}]
+    # naks=7 (Pushya ✓), tithi=1 ✓, sun=4, lagna=0, tara=(7-0)%27+1=8 ✓
+    # rashi: pos=(7-0)%12=7 → Ashtama → rejected
+    assert is_auspicious(7, 1, 4, 0, birth_charts, "upanayanam", day_rashi_idx=7) is False
+
+
+def test_is_auspicious_rashi_check_skipped_when_day_rashi_missing():
+    # day_rashi_idx=-1 (default) → rashi shuddhi check is skipped entirely
+    birth_charts = [{"janma_nakshatra_idx": 0, "janma_rashi_idx": 0}]
+    # Would fail rashi if day_rashi_idx=6, but no rashi provided → passes
+    assert is_auspicious(3, 0, 4, 3, birth_charts, "vivaha") is True
+
+
+def test_is_auspicious_rashi_check_skipped_when_no_rashi_in_chart():
+    # Chart has no janma_rashi_idx → rashi shuddhi check is skipped for that person
+    birth_charts = [{"janma_nakshatra_idx": 0}]
+    assert is_auspicious(3, 0, 4, 3, birth_charts, "vivaha", day_rashi_idx=6) is True
 
 
 # ── Muhurta finder tests ──────────────────────────────────────────────────────

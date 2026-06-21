@@ -99,6 +99,30 @@ def _masam_ok(masam_name: str, is_adhika: bool, ceremony_type: str) -> bool:
     return masam_name not in _CHATURMAS_MASAM.get(ceremony_type, set())
 
 
+# ── Rashi Shuddhi — forbidden Moon positions from Janma Rashi (Image 1) ──────
+# Image 1 (Lagna Shuddhi list):
+#   వివాహమునకు సప్తమ శుద్ధి   → Vivaha: Moon must NOT be in 7th rashi from Janma Rashi
+#   ఉపనయనమునకు అష్టమ శుద్ధి  → Upanayanam: Moon must NOT be in 8th rashi from Janma Rashi
+# Position = (day_rashi - janma_rashi) % 12  (0-indexed: 0=same, 6=7th, 7=8th)
+_RASHI_SHUDDHI_FORBIDDEN: dict[str, set[int]] = {
+    CEREMONY_VIVAHA:         {6},   # Saptama (7th position)
+    CEREMONY_UPANAYANAM:     {7},   # Ashtama (8th position)
+    CEREMONY_GRUHA_PRAVESAM: set(), # Not specified in Image 1; no restriction added
+    CEREMONY_POOJA:          set(),
+}
+
+
+def _rashi_shuddhi_ok(day_rashi: int, janma_rashi: int, ceremony_type: str) -> bool:
+    """Return True if the Moon's rashi on the ceremony day is not in a forbidden position.
+
+    Source: Image 1 (Lagna Shuddhi) from the user-uploaded handwritten Telugu notes.
+    - Vivaha: Saptama Shuddhi — avoid 7th rashi from Janma Rashi (Saptama = partnerships house)
+    - Upanayanam: Ashtama Shuddhi — avoid 8th rashi from Janma Rashi (8th = obstacles/longevity)
+    """
+    pos = (day_rashi - janma_rashi) % 12
+    return pos not in _RASHI_SHUDDHI_FORBIDDEN.get(ceremony_type, set())
+
+
 def _tara_ok(janma_nak: int, day_nak: int) -> bool:
     """Return True if the day nakshatra is auspicious for this person's janma nakshatra.
 
@@ -135,6 +159,7 @@ def is_auspicious(
     ceremony_type: str,
     masam_name: str = "",
     is_adhika_masam: bool = False,
+    day_rashi_idx: int = -1,
 ) -> bool:
     """Return True if the given panchang state is auspicious for the ceremony.
 
@@ -143,7 +168,8 @@ def is_auspicious(
     2. Good nakshatra for ceremony type
     3. Bad tithi exclusion (Rikta tithis + ceremony-specific)
     4. Tara Balam for every person
-    5. Panchaka Dosha
+    5. Rashi Shuddhi — Saptama/Ashtama check per Image 1 (Lagna Shuddhi)
+    6. Panchaka Dosha
     """
     if masam_name and not _masam_ok(masam_name, is_adhika_masam, ceremony_type):
         return False
@@ -154,6 +180,11 @@ def is_auspicious(
     for chart in birth_charts:
         if not _tara_ok(chart["janma_nakshatra_idx"], naks_idx):
             return False
+    if day_rashi_idx >= 0:
+        for chart in birth_charts:
+            jrashi = chart.get("janma_rashi_idx", -1)
+            if jrashi >= 0 and not _rashi_shuddhi_ok(day_rashi_idx, jrashi, ceremony_type):
+                return False
     if not _panchaka_ok(naks_idx, sun_idx, tithi_idx, lagna_idx):
         return False
     return True

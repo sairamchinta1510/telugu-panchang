@@ -51,6 +51,7 @@ def find_muhurtas_for_month(
             elong     = moon_sun_elongation(rise_jd)
             naks_idx  = int(moon_lon / (360.0 / 27)) % 27
             tithi_idx = int(elong / 12) % 30
+            day_rashi_idx = int(moon_lon / 30) % 12
 
             dt_rise   = jd_to_local_datetime(rise_jd, tz_name)
             sun_idx   = (dt_rise.weekday() + 1) % 7   # Sunday=0 … Saturday=6
@@ -66,6 +67,7 @@ def find_muhurtas_for_month(
                 naks_idx, tithi_idx, sun_idx, lagna_idx,
                 birth_charts, ceremony_type,
                 masam_name=masam_name, is_adhika_masam=is_adhika,
+                day_rashi_idx=day_rashi_idx,
             ):
                 continue
 

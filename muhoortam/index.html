@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>శుభ ముహూర్తం · Muhoortam.Sanathanadharmas.com</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #fdf6ec; color: #3e2723; padding: 16px; min-height: 100vh; max-width: 540px; margin: 0 auto; }
+
+.page-header { text-align: center; padding: 20px 16px 14px; background: linear-gradient(135deg, #5d4037 0%, #8d6e63 60%, #d7a96b 100%); border-radius: 14px; margin-bottom: 18px; color: white; }
+.page-header .om { font-size: 2.4rem; line-height: 1; margin-bottom: 6px; }
+.page-header h1 { font-size: 1.3rem; font-weight: 700; }
+.page-header .sub { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; }
+
+.step-panel { display: none; }
+.step-panel.active { display: block; }
+
+.card { background: #fff; border: 1px solid #d7ccc8; border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+.card h2 { font-size: 1rem; color: #5d4037; margin-bottom: 14px; border-bottom: 1px solid #efebe9; padding-bottom: 10px; }
+
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 0.8rem; font-weight: 600; color: #5d4037; margin-bottom: 4px; }
+.field input { width: 100%; padding: 9px 12px; border: 1px solid #d7ccc8; border-radius: 8px; font-size: 0.88rem; background: #fdf6ec; color: #3e2723; outline: none; }
+.field input:focus { border-color: #8d6e63; box-shadow: 0 0 0 3px rgba(141,110,99,0.15); }
+
+.ceremony-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ceremony-btn { padding: 12px 8px; border: 2px solid #d7ccc8; border-radius: 10px; background: #fff; cursor: pointer; text-align: center; font-size: 0.9rem; color: #5d4037; transition: all 0.2s; }
+.ceremony-btn.selected { border-color: #8B4513; background: #8B4513; color: white; }
+
+.person-block { background: #fdf6ec; border: 1px solid #d7ccc8; border-radius: 10px; padding: 14px; margin-bottom: 12px; position: relative; }
+.person-block h3 { font-size: 0.85rem; color: #8d6e63; margin-bottom: 12px; }
+.person-remove { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #bcaaa4; cursor: pointer; font-size: 1.1rem; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.add-person-btn { width: 100%; padding: 10px; border: 2px dashed #d7ccc8; border-radius: 10px; background: none; color: #8d6e63; cursor: pointer; font-size: 0.85rem; margin-bottom: 14px; }
+.add-person-btn:hover { border-color: #8d6e63; color: #5d4037; }
+
+.btn-primary { width: 100%; padding: 13px; background: #8B4513; color: white; border: none; border-radius: 10px; font-size: 1rem; cursor: pointer; font-weight: 600; }
+.btn-primary:hover { background: #6d3710; }
+.btn-primary:disabled { background: #bcaaa4; cursor: not-allowed; }
+
+.progress-wrap { background: #efebe9; border-radius: 8px; height: 10px; overflow: hidden; margin: 16px 0 8px; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, #8B4513, #d7a96b); border-radius: 8px; transition: width 0.4s ease; }
+.progress-label { text-align: center; font-size: 0.8rem; color: #8d6e63; }
+
+.results-count { text-align: center; font-size: 1rem; color: #5d4037; margin-bottom: 14px; font-weight: 600; }
+.results-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.results-table th { background: #8B4513; color: white; padding: 8px 10px; text-align: left; }
+.results-table td { padding: 8px 10px; border-bottom: 1px solid #efebe9; vertical-align: top; }
+.results-table tr:nth-child(even) td { background: #fdf6ec; }
+.results-table tr:hover td { background: #f5e6d3; }
+.kalam-cell { font-size: 0.74rem; color: #bf360c; }
+.time-cell { font-weight: 600; color: #33691e; font-size: 0.78rem; }
+
+.btn-secondary { padding: 10px 20px; background: #efebe9; color: #5d4037; border: 1px solid #d7ccc8; border-radius: 8px; cursor: pointer; font-size: 0.88rem; }
+.actions-row { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+
+.error-msg { background: #fbe9e7; border: 1px solid #ffccbc; border-radius: 8px; padding: 10px 14px; color: #bf360c; font-size: 0.82rem; margin-bottom: 12px; display: none; }
+
+.kalam-note { font-size: 0.74rem; color: #795548; background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 8px 10px; margin-top: 10px; }
+
+@media print {
+  .page-header, .actions-row, .btn-primary { display: none !important; }
+  body { background: white; padding: 0; }
+  .results-table th { background: #333 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="om">🕉</div>
+  <h1>శుభ ముహూర్తం</h1>
+  <div class="sub">Muhoortam.Sanathanadharmas.com</div>
+</div>
+
+<div id="errorMsg" class="error-msg"></div>
+
+<!-- Step 1: Ceremony Details -->
+<div id="step1" class="step-panel active">
+  <div class="card">
+    <h2>దశ 1 — వేడుక వివరాలు</h2>
+    <div class="field">
+      <label>వేడుక రకం ఎంచుకోండి</label>
+      <div class="ceremony-grid" style="margin-top:8px">
+        <button class="ceremony-btn" data-type="vivaha" onclick="selectCeremony(this)">💒 వివాహం</button>
+        <button class="ceremony-btn" data-type="gruha_pravesam" onclick="selectCeremony(this)">🏠 గృహ ప్రవేశం</button>
+        <button class="ceremony-btn" data-type="upanayanam" onclick="selectCeremony(this)">🪡 ఉపనయనం</button>
+        <button class="ceremony-btn" data-type="pooja" onclick="selectCeremony(this)">🪔 పూజ</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>వేడుక నగరం</label>
+      <input type="text" id="ceremonyCity" placeholder="ఉదా: Hyderabad, Vijayawada">
+    </div>
+    <div class="field">
+      <label>దేశం</label>
+      <input type="text" id="ceremonyCountry" placeholder="ఉదా: India, USA">
+    </div>
+    <button class="btn-primary" onclick="goStep2()">తదుపరి →</button>
+  </div>
+</div>
+
+<!-- Step 2: Birth Details -->
+<div id="step2" class="step-panel">
+  <div class="card">
+    <h2>దశ 2 — జన్మ వివరాలు</h2>
+    <div id="personList"></div>
+    <button class="add-person-btn" id="addPersonBtn" onclick="addPerson()">
+      + మరో వ్యక్తిని జోడించండి (గరిష్టం 6)
+    </button>
+    <button class="btn-primary" onclick="startCompute()">ముహూర్తాలు వెతకండి →</button>
+  </div>
+</div>
+
+<!-- Step 3: Computing -->
+<div id="step3" class="step-panel">
+  <div class="card" style="text-align:center;padding:32px 18px">
+    <div style="font-size:2.5rem;margin-bottom:12px">🕉</div>
+    <div style="font-size:1.05rem;font-weight:600;margin-bottom:6px">శుభ ముహూర్తాలు వెతుకుతున్నాం...</div>
+    <div id="progressLabel" class="progress-label">సిద్ధంగా ఉంది</div>
+    <div class="progress-wrap"><div id="progressBar" class="progress-bar" style="width:0%"></div></div>
+    <div id="progressDetail" style="font-size:0.78rem;color:#bcaaa4;margin-top:4px"></div>
+  </div>
+</div>
+
+<!-- Step 4: Results -->
+<div id="step4" class="step-panel">
+  <div class="card">
+    <h2>దశ 4 — శుభ ముహూర్తాలు</h2>
+    <div id="resultsCount" class="results-count"></div>
+    <div class="kalam-note">
+      ⚠️ <strong>గమనిక:</strong> రాహు కాలం, యమగండ కాలం, గులిక కాలం సమయంలో వేడుకలు నిర్వహించవద్దు. గులిక కాలంలో వివాహం చేస్తే పునర్వివాహం జరుగుతుందని పెద్దలు చెప్తారు.
+    </div>
+    <div style="overflow-x:auto;margin-top:10px">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>తేదీ</th>
+            <th>వారం</th>
+            <th>తిథి · నక్షత్రం</th>
+            <th>సమయం</th>
+            <th>నిషేధ కాలాలు</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+    <div class="actions-row">
+      <button class="btn-secondary" onclick="window.print()">🖨 PDF</button>
+      <button class="btn-secondary" onclick="resetWizard()">మళ్ళీ వెతకండి</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Replace with deployed API URL before going live (sam deploy output)
+const API_BASE = "__MUHOORTAM_API_URL__";
+
+let selectedCeremony = null;
+let allResults = [];
+let personCount = 0;
+
+// ── Step navigation ──────────────────────────────────────────────────────────
+
+function showStep(n) {
+  document.querySelectorAll(".step-panel").forEach(p => p.classList.remove("active"));
+  document.getElementById("step" + n).classList.add("active");
+}
+
+function showError(msg) {
+  const el = document.getElementById("errorMsg");
+  el.textContent = msg;
+  el.style.display = msg ? "block" : "none";
+}
+
+// ── Step 1 ───────────────────────────────────────────────────────────────────
+
+function selectCeremony(btn) {
+  document.querySelectorAll(".ceremony-btn").forEach(b => b.classList.remove("selected"));
+  btn.classList.add("selected");
+  selectedCeremony = btn.dataset.type;
+}
+
+function goStep2() {
+  showError("");
+  if (!selectedCeremony) { showError("వేడుక రకం ఎంచుకోండి"); return; }
+  if (!document.getElementById("ceremonyCity").value.trim()) { showError("వేడుక నగరం నమోదు చేయండి"); return; }
+  if (!document.getElementById("ceremonyCountry").value.trim()) { showError("దేశం నమోదు చేయండి"); return; }
+  if (personCount === 0) addPerson();
+  showStep(2);
+}
+
+// ── Step 2 ───────────────────────────────────────────────────────────────────
+
+function addPerson() {
+  if (personCount >= 6) return;
+  personCount++;
+  const idx = personCount;
+  const div = document.createElement("div");
+  div.className = "person-block";
+  div.id = "person" + idx;
+  div.innerHTML = `
+    <h3>👤 వ్యక్తి ${idx}</h3>
+    ${idx > 1 ? `<button class="person-remove" onclick="removePerson(${idx})">✕</button>` : ""}
+    <div class="two-col">
+      <div class="field">
+        <label>జన్మ తేదీ</label>
+        <input type="text" id="dob${idx}" placeholder="DD/MM/YYYY">
+      </div>
+      <div class="field">
+        <label>జన్మ సమయం</label>
+        <input type="text" id="time${idx}" placeholder="HH:MM">
+      </div>
+    </div>
+    <div class="field">
+      <label>జన్మ స్థలం (నగరం, దేశం)</label>
+      <input type="text" id="place${idx}" placeholder="ఉదా: Hyderabad, India">
+    </div>`;
+  document.getElementById("personList").appendChild(div);
+  document.getElementById("addPersonBtn").style.display = personCount >= 6 ? "none" : "block";
+}
+
+function removePerson(idx) {
+  document.getElementById("person" + idx)?.remove();
+  personCount = document.querySelectorAll(".person-block").length;
+  document.getElementById("addPersonBtn").style.display = personCount >= 6 ? "none" : "block";
+}
+
+async function startCompute() {
+  showError("");
+  const blocks = document.querySelectorAll(".person-block");
+  if (blocks.length === 0) { showError("కనీసం ఒక వ్యక్తి వివరాలు నమోదు చేయండి"); return; }
+
+  const persons = [];
+  for (const block of blocks) {
+    const id = block.id.replace("person", "");
+    const dob   = document.getElementById("dob"   + id)?.value.trim();
+    const time  = document.getElementById("time"  + id)?.value.trim();
+    const place = document.getElementById("place" + id)?.value.trim();
+    if (!dob || !time || !place) { showError("అన్ని వ్యక్తుల వివరాలు పూరించండి"); return; }
+    persons.push({ dob, time, place });
+  }
+
+  showStep(3);
+  setProgress(0, "జన్మ వివరాలు లెక్కిస్తున్నాం...", "");
+
+  // Fetch birth charts
+  const birthCharts = [];
+  for (let i = 0; i < persons.length; i++) {
+    try {
+      const resp = await fetch(API_BASE + "/muhoortam/birth-chart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(persons[i]),
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      birthCharts.push(await resp.json());
+    } catch (e) {
+      showStep(2);
+      showError("వ్యక్తి " + (i + 1) + " వివరాలు లెక్కించడం సాధ్యం కాలేదు: " + e.message);
+      return;
+    }
+  }
+
+  // Scan 12 months from today
+  const ceremonyPlace = document.getElementById("ceremonyCity").value.trim() + ", " +
+                        document.getElementById("ceremonyCountry").value.trim();
+  allResults = [];
+  const now = new Date();
+  let yr = now.getFullYear(), mo = now.getMonth() + 1;
+
+  for (let i = 0; i < 12; i++) {
+    const pct = Math.round(((i + 1) / 12) * 100);
+    setProgress(pct, `${MONTHS_TE[mo - 1]} ${yr} స్కాన్ అవుతోంది`, `${i + 1}/12 నెలలు`);
+    try {
+      const resp = await fetch(API_BASE + "/muhoortam/find", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          year: yr, month: mo,
+          ceremony_type: selectedCeremony,
+          ceremony_place: ceremonyPlace,
+          birth_charts: birthCharts,
+        }),
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      const data = await resp.json();
+      allResults = allResults.concat(data.results || []);
+    } catch (e) {
+      console.warn("Month scan failed:", yr, mo, e);
+    }
+    mo++;
+    if (mo > 12) { mo = 1; yr++; }
+  }
+
+  showResults();
+}
+
+function setProgress(pct, label, detail) {
+  document.getElementById("progressBar").style.width = pct + "%";
+  document.getElementById("progressLabel").textContent = label;
+  document.getElementById("progressDetail").textContent = detail;
+}
+
+// ── Step 4 ───────────────────────────────────────────────────────────────────
+
+const MONTHS_TE = ["జనవరి","ఫిబ్రవరి","మార్చి","ఏప్రిల్","మే","జూన్",
+                   "జులై","ఆగస్టు","సెప్టెంబర్","అక్టోబర్","నవంబర్","డిసెంబర్"];
+
+function showResults() {
+  const tbody = document.getElementById("resultsBody");
+  tbody.innerHTML = "";
+
+  document.getElementById("resultsCount").textContent =
+    allResults.length > 0
+      ? `${allResults.length} శుభ ముహూర్తాలు దొరికాయి`
+      : "శుభ ముహూర్తాలు దొరకలేదు — వేరే సమయంలో తిరిగి ప్రయత్నించండి";
+
+  for (const r of allResults) {
+    const timeNote = r.sunrise + " – " + r.sunset;
+    const kalamLines = [];
+    if (r.rahu_kalam)   kalamLines.push(`రాహు: ${r.rahu_kalam.start}–${r.rahu_kalam.end}`);
+    if (r.yamaganda)    kalamLines.push(`యమగండ: ${r.yamaganda.start}–${r.yamaganda.end}`);
+    if (r.gulika_kalam) kalamLines.push(`గులిక: ${r.gulika_kalam.start}–${r.gulika_kalam.end}`);
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.date_te}</td>
+      <td>${r.vaaram_te}</td>
+      <td>${r.tithi_te}<br><small style="color:#8d6e63">${r.nakshatra_te}</small></td>
+      <td class="time-cell">${timeNote}</td>
+      <td class="kalam-cell">${kalamLines.join("<br>")}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  showStep(4);
+}
+
+function resetWizard() {
+  showError("");
+  selectedCeremony = null;
+  allResults = [];
+  personCount = 0;
+  document.querySelectorAll(".ceremony-btn").forEach(b => b.classList.remove("selected"));
+  document.getElementById("ceremonyCity").value = "";
+  document.getElementById("ceremonyCountry").value = "";
+  document.getElementById("personList").innerHTML = "";
+  document.getElementById("addPersonBtn").style.display = "block";
+  showStep(1);
+}
+
+// Initialise with one person block
+addPerson();
+</script>
+</body>
+</html>
