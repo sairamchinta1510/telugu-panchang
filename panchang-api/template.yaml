@@ -60,6 +60,12 @@ Resources:
             Path: /muhoortam/find
             Method: POST
             ApiId: !Ref PanchangHttpApi
+        MuhoortamCheck:
+          Type: HttpApi
+          Properties:
+            Path: /muhoortam/check
+            Method: POST
+            ApiId: !Ref PanchangHttpApi
 
 Outputs:
   ApiEndpoint:

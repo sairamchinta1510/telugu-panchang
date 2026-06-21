@@ -250,8 +250,8 @@ def _load_finder(days_auspicious: set):
         return float(day)  # use day as JD stand-in
 
     def fake_get_sunrise_sunset(jd, lat, lon):
-        # Use jd as rise so moon_longitude(rise_jd) gets the same day-based JD
-        return (jd, jd + 1.0)
+        # rise_jd = integer JD, set_jd = integer + 0.5 (distinguishable)
+        return (jd, jd + 0.5)
 
     def fake_moon_longitude(jd):
         # Return Rohini (idx=3) for auspicious days: 3 * (360/27) + 1 = ~41°
@@ -265,8 +265,10 @@ def _load_finder(days_auspicious: set):
 
     from datetime import datetime as real_dt
     def fake_jd_to_local_datetime(jd, tz):
-        # July 16, 2026 is a Thursday (weekday=3 → sun_idx=4)
-        return real_dt(2026, 7, 16, 6, 0)
+        # rise_jd is integer (float(day)), set_jd is integer+0.5
+        if jd % 1 != 0:
+            return real_dt(2026, 7, 16, 18, 0)   # sunset
+        return real_dt(2026, 7, 16, 6, 0)         # sunrise, Thursday → sun_idx=4
 
     def fake_compute_lagna(jd, lat, lon):
         return 3  # Vrishchika lagna → panchaka safe (see above)
@@ -472,3 +474,159 @@ def test_handler_unknown_path():
     event = _make_handler_event("/muhoortam/unknown", {})
     resp = h.lambda_handler(event, None)
     assert resp["statusCode"] == 404
+
+
+# ── check_muhurta_day tests ───────────────────────────────────────────────────
+
+MOCK_CHECK_RESULT_GOOD = {
+    "verdict": "good",
+    "overall_day_good": True,
+    "time_verdict": None,
+    "date_te": "15 జులై 2026",
+    "vaaram_te": "గురువారం",
+    "tithi_te": "ప్రథమ",
+    "nakshatra_te": "రోహిణి",
+    "yoga_te": "సౌభాగ్య",
+    "masam_te": "జ్యేష్ఠ",
+    "sunrise": "06:03",
+    "sunset": "18:45",
+    "good_factors": ["నక్షత్రం: రోహిణి — వివాహంకు శుభమైన నక్షత్రం ✓"],
+    "bad_factors": [],
+    "time_issues": [],
+    "rahu_kalam": {"start": "13:30", "end": "15:07"},
+    "yamaganda": {"start": "06:03", "end": "07:40"},
+    "gulika_kalam": {"start": "09:17", "end": "10:54"},
+    "dur_muhurtam": [],
+    "varjyam": [],
+}
+
+MOCK_CHECK_RESULT_BAD = dict(MOCK_CHECK_RESULT_GOOD, verdict="bad", overall_day_good=False,
+    bad_factors=["నక్షత్రం: అశ్వని — వివాహంకు అనుకూలమైన నక్షత్రం కాదు"],
+    good_factors=[])
+
+
+def test_handler_check_ok():
+    h = _fresh_handler()
+    with patch.object(h, "_geocode", return_value=MOCK_GEO), \
+         patch.object(h, "check_muhurta_day", return_value=MOCK_CHECK_RESULT_GOOD):
+        event = _make_handler_event("/muhoortam/check", {
+            "date": "15/07/2026",
+            "ceremony_type": "vivaha",
+            "ceremony_place": "Hyderabad, India",
+            "birth_charts": [{"janma_nakshatra_idx": 3, "janma_rashi_idx": 1}],
+        })
+        resp = h.lambda_handler(event, None)
+    assert resp["statusCode"] == 200
+    body = json.loads(resp["body"])
+    assert body["verdict"] == "good"
+    assert body["date_te"] == "15 జులై 2026"
+
+
+def test_handler_check_with_time():
+    h = _fresh_handler()
+    with patch.object(h, "_geocode", return_value=MOCK_GEO), \
+         patch.object(h, "check_muhurta_day", return_value=MOCK_CHECK_RESULT_GOOD) as mock_check:
+        event = _make_handler_event("/muhoortam/check", {
+            "date": "15/07/2026",
+            "time": "10:30",
+            "ceremony_type": "vivaha",
+            "ceremony_place": "Hyderabad, India",
+            "birth_charts": [],
+        })
+        resp = h.lambda_handler(event, None)
+    assert resp["statusCode"] == 200
+    # Verify time was parsed and passed as check_hour=10, check_minute=30
+    _, kwargs = mock_check.call_args
+    assert kwargs.get("check_hour") == 10
+    assert kwargs.get("check_minute") == 30
+
+
+def test_handler_check_missing_field():
+    h = _fresh_handler()
+    with patch.object(h, "_geocode", return_value=MOCK_GEO):
+        event = _make_handler_event("/muhoortam/check", {
+            "date": "15/07/2026",
+            # missing ceremony_type and ceremony_place
+        })
+        resp = h.lambda_handler(event, None)
+    assert resp["statusCode"] == 400
+
+
+def test_handler_check_bad_date_format():
+    h = _fresh_handler()
+    with patch.object(h, "_geocode", return_value=MOCK_GEO):
+        event = _make_handler_event("/muhoortam/check", {
+            "date": "2026-07-15",  # wrong format (should be DD/MM/YYYY)
+            "ceremony_type": "vivaha",
+            "ceremony_place": "Hyderabad, India",
+        })
+        resp = h.lambda_handler(event, None)
+    assert resp["statusCode"] == 400
+
+
+def test_handler_check_bad_time_format():
+    h = _fresh_handler()
+    with patch.object(h, "_geocode", return_value=MOCK_GEO):
+        event = _make_handler_event("/muhoortam/check", {
+            "date": "15/07/2026",
+            "time": "1030",  # wrong format (should be HH:MM)
+            "ceremony_type": "vivaha",
+            "ceremony_place": "Hyderabad, India",
+        })
+        resp = h.lambda_handler(event, None)
+    assert resp["statusCode"] == 400
+
+
+def test_check_muhurta_day_verdict_structure():
+    """check_muhurta_day result must contain required keys and valid verdict."""
+    mf = _load_finder({15})
+    birth_charts = [{"janma_nakshatra_idx": 0, "name": "రాము"}]
+    result = mf.check_muhurta_day(2026, 7, 15, 17.38, 78.49, "Asia/Kolkata", "vivaha", birth_charts)
+    assert result["verdict"] in ("good", "bad", "mixed")
+    assert isinstance(result["good_factors"], list)
+    assert isinstance(result["bad_factors"], list)
+    assert isinstance(result["time_issues"], list)
+    assert "nakshatra_te" in result
+    assert "tithi_te" in result
+    assert "sunrise" in result
+
+
+def test_check_muhurta_day_good_nakshatra():
+    """Day with Rohini (auspicious for Vivaha) should appear in good_factors."""
+    mf = _load_finder({15})
+    result = mf.check_muhurta_day(2026, 7, 15, 17.38, 78.49, "Asia/Kolkata", "vivaha",
+                                   [{"janma_nakshatra_idx": 0}])
+    nak_factors = [f for f in result["good_factors"] if "నక్షత్రం" in f]
+    assert nak_factors, "Expected nakshatra good factor"
+
+
+def test_check_muhurta_day_bad_nakshatra():
+    """Day with Ashvini (not in Vivaha list) should appear in bad_factors."""
+    mf = _load_finder(set())  # no auspicious days → all days get naks=0 (Ashvini)
+    result = mf.check_muhurta_day(2026, 7, 15, 17.38, 78.49, "Asia/Kolkata", "vivaha",
+                                   [{"janma_nakshatra_idx": 0}])
+    nak_bad = [f for f in result["bad_factors"] if "నక్షత్రం" in f]
+    assert nak_bad, "Expected nakshatra bad factor"
+    assert result["overall_day_good"] is False
+
+
+def test_check_muhurta_day_person_name_in_factors():
+    """Person name should appear in tara balam factor reason."""
+    mf = _load_finder({15})
+    # Janma=3 (Rohini), day naks=3 → tara=1 (Janma) → bad tara
+    result = mf.check_muhurta_day(2026, 7, 15, 17.38, 78.49, "Asia/Kolkata", "vivaha",
+                                   [{"janma_nakshatra_idx": 3, "name": "వేణు"}])
+    tara_factors = [f for f in result["bad_factors"] if "వేణు" in f and "తార" in f]
+    assert tara_factors, "Expected person name in tara balam factor"
+
+
+def test_check_muhurta_day_time_in_rahu_kalam():
+    """Time within rahu kalam should set time_verdict='bad'."""
+    mf = _load_finder({15})
+    # Sunrise ~06:00, sunset ~18:00, sun_idx=4 (Thursday) → rahu kalam segment=6
+    # rahu = rise + (6-1)*part; part=(12*60)/8=90min → rahu starts at 06:00+450=13:30
+    result = mf.check_muhurta_day(2026, 7, 15, 17.38, 78.49, "Asia/Kolkata", "vivaha",
+                                   [{"janma_nakshatra_idx": 0}],
+                                   check_hour=14, check_minute=0)
+    assert result["time_verdict"] == "bad"
+    assert any("రాహు" in issue for issue in result["time_issues"])

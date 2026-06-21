@@ -12,7 +12,7 @@ import urllib.parse
 from timezonefinder import TimezoneFinder
 
 from compute.birth_chart import compute_birth_chart
-from compute.muhurta_finder import find_muhurtas_for_month
+from compute.muhurta_finder import find_muhurtas_for_month, check_muhurta_day
 
 _tf = TimezoneFinder()
 
@@ -66,6 +66,8 @@ def lambda_handler(event: dict, context) -> dict:
         return _handle_birth_chart(body)
     if path.endswith("/find"):
         return _handle_find(body)
+    if path.endswith("/check"):
+        return _handle_check(body)
     return _error(404, "Unknown endpoint")
 
 
@@ -135,3 +137,46 @@ def _handle_find(body: dict) -> dict:
         return _error(500, "Muhurta calculation failed")
 
     return _ok({"results": results, "count": len(results)})
+
+
+def _handle_check(body: dict) -> dict:
+    try:
+        date_str       = body["date"]          # "DD/MM/YYYY"
+        ceremony_type  = body["ceremony_type"]
+        ceremony_place = body["ceremony_place"]
+        birth_charts   = body.get("birth_charts", [])
+    except KeyError as e:
+        return _error(400, f"Missing field: {e}")
+
+    time_str = body.get("time", "")  # "HH:MM" or empty
+    check_hour = check_minute = -1
+    if time_str:
+        try:
+            check_hour, check_minute = [int(x) for x in time_str.split(":")]
+        except (ValueError, TypeError):
+            return _error(400, "time must be HH:MM")
+
+    try:
+        day, month, year = [int(x) for x in date_str.split("/")]
+    except (ValueError, TypeError):
+        return _error(400, "date must be DD/MM/YYYY")
+
+    try:
+        geo = _geocode(ceremony_place)
+    except ValueError as e:
+        return _error(400, str(e))
+    except Exception:
+        return _error(502, "Geocoding service unavailable")
+
+    try:
+        result = check_muhurta_day(
+            year, month, day,
+            geo["lat"], geo["lon"], geo["tz_name"],
+            ceremony_type, birth_charts,
+            check_hour=check_hour, check_minute=check_minute,
+        )
+    except Exception:
+        traceback.print_exc()
+        return _error(500, "Muhurta check calculation failed")
+
+    return _ok(result)
