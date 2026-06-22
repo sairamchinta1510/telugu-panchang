@@ -1009,6 +1009,8 @@ let _monthsCursor = 0;  // next month index to fetch
 let _scanComplete = false; // true when all months have been scanned
 let _scanBirthCharts = []; // birth charts cached for "next page" re-use
 let _scanPlace = "";
+let _scanFromDate = null; // Date — inclusive start of user's range
+let _scanToDate   = null; // Date — inclusive end of user's range
 
 let savedProfileCharts = {};   // personBlockId → pre-computed birth chart
 const PROFILES_KEY = "muhurta_profiles";
@@ -1401,6 +1403,8 @@ async function _runFind(birthCharts) {
   _scanComplete   = false;
   _scanBirthCharts = birthCharts;
   _scanPlace      = document.getElementById("ceremonyPlace").value.trim();
+  _scanFromDate   = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+  _scanToDate     = new Date(toDate.getFullYear(),   toDate.getMonth(),   toDate.getDate());
   allResults      = [];
 
   // Fetch just enough months to get the first PAGE_SIZE results
@@ -1442,7 +1446,13 @@ async function _fetchUntilPageFull(isFirst) {
       });
       if (!r.ok) throw new Error(await r.text());
       const data = await r.json();
-      allResults.push(...(data.results||[]));
+      const inRange = (data.results || []).filter(res => {
+        if (!res.date_raw) return true;
+        const [d, m, y] = res.date_raw.split('/').map(Number);
+        const rDate = new Date(y, m - 1, d);
+        return rDate >= _scanFromDate && rDate <= _scanToDate;
+      });
+      allResults.push(...inRange);
       _monthsCursor++;
     } catch(e) {
       showLoading(false);
