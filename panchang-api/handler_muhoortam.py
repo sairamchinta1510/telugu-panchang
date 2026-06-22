@@ -46,12 +46,36 @@ def _ok(data: dict) -> dict:
 
 
 def _geocode(place: str) -> dict:
-    """Resolve a place name to lat, lon, and IANA timezone using Nominatim."""
-    params = urllib.parse.urlencode({"q": place, "format": "json", "limit": 1})
-    url = f"https://nominatim.openstreetmap.org/search?{params}"
-    req = urllib.request.Request(url, headers={"User-Agent": "muhoortam-api/1.0"})
-    with urllib.request.urlopen(req, timeout=8) as resp:
-        results = json.loads(resp.read())
+    """Resolve a place name to lat, lon, and IANA timezone using Nominatim.
+
+    If the full string fails (e.g. a pasted full address), retries with
+    progressively simpler extracts: each comma-separated segment, then the
+    last non-numeric token that looks like a city name.
+    """
+    def _try_query(q: str) -> list:
+        q = q.strip()
+        if not q:
+            return []
+        params = urllib.parse.urlencode({"q": q, "format": "json", "limit": 1})
+        url = f"https://nominatim.openstreetmap.org/search?{params}"
+        req = urllib.request.Request(url, headers={"User-Agent": "muhoortam-api/1.0"})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            return json.loads(resp.read())
+
+    # Build candidate queries: full string first, then each comma segment
+    candidates = [place]
+    parts = [p.strip() for p in place.split(",") if p.strip()]
+    # Try individual segments (skip pure numbers / postcodes)
+    for p in parts:
+        if p and not p.isdigit() and p not in candidates:
+            candidates.append(p)
+
+    results = []
+    for q in candidates:
+        results = _try_query(q)
+        if results:
+            break
+
     if not results:
         raise ValueError(f"Place not found: {place!r}")
     r = results[0]
