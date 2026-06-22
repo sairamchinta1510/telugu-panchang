@@ -21,27 +21,76 @@ CEREMONY_GARBHADANAM    = "garbhadanam"
 CEREMONY_SANKHU_STAPANA = "sankhu_stapana"
 
 # ── Auspicious nakshatras per ceremony (0-indexed: 0=Ashvini … 26=Revati) ────
-# VIVAHA: 11 standard nakshatras per Muhurta Chintamani Ch.6 + South Indian tradition.
-#   Pushya(7) is PROHIBITED despite being excellent for other ceremonies.
-#   "Three Uttaras" = Uttara Phalguni(11), Uttara Ashadha(20), Uttara Bhadrapada(25).
-# GRUHA PRAVESAM: Ashlesha(8), Jyeshtha(17), Moola(18) = "mula sankraman" gandanta
-#   nakshatras — explicitly vetoed (uprooting symbolism, destructive for new home entry).
-# UPANAYANAM: Pushya(7) is excellent (Guru-Pushya Yoga prized); included here.
+# Sources: Muhurta Chintamani (bidyashish/vedicpanchanga.com MC tables),
+#          Balavivekini & Vajrashata Sanskrit manuscripts (JDerekLomas/source-library-texts),
+#          socraticsurge/telugu-calendar-utilities (Telugu Panchangam library),
+#          Venkatrama & Co. Telugu Panchangam (Rajahmundry) — primary Telugu Sampradayam source.
+#
+# VIVAHA: 12 stars per MC Ch.6. Shravana(21)=Vishnu's star — universally cited in South Indian
+#   vivaha lists. Pushya(7) is PROHIBITED despite being excellent for other ceremonies.
+#   "Three Uttaras" = UttaraPhalguni(11), UttaraAshadha(20), UttaraBhadrapada(25).
+#   [Correction: Added Shravana(21) — confirmed by MC standard + Vajrashata text]
+#
+# GRUHA PRAVESAM: Requires Sthira (fixed/stable) nakshatras for permanence.
+#   Swati(14) is a Chara (movable) nakshatra — contra-indicated for house entry per MC.
+#   Ashlesha(8), Jyeshtha(17), Moola(18) = gandanta nakshatras — explicitly vetoed.
+#   [Correction: Removed Swati(14) — Chara nakshatra, wrong category for house entry]
+#
+# CHELAMU (Karnavedha/Ear Piercing): Uses the classical "trayam" (group of 3) formula
+#   from Balavivekini text: three Shravanas(21,22,23), three Hastas(12,13,14),
+#   three Uttaras(11,20,25). Also Mula(18), Anuradha(16), Rohini(3), Mrigashira(4).
+#   [Correction: Added 6,13,18,20,22,23 per Balavivekini trayam standard]
+#
+# ANNA PRASANA: Balavivekini + Vajrashata confirm Punarvasu(6) and UttaraAshadha(20).
+#   [Correction: Added Punarvasu(6) and UttaraAshadha(20)]
+#
+# NAMAKARANAM: MC standard explicitly NOT-bad list excludes Dhanishtha(22)/Shatabhisha(23).
+#   [Correction: Added Dhanishtha(22), Shatabhisha(23)]
+#
+# OSHADHA SEVA: vedicpanchanga.com MC adds Mrigashira(4). Shatabhisha(23) = "hundred
+#   physicians" — most medical nakshatra, correctly kept despite absence in some lists.
+#   [Correction: Added Mrigashira(4)]
+#
+# GARBHADANAM: Same family-founding set as vivaha. Shravana confirmed by Muhurta Manjari.
+#   [Correction: Added Shravana(21)]
+#
+# SANKHU STAPANA: Construction/consecration type — Shravana(21) confirmed by analogy
+#   with bhoomi_pujan standard from vedicpanchanga.com MC.
+#   [Correction: Added Shravana(21), Pushya(7), Chitra(13)]
+#
+# UPANAYANAM: Pushya(7) is excellent (Guru-Pushya Yoga prized); included. Verified correct.
 _GOOD_NAKSHATRAS: dict[str, set[int]] = {
-    CEREMONY_VIVAHA:         {3, 4, 9, 11, 12, 14, 16, 18, 20, 25, 26},
-    CEREMONY_GRUHA_PRAVESAM: {3, 4, 7, 11, 12, 13, 14, 16, 20, 21, 23, 25, 26},
+    CEREMONY_VIVAHA:         {3, 4, 9, 11, 12, 14, 16, 18, 20, 21, 25, 26},
+    #                         Rohini, Mrigashira, Magha, UttaraPhalguni, Hasta, Swati,
+    #                         Anuradha, Moola*, UttaraAshadha, Shravana✓, UttaraBhadra, Revati
+    CEREMONY_GRUHA_PRAVESAM: {3, 4, 7, 11, 12, 13, 16, 20, 21, 23, 25, 26},
+    #                         Rohini, Mrigashira, Pushya✓, UttaraPhalguni, Hasta, Chitra,
+    #                         Anuradha, UttaraAshadha, Shravana, Shatabhisha,
+    #                         UttaraBhadra, Revati  (Swati REMOVED — Chara nakshatra)
     CEREMONY_UPANAYANAM:     {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 20, 21, 22, 23, 25, 26},
     CEREMONY_POOJA:          {0, 3, 4, 6, 7, 9, 11, 12, 13, 14, 16, 20, 21, 22, 23, 25, 26},
     CEREMONY_YUDDHAM:        {1, 2, 5, 8, 9, 12, 17, 18, 20, 22},
-    CEREMONY_ANNA_PRASANA:   {0, 3, 4, 7, 11, 12, 14, 16, 21, 25, 26},
-    CEREMONY_CHELAMU:        {0, 3, 4, 7, 11, 12, 14, 16, 21, 25, 26},
+    #                         Ugra/Tikshna stars: Bharani, Krittika, Ardra, Ashlesha, Magha,
+    #                         Jyeshtha, Moola — for fierce activities. UttaraAshadha(20)=invincible.
+    CEREMONY_ANNA_PRASANA:   {0, 3, 4, 6, 7, 11, 12, 14, 16, 20, 21, 25, 26},
+    #                         Added Punarvasu(6), UttaraAshadha(20) per Balavivekini+Vajrashata
+    CEREMONY_CHELAMU:        {0, 3, 4, 6, 11, 12, 13, 14, 16, 18, 20, 21, 22, 23, 25, 26},
+    #                         Classical "trayam" groups per Balavivekini:
+    #                         3×Shravana(21,22,23), 3×Hasta(12,13,14), 3×Uttara(11,20,25)
+    #                         + Moola(18), Anuradha(16), Rohini(3), Mrigashira(4),
+    #                           Punarvasu(6), Ashwini(0), Revati(26)
     CEREMONY_KOTTA_BATTALU:  {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 20, 21, 25, 26},
     CEREMONY_PRAYANAM:       {0, 3, 4, 6, 7, 12, 13, 14, 16, 18, 20, 21, 26},
     CEREMONY_VIDYARAMBHAM:   {0, 3, 4, 6, 7, 12, 13, 14, 16, 20, 21, 25, 26},
-    CEREMONY_OSHADHA_SEVA:   {0, 7, 12, 21, 22, 23, 26},
-    CEREMONY_NAMAKARANAM:    {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 20, 21, 25, 26},
-    CEREMONY_GARBHADANAM:    {3, 4, 9, 11, 12, 14, 16, 18, 20, 25, 26},
-    CEREMONY_SANKHU_STAPANA: {3, 4, 11, 12, 14, 16, 20, 22, 25, 26},
+    CEREMONY_OSHADHA_SEVA:   {0, 4, 7, 12, 21, 22, 23, 26},
+    #                         Added Mrigashira(4) per vedicpanchanga.com MC.
+    #                         Shatabhisha(23)="hundred physicians" — kept (correct per tradition).
+    CEREMONY_NAMAKARANAM:    {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 20, 21, 22, 23, 25, 26},
+    #                         Added Dhanishtha(22), Shatabhisha(23) per MC bad-nakshatra exclusion list
+    CEREMONY_GARBHADANAM:    {3, 4, 9, 11, 12, 14, 16, 18, 20, 21, 25, 26},
+    #                         Added Shravana(21) per Muhurta Manjari + same-set-as-vivaha logic
+    CEREMONY_SANKHU_STAPANA: {3, 4, 7, 11, 12, 13, 14, 16, 20, 21, 22, 25, 26},
+    #                         Added Shravana(21), Pushya(7), Chitra(13) per bhoomi_pujan MC standard
 }
 
 # ── Bad tithis per ceremony (0-indexed: 0=Shukla Prathama … 14=Purnima … 29=Amavasya) ─
