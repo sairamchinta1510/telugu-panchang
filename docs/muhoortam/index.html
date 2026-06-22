@@ -951,7 +951,7 @@ function renderWindowChecks(w, birthCharts) {
   if (!w || w.nak_idx === undefined) return "";
   const { nak_idx, tithi_idx, sun_idx, lagna_idx } = w;
 
-  const panchaka = (sun_idx + tithi_idx + nak_idx + lagna_idx) % 9;
+  const panchaka = ((sun_idx+1) + (tithi_idx+1) + (nak_idx+1) + (lagna_idx+1)) % 9;
   const panchakaGood = [0,3,5,7].includes(panchaka);
 
   let rows = `
@@ -963,7 +963,7 @@ function renderWindowChecks(w, birthCharts) {
       </tr>
       <tr>
         <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">పంచక</td>
-        <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">(${sun_idx}+${tithi_idx}+${nak_idx}+${lagna_idx})%9=${panchaka}</td>
+        <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">(${sun_idx+1}+${tithi_idx+1}+${nak_idx+1}+${lagna_idx+1})%9=${panchaka}</td>
         <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">${panchakaGood ? "✅" : "❌"}</td>
       </tr>`;
 
