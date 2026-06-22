@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import concurrent.futures
 import gzip
 import json
 import logging
@@ -10,24 +11,24 @@ from compute.precompute import precompute_month
 
 MAJOR_CITIES = [
     # India — Andhra Pradesh / Telangana
-    {"name": "hyderabad",   "lat": 17.385, "lon": 78.487,  "tz": "Asia/Kolkata"},
-    {"name": "tirupati",    "lat": 13.628, "lon": 79.418,  "tz": "Asia/Kolkata"},
-    {"name": "vijayawada",  "lat": 16.506, "lon": 80.648,  "tz": "Asia/Kolkata"},
-    {"name": "visakhapatnam", "lat": 17.687, "lon": 83.218, "tz": "Asia/Kolkata"},
+    {"name": "hyderabad",     "lat": 17.385, "lon": 78.487,   "tz": "Asia/Kolkata"},
+    {"name": "tirupati",      "lat": 13.628, "lon": 79.418,   "tz": "Asia/Kolkata"},
+    {"name": "vijayawada",    "lat": 16.506, "lon": 80.648,   "tz": "Asia/Kolkata"},
+    {"name": "visakhapatnam", "lat": 17.687, "lon": 83.218,   "tz": "Asia/Kolkata"},
     # India — other major cities
-    {"name": "mumbai",      "lat": 19.076, "lon": 72.878,  "tz": "Asia/Kolkata"},
-    {"name": "delhi",       "lat": 28.614, "lon": 77.209,  "tz": "Asia/Kolkata"},
-    {"name": "chennai",     "lat": 13.083, "lon": 80.275,  "tz": "Asia/Kolkata"},
-    {"name": "bangalore",   "lat": 12.972, "lon": 77.594,  "tz": "Asia/Kolkata"},
-    {"name": "kolkata",     "lat": 22.573, "lon": 88.363,  "tz": "Asia/Kolkata"},
+    {"name": "mumbai",        "lat": 19.076, "lon": 72.878,   "tz": "Asia/Kolkata"},
+    {"name": "delhi",         "lat": 28.614, "lon": 77.209,   "tz": "Asia/Kolkata"},
+    {"name": "chennai",       "lat": 13.083, "lon": 80.275,   "tz": "Asia/Kolkata"},
+    {"name": "bangalore",     "lat": 12.972, "lon": 77.594,   "tz": "Asia/Kolkata"},
+    {"name": "kolkata",       "lat": 22.573, "lon": 88.363,   "tz": "Asia/Kolkata"},
     # USA
-    {"name": "seattle",     "lat": 47.606, "lon": -122.332, "tz": "America/Los_Angeles"},
-    {"name": "new_york",    "lat": 40.713, "lon": -74.006,  "tz": "America/New_York"},
-    {"name": "chicago",     "lat": 41.878, "lon": -87.630,  "tz": "America/Chicago"},
-    {"name": "houston",     "lat": 29.760, "lon": -95.370,  "tz": "America/Chicago"},
-    {"name": "san_jose",    "lat": 37.339, "lon": -121.894, "tz": "America/Los_Angeles"},
+    {"name": "seattle",       "lat": 47.606, "lon": -122.332, "tz": "America/Los_Angeles"},
+    {"name": "new_york",      "lat": 40.713, "lon": -74.006,  "tz": "America/New_York"},
+    {"name": "chicago",       "lat": 41.878, "lon": -87.630,  "tz": "America/Chicago"},
+    {"name": "houston",       "lat": 29.760, "lon": -95.370,  "tz": "America/Chicago"},
+    {"name": "san_jose",      "lat": 37.339, "lon": -121.894, "tz": "America/Los_Angeles"},
     # UK
-    {"name": "london",      "lat": 51.508, "lon": -0.128,   "tz": "Europe/London"},
+    {"name": "london",        "lat": 51.508, "lon": -0.128,   "tz": "Europe/London"},
 ]
 
 logger = logging.getLogger(__name__)
@@ -56,8 +57,21 @@ def _write_cache_sync(year: int, month: int, lat: float, lon: float, data: dict)
     )
 
 
+def _precompute_one(city: dict, year: int, month: int) -> tuple[str, bool, str]:
+    """Compute and cache one city/month. Returns (key, success, error_msg)."""
+    key = f"{city['name']}/{year}-{month:02d}"
+    try:
+        data = precompute_month(year, month, city["lat"], city["lon"], city["tz"])
+        _write_cache_sync(year, month, city["lat"], city["lon"], data)
+        logger.info("Precomputed %s: %d days", key, len(data))
+        return key, True, ""
+    except Exception as exc:
+        logger.error("Failed %s: %s", key, exc)
+        return key, False, str(exc)
+
+
 def lambda_handler(event: dict, context) -> dict:
-    """Nightly cron: precompute next 90 days for major Indian cities."""
+    """Nightly cron: precompute next 90 days for all cities in parallel."""
     today = date.today()
 
     month_set: set[tuple[int, int]] = set()
@@ -66,24 +80,23 @@ def lambda_handler(event: dict, context) -> dict:
         month_set.add((d.year, d.month))
 
     months = sorted(month_set)
-    results = {"success": [], "failed": []}
 
-    for city in MAJOR_CITIES:
-        for year, month in months:
-            try:
-                data = precompute_month(year, month, city["lat"], city["lon"], city["tz"])
-                _write_cache_sync(year, month, city["lat"], city["lon"], data)
-                results["success"].append(f"{city['name']}/{year}-{month:02d}")
-                logger.info("Precomputed %s/%s-%02d: %d days", city["name"], year, month, len(data))
-            except Exception as exc:
-                key = f"{city['name']}/{year}-{month:02d}"
-                results["failed"].append(key)
-                logger.error("Failed %s: %s", key, exc)
+    # Build all (city, year, month) work items
+    work = [(city, y, m) for city in MAJOR_CITIES for y, m in months]
+
+    results: dict[str, list[str]] = {"success": [], "failed": []}
+
+    # Run up to 6 city-months in parallel (swisseph is thread-safe for reads)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+        futures = {pool.submit(_precompute_one, city, y, m): (city, y, m)
+                   for city, y, m in work}
+        for future in concurrent.futures.as_completed(futures):
+            key, ok, _ = future.result()
+            (results["success"] if ok else results["failed"]).append(key)
 
     logger.info(
         "Precompute complete. Success: %d, Failed: %d",
-        len(results["success"]),
-        len(results["failed"]),
+        len(results["success"]), len(results["failed"]),
     )
 
     return {

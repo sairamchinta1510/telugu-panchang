@@ -103,8 +103,8 @@ Resources:
       CodeUri: .
       Handler: handler_precompute.lambda_handler
       Description: Nightly panchang cache precompute for major Indian cities
-      Timeout: 300
-      MemorySize: 512
+      Timeout: 900
+      MemorySize: 1024
       Policies:
         - !Ref PanchangCachePolicy
       Events:
