@@ -1203,6 +1203,13 @@ function selectCeremony(el) {
 
 // ── Autocomplete ──────────────────────────────────────────────────────────────
 const acTimers = {};
+function _shortPlace(p) {
+  // Extract "City, Country" from Nominatim address object (requires addressdetails=1)
+  const a = p.address || {};
+  const city = a.city || a.town || a.village || a.county || a.state_district || p.display_name.split(",")[0];
+  const country = a.country || p.display_name.split(",").pop();
+  return `${city.trim()}, ${country.trim()}`;
+}
 function acSearch(input, listId) {
   const q = input.value.trim(), list = document.getElementById(listId);
   clearTimeout(acTimers[listId]);
@@ -1211,15 +1218,16 @@ function acSearch(input, listId) {
   list.style.display = "block";
   acTimers[listId] = setTimeout(async () => {
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6`,
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&addressdetails=1`,
         { headers: {"Accept-Language":"te,en"} });
       const data = await res.json();
       if(!data.length) { list.innerHTML = '<div class="ac-empty">ఏమీ కనుగొనబడలేదు</div>'; return; }
-      list.innerHTML = data.map(p =>
-        `<div class="ac-item" onclick="acPick('${input.id}','${listId}',this)" data-val="${p.display_name.replace(/"/g,'&quot;')}">
-          📍 ${p.display_name}
-        </div>`
-      ).join("");
+      list.innerHTML = data.map(p => {
+        const short = _shortPlace(p);
+        return `<div class="ac-item" onclick="acPick('${input.id}','${listId}',this)" data-val="${short.replace(/"/g,'&quot;')}" title="${p.display_name.replace(/"/g,'&quot;')}">
+          📍 ${short}
+        </div>`;
+      }).join("");
     } catch { list.innerHTML = '<div class="ac-empty">లోపం జరిగింది</div>'; }
   }, 400);
 }
