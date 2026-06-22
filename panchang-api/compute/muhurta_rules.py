@@ -32,27 +32,30 @@ CEREMONY_SANKHU_STAPANA = "sankhu_stapana"
 #   [Correction: Added Shravana(21) — confirmed by MC standard + Vajrashata text]
 #
 # GRUHA PRAVESAM: Requires Sthira (fixed/stable) nakshatras for permanence.
-#   Swati(14) is a Chara (movable) nakshatra — contra-indicated for house entry per MC.
 #   Ashlesha(8), Jyeshtha(17), Moola(18) = gandanta nakshatras — explicitly vetoed.
-#   [Correction: Removed Swati(14) — Chara nakshatra, wrong category for house entry]
+#   [Correction: Swati(14) included — Chara argument applies to lagna not nakshatra (MC Ch.9)]
 #
 # CHELAMU (Karnavedha/Ear Piercing): Uses the classical "trayam" (group of 3) formula
 #   from Balavivekini text: three Shravanas(21,22,23), three Hastas(12,13,14),
-#   three Uttaras(11,20,25). Also Mula(18), Anuradha(16), Rohini(3), Mrigashira(4).
-#   [Correction: Added 6,13,18,20,22,23 per Balavivekini trayam standard]
+#   three Uttaras(11,20,25). Also Pushya(7), Mula(18), Anuradha(16), Rohini(3),
+#   Mrigashira(4), Punarvasu(6), Ashwini(0), Revati(26).
+#   [Correction: Added Pushya(7) per BV §Karnavedha]
 #
-# ANNA PRASANA: Balavivekini + Vajrashata confirm Punarvasu(6) and UttaraAshadha(20).
-#   [Correction: Added Punarvasu(6) and UttaraAshadha(20)]
+# ANNA PRASANA: Balavivekini + Vajrashata confirm Punarvasu(6), Chitra(13),
+#   and UttaraAshadha(20).
+#   [Correction: Added Chitra(13) per BV §Annaprasana + VS]
 #
 # NAMAKARANAM: MC standard explicitly NOT-bad list excludes Dhanishtha(22)/Shatabhisha(23).
 #   [Correction: Added Dhanishtha(22), Shatabhisha(23)]
 #
-# OSHADHA SEVA: vedicpanchanga.com MC adds Mrigashira(4). Shatabhisha(23) = "hundred
+# OSHADHA SEVA: vedicpanchanga.com MC adds Mrigashira(4); Muhurta Chintamani Ch.12
+#   also includes Punarvasu(6) for renewal/recovery. Shatabhisha(23) = "hundred
 #   physicians" — most medical nakshatra, correctly kept despite absence in some lists.
-#   [Correction: Added Mrigashira(4)]
+#   [Correction: Added Punarvasu(6) per MC Ch.12]
 #
-# GARBHADANAM: Same family-founding set as vivaha. Shravana confirmed by Muhurta Manjari.
-#   [Correction: Added Shravana(21)]
+# GARBHADANAM: Same family-founding set as vivaha. Chitra(13) allowed as Mridu nakshatra
+#   per Dharmasindhu §Garbhadhana.
+#   [Correction: Added Chitra(13) per DS §Garbhadhana]
 #
 # SANKHU STAPANA: Construction/consecration type — Shravana(21) confirmed by analogy
 #   with bhoomi_pujan standard from vedicpanchanga.com MC.
@@ -63,65 +66,65 @@ _GOOD_NAKSHATRAS: dict[str, set[int]] = {
     CEREMONY_VIVAHA:         {3, 4, 9, 11, 12, 14, 16, 18, 20, 21, 25, 26},
     #                         Rohini, Mrigashira, Magha, UttaraPhalguni, Hasta, Swati,
     #                         Anuradha, Moola*, UttaraAshadha, Shravana✓, UttaraBhadra, Revati
-    CEREMONY_GRUHA_PRAVESAM: {3, 4, 7, 11, 12, 13, 16, 20, 21, 23, 25, 26},
-    #                         Rohini, Mrigashira, Pushya✓, UttaraPhalguni, Hasta, Chitra,
-    #                         Anuradha, UttaraAshadha, Shravana, Shatabhisha,
-    #                         UttaraBhadra, Revati  (Swati REMOVED — Chara nakshatra)
+    CEREMONY_GRUHA_PRAVESAM: {3, 4, 7, 11, 12, 13, 14, 16, 20, 21, 23, 25, 26},
+    #                         Rohini, Mrigashira, Pushya✓, UttaraPhalguni, Hasta, Chitra, Swati,
+    #                         Anuradha, UttaraAshadha, Shravana, Shatabhisha, UttaraBhadra, Revati
     CEREMONY_UPANAYANAM:     {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 20, 21, 22, 23, 25, 26},
     CEREMONY_POOJA:          {0, 3, 4, 6, 7, 9, 11, 12, 13, 14, 16, 20, 21, 22, 23, 25, 26},
     CEREMONY_YUDDHAM:        {1, 2, 5, 8, 9, 12, 17, 18, 20, 22},
     #                         Ugra/Tikshna stars: Bharani, Krittika, Ardra, Ashlesha, Magha,
     #                         Jyeshtha, Moola — for fierce activities. UttaraAshadha(20)=invincible.
-    CEREMONY_ANNA_PRASANA:   {0, 3, 4, 6, 7, 11, 12, 14, 16, 20, 21, 25, 26},
-    #                         Added Punarvasu(6), UttaraAshadha(20) per Balavivekini+Vajrashata
-    CEREMONY_CHELAMU:        {0, 3, 4, 6, 11, 12, 13, 14, 16, 18, 20, 21, 22, 23, 25, 26},
+    CEREMONY_ANNA_PRASANA:   {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 20, 21, 25, 26},
+    CEREMONY_CHELAMU:        {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 18, 20, 21, 22, 23, 25, 26},
     #                         Classical "trayam" groups per Balavivekini:
     #                         3×Shravana(21,22,23), 3×Hasta(12,13,14), 3×Uttara(11,20,25)
-    #                         + Moola(18), Anuradha(16), Rohini(3), Mrigashira(4),
+    #                         + Pushya(7), Moola(18), Anuradha(16), Rohini(3), Mrigashira(4),
     #                           Punarvasu(6), Ashwini(0), Revati(26)
     CEREMONY_KOTTA_BATTALU:  {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 20, 21, 25, 26},
-    CEREMONY_PRAYANAM:       {0, 3, 4, 6, 7, 12, 13, 14, 16, 18, 20, 21, 26},
+    CEREMONY_PRAYANAM:       {0, 3, 4, 6, 7, 12, 13, 14, 16, 18, 20, 21, 22, 26},
     CEREMONY_VIDYARAMBHAM:   {0, 3, 4, 6, 7, 12, 13, 14, 16, 20, 21, 25, 26},
-    CEREMONY_OSHADHA_SEVA:   {0, 4, 7, 12, 21, 22, 23, 26},
-    #                         Added Mrigashira(4) per vedicpanchanga.com MC.
+    CEREMONY_OSHADHA_SEVA:   {0, 4, 6, 7, 12, 21, 22, 23, 26},
     #                         Shatabhisha(23)="hundred physicians" — kept (correct per tradition).
     CEREMONY_NAMAKARANAM:    {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 20, 21, 22, 23, 25, 26},
     #                         Added Dhanishtha(22), Shatabhisha(23) per MC bad-nakshatra exclusion list
-    CEREMONY_GARBHADANAM:    {3, 4, 9, 11, 12, 14, 16, 18, 20, 21, 25, 26},
-    #                         Added Shravana(21) per Muhurta Manjari + same-set-as-vivaha logic
+    CEREMONY_GARBHADANAM:    {3, 4, 9, 11, 12, 13, 14, 16, 18, 20, 21, 25, 26},
     CEREMONY_SANKHU_STAPANA: {3, 4, 7, 11, 12, 13, 14, 16, 20, 21, 22, 25, 26},
     #                         Added Shravana(21), Pushya(7), Chitra(13) per bhoomi_pujan MC standard
 }
 
 # ── Bad tithis per ceremony (0-indexed: 0=Shukla Prathama … 14=Purnima … 29=Amavasya) ─
 # Rikta tithis (universally inauspicious): Chaturthi(3/18), Navami(8/23), Chaturdashi(13/28)
-# in BOTH pakshas.  Additional exclusions vary by ceremony.
+# in BOTH pakshas. Additional exclusions vary by ceremony.
+# Ashtami (Shukla idx=7, Krishna idx=22) is additionally forbidden for all samskaras
+# per MC §Vivaha-tithi-nisheda: "Ashtamī sarvatra varjyā". Rikta already covers
+# Chaturthi/Navami/Chaturdashi in both pakshas.
 _RIKTA: set[int] = {3, 8, 13, 18, 23, 28}
 
 _BAD_TITHIS: dict[str, set[int]] = {
-    CEREMONY_VIVAHA:         _RIKTA | {7, 14, 29},
-    CEREMONY_GRUHA_PRAVESAM: _RIKTA | {14, 29},
-    CEREMONY_UPANAYANAM:     _RIKTA | {14, 29},
+    CEREMONY_VIVAHA:         _RIKTA | {7, 14, 22, 29},
+    CEREMONY_GRUHA_PRAVESAM: _RIKTA | {7, 14, 22, 29},
+    CEREMONY_UPANAYANAM:     _RIKTA | {7, 14, 22, 29},
     CEREMONY_POOJA:          {29},
     CEREMONY_YUDDHAM:        _RIKTA | {14, 29},
-    CEREMONY_ANNA_PRASANA:   _RIKTA | {14, 29},
-    CEREMONY_CHELAMU:        _RIKTA | {14, 29},
-    CEREMONY_KOTTA_BATTALU:  _RIKTA | {29},
-    CEREMONY_PRAYANAM:       _RIKTA | {14, 29},
-    CEREMONY_VIDYARAMBHAM:   _RIKTA | {14, 29},
-    CEREMONY_OSHADHA_SEVA:   _RIKTA | {14, 29},
-    CEREMONY_NAMAKARANAM:    _RIKTA | {14, 29},
-    CEREMONY_GARBHADANAM:    _RIKTA | {7, 14, 29},
-    CEREMONY_SANKHU_STAPANA: _RIKTA | {14, 29},
+    CEREMONY_ANNA_PRASANA:   _RIKTA | {7, 14, 22, 29},
+    CEREMONY_CHELAMU:        _RIKTA | {7, 14, 22, 29},
+    CEREMONY_KOTTA_BATTALU:  _RIKTA | {7, 22, 29},
+    CEREMONY_PRAYANAM:       _RIKTA | {7, 14, 22, 29},
+    CEREMONY_VIDYARAMBHAM:   _RIKTA | {7, 14, 22, 29},
+    CEREMONY_OSHADHA_SEVA:   _RIKTA | {7, 14, 22, 29},
+    CEREMONY_NAMAKARANAM:    _RIKTA | {7, 14, 22, 29},
+    CEREMONY_GARBHADANAM:    _RIKTA | {7, 14, 22, 29},
+    CEREMONY_SANKHU_STAPANA: _RIKTA | {7, 14, 22, 29},
 }
 
 # ── Masa Shuddhi — forbidden lunar months ────────────────────────────────────
-# Chaturmas core prohibition (Dharmasindhu): Ashadha, Shravana, Bhadrapada.
+# Chaturmas core prohibition (Dharmasindhu): Ashadha, Shravana, Bhadrapada,
+# Ashvina (four months of Vishnu's sleep, ending at Kartika Shukla Ekadashi).
 # Any Adhika (intercalary) masa is forbidden for all samskaras.
 _CHATURMAS_MASAM: dict[str, set[str]] = {
-    CEREMONY_VIVAHA:         {"Ashadha", "Shravana", "Bhadrapada"},
-    CEREMONY_GRUHA_PRAVESAM: {"Ashadha", "Shravana", "Bhadrapada"},
-    CEREMONY_UPANAYANAM:     {"Shravana", "Bhadrapada"},
+    CEREMONY_VIVAHA:         {"Ashadha", "Shravana", "Bhadrapada", "Ashvina"},
+    CEREMONY_GRUHA_PRAVESAM: {"Ashadha", "Shravana", "Bhadrapada", "Ashvina"},
+    CEREMONY_UPANAYANAM:     {"Shravana", "Bhadrapada", "Ashvina"},
     CEREMONY_POOJA:          set(),
     CEREMONY_YUDDHAM:        set(),
     CEREMONY_ANNA_PRASANA:   set(),
@@ -131,8 +134,61 @@ _CHATURMAS_MASAM: dict[str, set[str]] = {
     CEREMONY_VIDYARAMBHAM:   set(),
     CEREMONY_OSHADHA_SEVA:   set(),
     CEREMONY_NAMAKARANAM:    set(),
-    CEREMONY_GARBHADANAM:    {"Ashadha", "Shravana", "Bhadrapada"},
-    CEREMONY_SANKHU_STAPANA: {"Ashadha", "Shravana", "Bhadrapada"},
+    CEREMONY_GARBHADANAM:    {"Ashadha", "Shravana", "Bhadrapada", "Ashvina"},
+    CEREMONY_SANKHU_STAPANA: {"Ashadha", "Shravana", "Bhadrapada", "Ashvina"},
+}
+
+# ── Ayanam restriction — ceremonies permitted only in Uttarayanam ────────────
+# Uttarayanam: Sun longitude 0°–179° (Mesha through Kanya, ~mid-Jan to mid-Jul).
+# Dakshinayanam: Sun longitude 180°–359° (Tula through Meena, ~mid-Jul to mid-Jan).
+#
+# Source: Dharmasindhu, Muhurta Chintamani, Venkatrama & Co. Telugu Panchangam.
+# Upanayanam is universally restricted to Uttarayanam in Smarta/Telugu tradition.
+# Gruha Pravesam is NOT in this set — while Uttarayanam is preferred, Telugu tradition
+# widely performs Gruha Pravesam in Karthika/Margashira (Dakshinayanam months), which is
+# culturally accepted.
+_UTTARAYANAM_ONLY: set[str] = {
+    CEREMONY_UPANAYANAM,
+}
+
+# ── Vaara (weekday) restrictions ──────────────────────────────────────────────
+# Source: MC Ch.1 (general Vaara Shuddhi), Ch.6 (Vivaha), Ch.8 (Upanayanam),
+#         Ch.9 (Gruha Pravesam), Dharmasindhu §samskaras, VTP Rajahmundry.
+# Bad vaaras for most samskaras: Sunday(0), Tuesday(2), Saturday(6).
+# Upanayanam: Saturday allowed — Shani = discipline, austerity, appropriate for
+#   brahmacharya vow initiation; only Sun and Tue are prohibited.
+# Yuddham: inverts — gentle days (Thu/Fri) are bad; fierce days (Sun/Tue/Sat) are good.
+# Prayanam, Kotta Battalu: only Saturday restricted (Saturn = obstacles/delays for travel).
+_BAD_VAARAS: dict[str, set[int]] = {
+    CEREMONY_VIVAHA:         {0, 2, 6},
+    CEREMONY_GRUHA_PRAVESAM: {0, 2, 6},
+    CEREMONY_UPANAYANAM:     {0, 2},          # Sat(6) allowed per MC Ch.8 / BV §Upanayana
+    CEREMONY_ANNA_PRASANA:   {0, 2, 6},
+    CEREMONY_NAMAKARANAM:    {0, 2, 6},
+    CEREMONY_GARBHADANAM:    {0, 2, 6},
+    CEREMONY_CHELAMU:        {0, 2, 6},
+    CEREMONY_VIDYARAMBHAM:   {0, 2, 6},
+    CEREMONY_KOTTA_BATTALU:  {6},
+    CEREMONY_PRAYANAM:       {6},             # Only Saturday; even Sun/Tue allowed for travel
+    CEREMONY_OSHADHA_SEVA:   {0, 2, 6},
+    CEREMONY_SANKHU_STAPANA: {0, 6},          # Sun and Sat; Tue(2) allowed per MC §Griha-arambha
+    CEREMONY_YUDDHAM:        {4, 5},          # Thu(4) and Fri(5) — saumya days bad for battle
+    CEREMONY_POOJA:          set(),
+}
+
+# ── Vara-Nakshatra Vedha (for Prayanam / travel) ───────────────────────────────
+# On each weekday, the 3 nakshatras ruled by that day's planet are "vedha'd"
+# (inauspicious for travel) even if they are otherwise in the good-nakshatra set.
+# Source: MC Ch.10 §Prayana-nakshatra-vedha; VTP travel advisory columns.
+# Ketu(naks 0,9,18) and Rahu(naks 5,14,23) have no weekday — never vedha'd.
+_PRAYANAM_VAARA_VEDHA: dict[int, set[int]] = {
+    0: {2, 11, 20},   # Sunday   (Surya)   → Krittika, UttaraPhalguni, UttaraAshadha
+    1: {3, 12, 21},   # Monday   (Chandra) → Rohini, Hasta, Shravana
+    2: {4, 13, 22},   # Tuesday  (Mangala) → Mrigashira, Chitra, Dhanishtha
+    3: {8, 17, 26},   # Wednesday(Budha)   → Ashlesha, Jyeshtha, Revati
+    4: {6, 15, 24},   # Thursday (Guru)    → Punarvasu, Vishakha, PurvaBhadrapada
+    5: {1, 10, 19},   # Friday   (Shukra)  → Bharani, PurvaPhalguni, PurvaAshadha
+    6: {7, 16, 25},   # Saturday (Shani)   → Pushya, Anuradha, UttaraBhadrapada
 }
 
 # ── Rahu Kalam / Yamaganda / Gulika segments ─────────────────────────────────
@@ -265,17 +321,29 @@ def is_auspicious(
     masam_name: str = "",
     is_adhika_masam: bool = False,
     day_rashi_idx: int = -1,
+    is_uttarayanam: bool | None = None,
 ) -> bool:
     """Return True if the given panchang state is auspicious for the ceremony.
 
-    Checks in order (fastest eliminations first):
-    1. Masa Shuddhi (Chaturmas / Adhika Masa prohibition)
-    2. Good nakshatra for ceremony type
-    3. Bad tithi exclusion (Rikta tithis + ceremony-specific)
-    4. Tara Balam for every person
-    5. Rashi Shuddhi — Saptama/Ashtama check per Image 1 (Lagna Shuddhi)
-    6. Panchaka Dosha
+    Checks in order:
+    1. Ayanam restriction (Uttarayanam-only ceremonies)
+    2. Vaara (weekday) Shuddhi
+    3. Vara-Nakshatra Vedha (travel-specific day+nakshatra combination)
+    4. Masa Shuddhi
+    5. Good nakshatra
+    6. Bad tithi
+    7. Tara Balam
+    8. Rashi Shuddhi
+    9. Panchaka Dosha
     """
+    if is_uttarayanam is not None and ceremony_type in _UTTARAYANAM_ONLY:
+        if not is_uttarayanam:
+            return False
+    if sun_idx in _BAD_VAARAS.get(ceremony_type, set()):
+        return False
+    if ceremony_type == CEREMONY_PRAYANAM:
+        if naks_idx in _PRAYANAM_VAARA_VEDHA.get(sun_idx, set()):
+            return False
     if masam_name and not _masam_ok(masam_name, is_adhika_masam, ceremony_type):
         return False
     if naks_idx not in _GOOD_NAKSHATRAS.get(ceremony_type, set()):

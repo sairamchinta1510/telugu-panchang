@@ -9,11 +9,21 @@ from __future__ import annotations
 import bisect
 import calendar
 
-from .astro import (
-    local_date_to_jd, get_sunrise_sunset,
-    jd_to_local_datetime, moon_longitude, moon_sun_elongation,
-    find_next_index_change, compute_planet_rashis,
-)
+try:
+    from .astro import (
+        local_date_to_jd, get_sunrise_sunset,
+        jd_to_local_datetime, moon_longitude, moon_sun_elongation,
+        find_next_index_change, compute_planet_rashis, sun_longitude,
+    )
+except ImportError:
+    from .astro import (
+        local_date_to_jd, get_sunrise_sunset,
+        jd_to_local_datetime, moon_longitude, moon_sun_elongation,
+        find_next_index_change, compute_planet_rashis,
+    )
+
+    def sun_longitude(jd: float) -> float:
+        return 0.0
 from .panchang import compute_panchang, NAKSHATRA_TE, TITHI_TE
 try:
     from .panchang import YOGA_TE
@@ -26,7 +36,7 @@ except ImportError:
 from .birth_chart import compute_lagna, RASHI_TE
 from .muhurta_rules import (
     is_auspicious, compute_kalams, compute_choghadiya_slots,
-    _masam_ok, _GOOD_NAKSHATRAS, _BAD_TITHIS,
+    _masam_ok, _GOOD_NAKSHATRAS, _BAD_TITHIS, _BAD_VAARAS, _PRAYANAM_VAARA_VEDHA,
     _tara_ok, _rashi_shuddhi_ok, _panchaka_ok,
     _RASHI_SHUDDHI_FORBIDDEN, _SUDHI_NAME_TE,
 )
@@ -84,6 +94,7 @@ def _find_good_windows_from_cache(
     masam_name: str,
     is_adhika: bool,
     sun_idx: int,
+    is_uttarayanam: bool = True,
     skip_planet_rashis: bool = False,
 ) -> list[dict]:
     """Cached path: use precomputed transitions instead of live swisseph calls."""
@@ -115,6 +126,7 @@ def _find_good_windows_from_cache(
             birth_charts, ceremony_type,
             masam_name=masam_name, is_adhika_masam=is_adhika,
             day_rashi_idx=day_rashi_idx,
+            is_uttarayanam=is_uttarayanam,
         )
 
         if good:
@@ -175,6 +187,7 @@ def _find_good_windows(
     is_adhika: bool,
     sun_idx: int,
     lagna_idx: int,   # kept for API compat; actual per-window lagna is recomputed
+    is_uttarayanam: bool = True,
     skip_planet_rashis: bool = False,
     day_cache: dict | None = None,
 ) -> list[dict]:
@@ -201,7 +214,7 @@ def _find_good_windows(
         return _find_good_windows_from_cache(
             day_cache, rise_jd, set_jd, tz_name,
             ceremony_type, birth_charts, masam_name, is_adhika,
-            sun_idx, skip_planet_rashis,
+            sun_idx, is_uttarayanam, skip_planet_rashis,
         )
 
     # Pre-compute Choghadiya slots for the full day/night
@@ -230,6 +243,7 @@ def _find_good_windows(
             birth_charts, ceremony_type,
             masam_name=masam_name, is_adhika_masam=is_adhika,
             day_rashi_idx=day_rashi_idx,
+            is_uttarayanam=is_uttarayanam,
         )
 
         if good:
@@ -322,6 +336,7 @@ def find_muhurtas_for_month(
                 masam_name = dc["masam"]
                 is_adhika = dc["is_adhika"]
                 day_rashi_idx = dc["day_rashi_idx"]
+                is_uttarayanam = dc.get("is_uttarayanam", True)
                 dt_rise = jd_to_local_datetime(rise_jd, tz_name)
             else:
                 jd = local_date_to_jd(year, month, day, tz_name)
@@ -336,6 +351,7 @@ def find_muhurtas_for_month(
                 dt_rise = jd_to_local_datetime(rise_jd, tz_name)
                 sun_idx = (dt_rise.weekday() + 1) % 7   # Sunday=0 … Saturday=6
                 lagna_idx = compute_lagna(rise_jd, lat, lon)
+                is_uttarayanam = sun_longitude(rise_jd) < 180
 
                 pan = compute_panchang(jd, lat, lon, tz_name)
                 masam_name = pan["masam"]["en"]
@@ -346,6 +362,7 @@ def find_muhurtas_for_month(
                 birth_charts, ceremony_type,
                 masam_name=masam_name, is_adhika_masam=is_adhika,
                 day_rashi_idx=day_rashi_idx,
+                is_uttarayanam=is_uttarayanam,
             )
 
             # Always compute specific muhurtam windows so the UI can show a best
@@ -370,6 +387,7 @@ def find_muhurtas_for_month(
                 rise_jd, set_jd, lat, lon, tz_name,
                 ceremony_type, birth_charts, masam_name, is_adhika,
                 sun_idx, lagna_idx,
+                is_uttarayanam=is_uttarayanam,
                 skip_planet_rashis=True,
                 day_cache=dc,
             )
@@ -463,6 +481,7 @@ def check_muhurta_day(
     pan       = compute_panchang(jd, lat, lon, tz_name)
     masam_name = pan["masam"]["en"]
     is_adhika  = pan["masam"]["adhika"]
+    is_uttarayanam = sun_longitude(rise_jd) < 180
 
     rise_mins = dt_rise.hour * 60 + dt_rise.minute + dt_rise.second / 60
     set_mins  = dt_set.hour  * 60 + dt_set.minute  + dt_set.second  / 60
@@ -472,6 +491,14 @@ def check_muhurta_day(
     good_factors: list[str] = []
     bad_factors:  list[str] = []
 
+    # 0. Ayanam check (only for Uttarayanam-only ceremonies)
+    if ceremony_type in ("upanayanam",):
+        ayanam_name = pan["ayanam"]["te"]
+        if is_uttarayanam:
+            good_factors.append(f"అయనం: {ayanam_name} — {cer_te}కు శుభ అయనం ✓")
+        else:
+            bad_factors.append(f"అయనం: {ayanam_name} — {cer_te}కు కేవలం ఉత్తరాయణంలో మాత్రమే చేయాలి")
+
     # 1. Masa Shuddhi
     if masam_name and not _masam_ok(masam_name, is_adhika, ceremony_type):
         label = "అధిక మాసం" if is_adhika else pan["masam"]["te"] + " మాసం"
@@ -479,19 +506,34 @@ def check_muhurta_day(
     else:
         good_factors.append(f"మాసం: {pan['masam']['te']} — {cer_te}కు అనుకూలం")
 
-    # 2. Nakshatra
+    # 2. Vaara Shuddhi
+    vaara_te = pan["vaaram"]["te"]
+    if sun_idx in _BAD_VAARAS.get(ceremony_type, set()):
+        bad_factors.append(f"వారం: {vaara_te} — {cer_te}కు నిషిద్ధ వారం (సూర్య/మంగళ/శని దోషం)")
+    else:
+        good_factors.append(f"వారం: {vaara_te} — {cer_te}కు అనుకూల వారం ✓")
+
+    # 2b. Vara-Nakshatra Vedha (only for Prayanam)
+    if ceremony_type == "prayanam":
+        vedha_naks = _PRAYANAM_VAARA_VEDHA.get(sun_idx, set())
+        if naks_idx in vedha_naks:
+            bad_factors.append(f"వార-నక్షత్ర వేధ: {pan['nakshatra']['te']} — ఈ {vaara_te}న వేధింపబడిన నక్షత్రం")
+        else:
+            good_factors.append(f"వార-నక్షత్ర వేధ: {pan['nakshatra']['te']} — ఈ {vaara_te}న వేధ లేదు ✓")
+
+    # 3. Nakshatra
     if naks_idx in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
         good_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు శుభమైన నక్షత్రం ✓")
     else:
         bad_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు")
 
-    # 3. Tithi
+    # 4. Tithi
     if tithi_idx in _BAD_TITHIS.get(ceremony_type, set()):
         bad_factors.append(f"తిథి: {pan['tithi']['te']} — నివారించాల్సిన తిథి (రిక్త/దోష తిథి)")
     else:
         good_factors.append(f"తిథి: {pan['tithi']['te']} — శుభ తిథి ✓")
 
-    # 4. Tara Balam per person
+    # 5. Tara Balam per person
     for i, chart in enumerate(birth_charts):
         name = chart.get("name") or f"వ్యక్తి {i + 1}"
         if _tara_ok(chart["janma_nakshatra_idx"], naks_idx):
@@ -502,7 +544,7 @@ def check_muhurta_day(
                 f"వ్యతిరేక తార (1, 3, 5 లేదా 7వ తార)"
             )
 
-    # 5. Rashi Shuddhi (only ceremonies with restrictions)
+    # 6. Rashi Shuddhi (only ceremonies with restrictions)
     if day_rashi_idx >= 0 and _RASHI_SHUDDHI_FORBIDDEN.get(ceremony_type):
         for i, chart in enumerate(birth_charts):
             name = chart.get("name") or f"వ్యక్తి {i + 1}"
@@ -516,7 +558,7 @@ def check_muhurta_day(
                         f"{name}: రాశి శుద్ధి అననుకూలం — చంద్రుడు {pos}వ స్థానంలో ఉన్నాడు"
                     )
 
-    # 6. Panchaka Dosha
+    # 7. Panchaka Dosha
     if _panchaka_ok(naks_idx, sun_idx, tithi_idx, lagna_idx):
         good_factors.append("పంచక దోషం లేదు ✓")
     else:
@@ -527,12 +569,14 @@ def check_muhurta_day(
         birth_charts, ceremony_type,
         masam_name=masam_name, is_adhika_masam=is_adhika,
         day_rashi_idx=day_rashi_idx,
+        is_uttarayanam=is_uttarayanam,
     )
 
     good_windows = _find_good_windows(
         rise_jd, set_jd, lat, lon, tz_name,
         ceremony_type, birth_charts, masam_name, is_adhika,
         sun_idx, lagna_idx,
+        is_uttarayanam=is_uttarayanam,
     )
 
     if not overall_good and good_windows:

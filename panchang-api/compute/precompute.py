@@ -126,6 +126,7 @@ def compute_day_cache_data(
         "is_adhika": pan["masam"]["adhika"],
         "sun_idx": sun_idx,
         "day_rashi_idx": day_rashi_idx,
+        "is_uttarayanam": sun_lon < 180,
         "sunrise": dt_rise.strftime("%H:%M"),
         "sunset": dt_set.strftime("%H:%M"),
         "sunrise_jd": rise_jd,
