@@ -1003,6 +1003,13 @@ let savedBirthCharts = [], savedPersons = [];
 let _resultsShown = 0;   // how many result cards are currently displayed
 const _PAGE_SIZE = 5;    // cards per page
 
+// Lazy-scan state: scan only enough months to find _PAGE_SIZE results at a time
+let _monthsList = [];    // [{year, month}] — full scan list, built once
+let _monthsCursor = 0;  // next month index to fetch
+let _scanComplete = false; // true when all months have been scanned
+let _scanBirthCharts = []; // birth charts cached for "next page" re-use
+let _scanPlace = "";
+
 let savedProfileCharts = {};   // personBlockId → pre-computed birth chart
 const PROFILES_KEY = "muhurta_profiles";
 
@@ -1382,34 +1389,22 @@ async function _runCheck(birthCharts) {
 async function _runFind(birthCharts) {
   const fromDate = new Date(document.getElementById("rangeFrom").value);
   const toDate   = new Date(document.getElementById("rangeTo").value);
-  const months = [];
+
+  // Build full month list once — but only scan as needed
+  _monthsList = [];
   let cur = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
   while (cur <= toDate) {
-    months.push({ year: cur.getFullYear(), month: cur.getMonth()+1 });
+    _monthsList.push({ year: cur.getFullYear(), month: cur.getMonth()+1 });
     cur.setMonth(cur.getMonth()+1);
   }
-  const place = document.getElementById("ceremonyPlace").value.trim();
-  allResults = [];
-  for (let i = 0; i < months.length; i++) {
-    const { year, month } = months[i];
-    setProgress(Math.round(((i+1)/months.length)*100), `${MONTHS_TE[month-1]} ${year} స్కాన్ అవుతోంది`, `${i+1}/${months.length} నెలలు`);
-    try {
-      const r = await fetch(API_BASE+"/muhoortam/find", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ year, month, ceremony_type: selectedCeremony, ceremony_place: place, birth_charts: birthCharts })
-      });
-      if (!r.ok) throw new Error(await r.text());
-      const data = await r.json();
-      allResults.push(...(data.results||[]));
-    } catch(e) {
-      showLoading(false);
-      setStep(2);
-      showError("లెక్కింపులో లోపం: "+e.message);
-      return;
-    }
-  }
-  showLoading(false);
-  showResults();
+  _monthsCursor   = 0;
+  _scanComplete   = false;
+  _scanBirthCharts = birthCharts;
+  _scanPlace      = document.getElementById("ceremonyPlace").value.trim();
+  allResults      = [];
+
+  // Fetch just enough months to get the first PAGE_SIZE results
+  await _fetchUntilPageFull(true);
 }
 
 function parseTeDate(s) {
@@ -1420,6 +1415,64 @@ function setProgress(pct,label,sub) {
   document.getElementById("progressBar").style.width = pct+"%";
   document.getElementById("progressLabel").textContent = label;
   document.getElementById("progressSub").textContent = sub;
+}
+
+// ── Lazy scan: fetch months until we have (current + PAGE_SIZE) results ───────
+async function _fetchUntilPageFull(isFirst) {
+  const target = allResults.length + _PAGE_SIZE;
+
+  while (_monthsCursor < _monthsList.length && allResults.length < target) {
+    const { year, month } = _monthsList[_monthsCursor];
+    const scanned = _monthsCursor + 1;
+    const total   = _monthsList.length;
+    setProgress(
+      Math.round((scanned / total) * 100),
+      `${MONTHS_TE[month-1]} ${year} స్కాన్ అవుతోంది`,
+      `${total - _monthsCursor} నెలలు మిగిలి ఉన్నాయి`
+    );
+    try {
+      const r = await fetch(API_BASE+"/muhoortam/find", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          year, month,
+          ceremony_type: selectedCeremony,
+          ceremony_place: _scanPlace,
+          birth_charts: _scanBirthCharts
+        })
+      });
+      if (!r.ok) throw new Error(await r.text());
+      const data = await r.json();
+      allResults.push(...(data.results||[]));
+      _monthsCursor++;
+    } catch(e) {
+      showLoading(false);
+      setStep(2);
+      showError("లెక్కింపులో లోపం: "+e.message);
+      return false;
+    }
+  }
+
+  if (_monthsCursor >= _monthsList.length) _scanComplete = true;
+
+  showLoading(false);
+  if (isFirst) {
+    showResults();
+  } else {
+    // Append only the newly available cards
+    const container = document.getElementById("cardsContainer");
+    if (!container) return true;
+    const prevShown = _resultsShown;
+    const end = Math.min(_resultsShown + _PAGE_SIZE, allResults.length);
+    for (let i = _resultsShown; i < end; i++) {
+      container.appendChild(_renderResultCard(allResults[i], i));
+    }
+    _resultsShown = end;
+    _updateLoadMoreBtn();
+    if (prevShown > 0 && container.children[prevShown]) {
+      container.children[prevShown].scrollIntoView({ behavior:"smooth", block:"nearest" });
+    }
+  }
+  return true;
 }
 
 // ── Best muhurta window (excludes all bad periods + varjyam) ─────────────────
@@ -1505,27 +1558,43 @@ function _renderResultCard(r, i) {
 function _updateLoadMoreBtn() {
   const btn = document.getElementById("loadMoreBtn");
   if (!btn) return;
-  const remaining = allResults.length - _resultsShown;
-  if (remaining <= 0) {
+  const hasMoreFetched   = allResults.length > _resultsShown;
+  const hasMoreToScan    = !_scanComplete;
+  if (!hasMoreFetched && !hasMoreToScan) {
     btn.style.display = "none";
   } else {
     btn.style.display = "";
-    btn.textContent = `తదుపరి ${Math.min(remaining, _PAGE_SIZE)} ముహూర్తాలు చూడండి →  (మొత్తం: ${allResults.length - _resultsShown} మిగిలి ఉన్నాయి)`;
+    const remaining = _scanComplete ? (allResults.length - _resultsShown) : "?";
+    btn.textContent = `తదుపరి ${_PAGE_SIZE} ముహూర్తాలు చూడండి →` +
+      (remaining !== "?" ? `  (${allResults.length - _resultsShown} సిద్ధంగా ఉన్నాయి)` : "  (వెతుకుతున్నాం...)");
   }
 }
 
-function loadMoreResults() {
-  const container = document.getElementById("cardsContainer");
-  const prevShown = _resultsShown;
-  const end = Math.min(_resultsShown + _PAGE_SIZE, allResults.length);
-  for (let i = _resultsShown; i < end; i++) {
-    container.appendChild(_renderResultCard(allResults[i], i));
-  }
-  _resultsShown = end;
-  _updateLoadMoreBtn();
-  // Scroll to first newly added card
-  if (prevShown > 0 && container.children[prevShown]) {
-    container.children[prevShown].scrollIntoView({ behavior:"smooth", block:"nearest" });
+async function loadMoreResults() {
+  const btn = document.getElementById("loadMoreBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ వెతుకుతున్నాం..."; }
+
+  if (allResults.length > _resultsShown) {
+    // Already have results cached — just render them
+    const container = document.getElementById("cardsContainer");
+    const prevShown = _resultsShown;
+    const end = Math.min(_resultsShown + _PAGE_SIZE, allResults.length);
+    for (let i = _resultsShown; i < end; i++) {
+      container.appendChild(_renderResultCard(allResults[i], i));
+    }
+    _resultsShown = end;
+    if (btn) btn.disabled = false;
+    _updateLoadMoreBtn();
+    if (prevShown > 0 && container.children[prevShown]) {
+      container.children[prevShown].scrollIntoView({ behavior:"smooth", block:"nearest" });
+    }
+  } else if (!_scanComplete) {
+    // Need to fetch more months
+    showLoading(true);
+    await _fetchUntilPageFull(false);
+    if (btn) btn.disabled = false;
+  } else {
+    if (btn) btn.style.display = "none";
   }
 }
 
@@ -1600,8 +1669,12 @@ function showResults() {
   </button>`;
   list.appendChild(loadMoreWrap);
 
-  // Render first page
-  loadMoreResults();
+  // Render first page from already-fetched allResults
+  const container = document.getElementById("cardsContainer");
+  const end = Math.min(_PAGE_SIZE, allResults.length);
+  for (let i = 0; i < end; i++) container.appendChild(_renderResultCard(allResults[i], i));
+  _resultsShown = end;
+  _updateLoadMoreBtn();
   setStep(3);
 }
 
