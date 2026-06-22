@@ -205,10 +205,11 @@ def find_muhurtas_for_month(
                 day_rashi_idx=day_rashi_idx,
             )
 
-            good_windows: list[dict] = []
-            if good_at_sunrise:
-                good_windows = []   # good all day — no restriction
-            else:
+            # Always compute specific muhurtam windows so the UI can show a best
+            # time (Choghadiya rank). The nakshatra pre-filter only applies when
+            # the day already failed the sunrise check — good-at-sunrise days
+            # proceed directly to window scanning.
+            if not good_at_sunrise:
                 # Pre-filter: if the same bad nakshatra spans the full 24 h, no
                 # good window transition can exist — skip the expensive scan.
                 good_naks = _GOOD_NAKSHATRAS.get(ceremony_type, set())
@@ -216,14 +217,15 @@ def find_muhurtas_for_month(
                     naks_idx_end = int(moon_longitude(rise_jd + 1.0) / (360.0 / 27)) % 27
                     if naks_idx_end not in good_naks and naks_idx_end == naks_idx:
                         continue  # single bad nakshatra covers full 24 h — skip
-                good_windows = _find_good_windows(
-                    rise_jd, set_jd, lat, lon, tz_name,
-                    ceremony_type, birth_charts, masam_name, is_adhika,
-                    sun_idx, lagna_idx,
-                    skip_planet_rashis=True,
-                )
-                if not good_windows:
-                    continue   # truly bad all day
+
+            good_windows = _find_good_windows(
+                rise_jd, set_jd, lat, lon, tz_name,
+                ceremony_type, birth_charts, masam_name, is_adhika,
+                sun_idx, lagna_idx,
+                skip_planet_rashis=True,
+            )
+            if not good_at_sunrise and not good_windows:
+                continue   # truly bad all day
 
             dt_set    = jd_to_local_datetime(set_jd, tz_name)
             rise_mins = dt_rise.hour * 60 + dt_rise.minute + dt_rise.second / 60
