@@ -81,7 +81,13 @@ _GOOD_NAKSHATRAS: dict[str, set[int]] = {
     #                         + Pushya(7), Moola(18), Anuradha(16), Rohini(3), Mrigashira(4),
     #                           Punarvasu(6), Ashwini(0), Revati(26)
     CEREMONY_KOTTA_BATTALU:  {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 20, 21, 25, 26},
-    CEREMONY_PRAYANAM:       {0, 3, 4, 6, 7, 12, 13, 14, 16, 18, 20, 21, 22, 26},
+    CEREMONY_PRAYANAM:       {0, 4, 6, 7, 12, 16, 18, 21, 22, 26},
+    #                         Per classical shloka: "మృగాశ్వని పుష్య పునర్వసుచా హస్తానురాధ
+    #                         శ్రవణాని మూల ధనిష్ఠ రేవత్ అఖిలే ప్రయాణం ఫలం లేభేట్ శీఘ్ర నివర్తి తంతే"
+    #                         Mrigashira(4), Ashvini(0), Pushya(7), Punarvasu(6), Hasta(12),
+    #                         Anuradha(16), Shravana(21), Moola(18), Dhanishtha(22), Revati(26).
+    #                         Removed: Rohini(3), Chitra(13), Swati(14), UttaraAshadha(20)
+    #                         — not in shloka, shloka is primary classical authority for Prayanam.
     CEREMONY_VIDYARAMBHAM:   {0, 3, 4, 6, 7, 12, 13, 14, 16, 20, 21, 25, 26},
     CEREMONY_OSHADHA_SEVA:   {0, 4, 6, 7, 12, 21, 22, 23, 26},
     #                         Shatabhisha(23)="hundred physicians" — kept (correct per tradition).
