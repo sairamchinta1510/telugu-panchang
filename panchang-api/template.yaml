@@ -124,3 +124,6 @@ Outputs:
   CacheBucketName:
     Description: S3 bucket for panchang precompute cache
     Value: !Ref PanchangCacheBucket
+  PrecomputeFunctionArn:
+    Description: ARN of the nightly precompute Lambda (for manual triggering)
+    Value: !GetAtt PrecomputeFunction.Arn

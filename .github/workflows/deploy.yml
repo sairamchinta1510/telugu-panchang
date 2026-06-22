@@ -68,6 +68,33 @@ jobs:
             git push
           fi
 
+      - name: Trigger precompute cache warm-up
+        run: |
+          FUNCTION=$(aws cloudformation describe-stacks \
+            --stack-name telugu-panchang \
+            --query 'Stacks[0].Outputs[?OutputKey==`PrecomputeFunctionArn`].OutputValue' \
+            --output text 2>/dev/null || true)
+
+          if [ -z "$FUNCTION" ]; then
+            # Fall back to listing by name pattern
+            FUNCTION=$(aws lambda list-functions --region ap-south-1 \
+              --query "Functions[?contains(FunctionName,'PrecomputeFunction')].FunctionName" \
+              --output text | head -1)
+          fi
+
+          if [ -n "$FUNCTION" ]; then
+            echo "Invoking precompute Lambda: $FUNCTION"
+            aws lambda invoke \
+              --function-name "$FUNCTION" \
+              --invocation-type Event \
+              --payload '{}' \
+              --region ap-south-1 \
+              /tmp/precompute-response.json
+            echo "✅ Precompute triggered (async) — cache warming for 15 cities × 3 months"
+          else
+            echo "⚠️  Could not find PrecomputeFunction — skipping warm-up"
+          fi
+
       - name: Print deployed URLs
         run: |
           echo "✅ Panchang API : ${{ env.API_URL }}/panchang"
