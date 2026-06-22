@@ -677,3 +677,62 @@ def test_check_muhurta_day_bad_day_has_good_windows():
     assert "good_windows" in result
     # overall_day_good must be False when no windows found and not good at sunrise
     assert result["overall_day_good"] is False
+
+
+def test_find_good_windows_skip_planet_rashis_omits_key():
+    """_find_good_windows(skip_planet_rashis=True) must not call compute_planet_rashis
+    and must not include planet_rashis key in returned window dicts."""
+    mf = _load_finder({1})  # day 1 = Rohini nakshatra = vivaha-good
+    import compute.muhurta_finder as _mf
+    from unittest.mock import MagicMock
+    mock_pr = MagicMock(return_value={
+        "ravi": 0, "chandra": 1, "kuja": 2, "budha": 3,
+        "guru": 4, "shukra": 5, "shani": 6, "rahu": 7, "ketu": 1,
+    })
+    _mf.compute_planet_rashis = mock_pr
+    birth_charts = [{"janma_nakshatra_idx": 0}]
+    windows = _mf._find_good_windows(
+        1.0, 1.5, 17.38, 78.49, "Asia/Kolkata",
+        "vivaha", birth_charts, "Jyeshtha", False, 4, 3,
+        skip_planet_rashis=True,
+    )
+    mock_pr.assert_not_called()
+    for w in windows:
+        assert "planet_rashis" not in w, "planet_rashis must be absent when skip_planet_rashis=True"
+
+
+def test_find_good_windows_includes_planet_rashis_by_default():
+    """_find_good_windows() includes planet_rashis in windows when skip_planet_rashis=False."""
+    mf = _load_finder({1})
+    import compute.muhurta_finder as _mf
+    from unittest.mock import MagicMock
+    mock_pr = MagicMock(return_value={
+        "ravi": 0, "chandra": 1, "kuja": 2, "budha": 3,
+        "guru": 4, "shukra": 5, "shani": 6, "rahu": 7, "ketu": 1,
+    })
+    _mf.compute_planet_rashis = mock_pr
+    birth_charts = [{"janma_nakshatra_idx": 0}]
+    windows = _mf._find_good_windows(
+        1.0, 1.5, 17.38, 78.49, "Asia/Kolkata",
+        "vivaha", birth_charts, "Jyeshtha", False, 4, 3,
+    )
+    assert len(windows) > 0, "Expected at least one good window for Rohini day"
+    mock_pr.assert_called()
+    for w in windows:
+        assert "planet_rashis" in w
+
+
+def test_find_muhurtas_result_has_date_raw():
+    """find_muhurtas_for_month results must include date_raw in DD/MM/YYYY format."""
+    mf = _load_finder({15})
+    birth_charts = [{"janma_nakshatra_idx": 0}]
+    results = mf.find_muhurtas_for_month(2026, 7, 17.38, 78.49, "Asia/Kolkata", "vivaha", birth_charts)
+    assert len(results) >= 1
+    for r in results:
+        assert "date_raw" in r, "date_raw must be present in find results"
+        parts = r["date_raw"].split("/")
+        assert len(parts) == 3
+        day_n, month_n, year_n = int(parts[0]), int(parts[1]), int(parts[2])
+        assert 1 <= day_n <= 31
+        assert 1 <= month_n <= 12
+        assert year_n >= 2000
