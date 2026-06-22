@@ -611,6 +611,7 @@ body {
   box-shadow: 0 8px 32px rgba(91,30,0,0.22) !important;
   border: 1px solid rgba(196,154,108,0.35) !important;
   background: var(--white) !important;
+  max-width: calc(100vw - 24px) !important;
 }
 .flatpickr-months { background: var(--maroon) !important; border-radius: 14px 14px 0 0 !important; }
 .flatpickr-months .flatpickr-month { background: transparent !important; color: #fff !important; }
@@ -1144,7 +1145,8 @@ async function savePersonProfile(idx) {
   const f = d => d.toISOString().slice(0,10);
   const todayStr = f(t), endStr = f(n);
   const fpOpts = { dateFormat: "Y-m-d", disableMobile: true, allowInput: false,
-    onOpen(_, __, fp) { fp.input.blur(); } };
+    position: "auto center",
+    onOpen(_, __, fp) { fp.input.blur(); fp.calendarContainer.style.zIndex = "9999"; } };
   flatpickr("#rangeFrom", { ...fpOpts, defaultDate: todayStr });
   flatpickr("#rangeTo",   { ...fpOpts, defaultDate: endStr });
   flatpickr("#checkDate", { ...fpOpts });
@@ -1287,7 +1289,8 @@ function addPerson() {
     <button class="save-profile-btn" style="margin-top:8px;background:var(--gold-light);border:1px solid var(--gold);border-radius:8px;padding:6px 14px;font-size:0.75rem;font-family:inherit;color:var(--brown);cursor:pointer" onclick="savePersonProfile(${idx})">💾 Save Profile</button>`;
   document.getElementById("personList").appendChild(div);
   flatpickr(`#dob${idx}`, { dateFormat: "Y-m-d", maxDate: new Date(), disableMobile: true,
-    allowInput: false, onOpen(_, __, fp) { fp.input.blur(); },
+    position: "auto center", allowInput: false,
+    onOpen(_, __, fp) { fp.input.blur(); fp.calendarContainer.style.zIndex = "9999"; },
     onChange() { delete savedProfileCharts[idx]; } });
   _renumberPersonBlocks();
   document.getElementById("addPersonBtn").style.display = document.querySelectorAll(".person-block").length>=6?"none":"block";
