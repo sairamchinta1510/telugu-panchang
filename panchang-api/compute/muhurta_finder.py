@@ -65,7 +65,8 @@ def _find_good_windows(
 
     Returns list of dicts sorted best-first (highest Choghadiya rank, then longest).
     Each dict: {from, to, duration_mins, nakshatra_te, tithi_te, lagna_te,
-                best_time, choghadiya_te, choghadiya_rank}
+                nak_idx, tithi_idx, sun_idx, best_time, choghadiya_te,
+                choghadiya_rank}
     """
     def _ti(j): return int(moon_sun_elongation(j) / 12) % 30
     def _ni(j): return int(moon_longitude(j) / (360.0 / 27)) % 27
@@ -137,6 +138,9 @@ def _find_good_windows(
                 "nakshatra_te":    NAKSHATRA_TE[naks_idx],
                 "tithi_te":        TITHI_TE[tithi_idx],
                 "lagna_te":        RASHI_TE[win_lagna_idx],
+                "nak_idx":         naks_idx,
+                "tithi_idx":       tithi_idx,
+                "sun_idx":         sun_idx,
                 "lagna_idx":       win_lagna_idx,
                 "planet_rashis":   planet_rashis,
                 "best_time":       best_time_str,

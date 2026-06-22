@@ -655,25 +655,9 @@ body {
 <div id="errorToast" class="error-toast"></div>
 
 <!-- ══════════════════════════════════════════════════
-     PANEL 1 — People
+     PANEL 1 — Event Details
 ══════════════════════════════════════════════════ -->
 <div id="panel1" class="panel active">
-  <div class="section-title">వ్యక్తుల వివరాలు</div>
-
-  <!-- Saved profiles chips (hidden until profiles exist) -->
-  <div id="profileChips" style="display:none;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:12px;border:1px solid rgba(196,154,108,0.2)"></div>
-
-  <div id="personList"></div>
-  <button class="btn-add" id="addPersonBtn" onclick="addPerson()">
-    ＋ మరో వ్యక్తిని జోడించండి (గరిష్టం 6)
-  </button>
-  <button class="btn-primary" onclick="goPanel2()">తదుపరి దశ →</button>
-</div>
-
-<!-- ══════════════════════════════════════════════════
-     PANEL 2 — Event Details
-══════════════════════════════════════════════════ -->
-<div id="panel2" class="panel">
   <div class="section-title">వేడుక వివరాలు</div>
 
   <div class="card">
@@ -815,8 +799,24 @@ body {
     </div>
   </div>
 
+  <button class="btn-primary" onclick="goPanel2()">తదుపరి దశ → వ్యక్తుల వివరాలు</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PANEL 2 — People
+══════════════════════════════════════════════════ -->
+<div id="panel2" class="panel">
+  <div class="section-title">వ్యక్తుల వివరాలు</div>
+
+  <!-- Saved profiles chips (hidden until profiles exist) -->
+  <div id="profileChips" style="display:none;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:12px;border:1px solid rgba(196,154,108,0.2)"></div>
+
+  <div id="personList"></div>
+  <button class="btn-add" id="addPersonBtn" onclick="addPerson()">
+    ＋ మరో వ్యక్తిని జోడించండి (గరిష్టం 6)
+  </button>
   <div style="display:flex;gap:10px;margin-top:4px">
-    <button class="btn-outline" style="flex:0 0 auto" onclick="setStep(1);showError('')">← వెనక్కి</button>
+    <button class="btn-outline" style="flex:0 0 auto" onclick="setStep(1);showError('')">← వేడుక మార్చండి</button>
     <button id="findBtn" class="btn-primary" style="flex:1" onclick="startCompute()">ముహూర్తాలు వెతకండి 🔍</button>
   </div>
 </div>
@@ -854,7 +854,7 @@ body {
   <!-- Actions row -->
   <div class="actions-row" id="resultsActions" style="display:none">
     <button class="btn-outline" onclick="window.print()">🖨 PDF</button>
-    <button class="btn-outline" onclick="setStep(2);showError('')">← వివరాలు మార్చండి</button>
+    <button class="btn-outline" onclick="setStep(2);showError('')">← వ్యక్తులు మార్చండి</button>
     <button class="btn-outline" onclick="resetWizard()">↺ కొత్తగా</button>
   </div>
 </div>
@@ -943,6 +943,49 @@ function renderHoroscopeChart(planetRashis, lagnaIdx) {
   return `<div class="horo-wrap"><div class="horo-grid">${rows}</div></div>`;
 }
 
+const TARA_NAMES = ["జన్మ","సంపత్","విపత్","క్షేమ","ప్రత్యక్","సాధన","నైధన","మిత్ర","పరమ మిత్ర"];
+const TARA_GOOD = [false, true, false, true, false, true, false, true, true];
+
+function renderWindowChecks(w, birthCharts) {
+  if (!w || w.nak_idx === undefined) return "";
+  const { nak_idx, tithi_idx, sun_idx, lagna_idx } = w;
+
+  const panchaka = (sun_idx + tithi_idx + nak_idx + lagna_idx) % 9;
+  const panchakaGood = [0,3,5,7].includes(panchaka);
+
+  let rows = `
+    <table style="width:100%;border-collapse:collapse;font-size:0.72rem;margin-top:8px">
+      <tr style="background:var(--cream2)">
+        <th style="text-align:left;padding:5px 6px;border-bottom:1px solid #E8D5C4;color:var(--brown-mid);font-weight:700">తనిఖీ</th>
+        <th style="text-align:left;padding:5px 6px;border-bottom:1px solid #E8D5C4;color:var(--brown-mid);font-weight:700">విలువ</th>
+        <th style="padding:5px 6px;border-bottom:1px solid #E8D5C4"></th>
+      </tr>
+      <tr>
+        <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">పంచక</td>
+        <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">(${sun_idx}+${tithi_idx}+${nak_idx}+${lagna_idx})%9=${panchaka}</td>
+        <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">${panchakaGood ? "✅" : "❌"}</td>
+      </tr>`;
+
+  if (birthCharts && birthCharts.length) {
+    birthCharts.forEach(bc => {
+      if (bc.janma_nakshatra_idx === undefined) return;
+      const taraPos = ((nak_idx - bc.janma_nakshatra_idx + 27) % 27) % 9;
+      const taraGood = TARA_GOOD[taraPos];
+      const taraName = TARA_NAMES[taraPos] || taraPos;
+      const name = bc.name || "వ్యక్తి";
+      rows += `
+        <tr>
+          <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">${name} తార</td>
+          <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">${taraPos+1}వ తార (${taraName})</td>
+          <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">${taraGood ? "✅" : "❌"}</td>
+        </tr>`;
+    });
+  }
+
+  rows += `</table>`;
+  return rows;
+}
+
 let selectedCeremony = null, allResults = [], personCount = 0;
 let dateMode = "range"; // "range" | "single"
 
@@ -957,6 +1000,8 @@ function setDateMode(mode) {
 }
 
 let savedBirthCharts = [], savedPersons = [];
+let _resultsShown = 0;   // how many result cards are currently displayed
+const _PAGE_SIZE = 5;    // cards per page
 
 let savedProfileCharts = {};   // personBlockId → pre-computed birth chart
 const PROFILES_KEY = "muhurta_profiles";
@@ -1007,20 +1052,53 @@ function addFromProfile(idx) {
   const profiles = loadProfiles();
   const p = profiles[idx];
   if (!p) return;
-  addPerson();
-  const id = personCount;
-  document.getElementById("pname"+id).value = p.name;
-  if (p.dob) {
-    const input = document.getElementById("dob"+id);
-    const fp = input._flatpickr;
-    if (fp) fp.setDate(p.dob, true); else input.value = p.dob;
+
+  let targetId = null;
+  document.querySelectorAll(".person-block").forEach(block => {
+    if (targetId) return;
+    const id = block.id.replace("person","");
+    const dob = document.getElementById("dob"+id)?.value.trim();
+    const name = document.getElementById("pname"+id)?.value.trim();
+    if (!dob && !name) targetId = id;
+  });
+
+  if (targetId) {
+    document.getElementById("pname"+targetId).value = p.name;
+    if (p.dob) {
+      const input = document.getElementById("dob"+targetId);
+      const fp = input._flatpickr;
+      if (fp) fp.setDate(p.dob, true); else input.value = p.dob;
+    }
+    if (p.time) document.getElementById("time"+targetId).value = p.time;
+    if (p.place) {
+      const placeEl = document.getElementById("place"+targetId);
+      if (placeEl) placeEl.value = p.place;
+    }
+    if (p.birthChart) savedProfileCharts[targetId] = p.birthChart;
+  } else {
+    addPerson();
+    const id = personCount;
+    document.getElementById("pname"+id).value = p.name;
+    if (p.dob) {
+      const input = document.getElementById("dob"+id);
+      const fp = input._flatpickr;
+      if (fp) fp.setDate(p.dob, true); else input.value = p.dob;
+    }
+    if (p.time) document.getElementById("time"+id).value = p.time;
+    if (p.place) {
+      const placeEl = document.getElementById("place"+id);
+      if (placeEl) placeEl.value = p.place;
+    }
+    if (p.birthChart) savedProfileCharts[id] = p.birthChart;
   }
-  if (p.time) document.getElementById("time"+id).value = p.time;
-  if (p.place) {
-    const placeEl = document.getElementById("place"+id);
-    if (placeEl) placeEl.value = p.place;
-  }
-  if (p.birthChart) savedProfileCharts[id] = p.birthChart;
+
+  _renumberPersonBlocks();
+}
+
+function _renumberPersonBlocks() {
+  document.querySelectorAll(".person-block h3").forEach((h, i) => {
+    h.textContent = `👤 వ్యక్తి ${i + 1}`;
+  });
 }
 
 async function savePersonProfile(idx) {
@@ -1147,22 +1225,23 @@ document.addEventListener("click", e => {
 // ── Panel 1 → 2 ───────────────────────────────────────────────────────────────
 function goPanel2() {
   showError("");
-  const blocks = document.querySelectorAll(".person-block");
-  if (!blocks.length) { showError("కనీసం ఒక వ్యక్తి వివరాలు నమోదు చేయండి"); return; }
-  for (const b of blocks) {
-    const id = b.id.replace("person","");
-    const dobRaw = document.getElementById("dob"+id)?.value.trim();
-    const time   = document.getElementById("time"+id)?.value.trim();
-    const place  = document.getElementById("place"+id)?.value.trim();
-    if (!dobRaw || !time || !place) { showError("అన్ని వ్యక్తుల వివరాలు పూరించండి"); return; }
+  if (!selectedCeremony) { showError("వేడుక రకం ఎంచుకోండి"); return; }
+  if (!document.getElementById("ceremonyPlace").value.trim()) { showError("వేడుక స్థలం నమోదు చేయండి"); return; }
+  if (dateMode === "range") {
+    const from = document.getElementById("rangeFrom").value;
+    const to   = document.getElementById("rangeTo").value;
+    if (!from || !to) { showError("తేదీ పరిధి నమోదు చేయండి"); return; }
+    if (from > to) { showError("'నుండి' తేదీ 'వరకు' తేదీ కంటే తర్వాత ఉండకూడదు"); return; }
+  } else {
+    if (!document.getElementById("checkDate").value) { showError("తనిఖీ చేయాల్సిన తేదీ నమోదు చేయండి"); return; }
   }
   setStep(2);
 }
 
 // ── Person blocks ─────────────────────────────────────────────────────────────
 function addPerson() {
-  if(personCount >= 6) return;
-  personCount++;
+  if(document.querySelectorAll(".person-block").length >= 6) return;
+  personCount = Math.max(personCount, ...Array.from(document.querySelectorAll(".person-block")).map(b => Number(b.id.replace("person","")) || 0)) + 1;
   const idx = personCount, div = document.createElement("div");
   div.className = "person-block"; div.id = "person"+idx;
   div.innerHTML = `
@@ -1201,14 +1280,16 @@ function addPerson() {
   flatpickr(`#dob${idx}`, { dateFormat: "Y-m-d", maxDate: new Date(), disableMobile: true,
     allowInput: false, onOpen(_, __, fp) { fp.input.blur(); },
     onChange() { delete savedProfileCharts[idx]; } });
-  document.getElementById("addPersonBtn").style.display = personCount>=6?"none":"block";
+  _renumberPersonBlocks();
+  document.getElementById("addPersonBtn").style.display = document.querySelectorAll(".person-block").length>=6?"none":"block";
   _updateRemoveBtns();
 }
 function removePerson(idx) {
   document.getElementById("person"+idx)?.remove();
   delete savedProfileCharts[idx];
-  personCount = document.querySelectorAll(".person-block").length;
-  document.getElementById("addPersonBtn").style.display = personCount>=6?"none":"block";
+  personCount = Math.max(0, ...Array.from(document.querySelectorAll(".person-block")).map(b => Number(b.id.replace("person","")) || 0));
+  document.getElementById("addPersonBtn").style.display = document.querySelectorAll(".person-block").length>=6?"none":"block";
+  _renumberPersonBlocks();
   _updateRemoveBtns();
 }
 function _updateRemoveBtns() {
@@ -1219,18 +1300,6 @@ function _updateRemoveBtns() {
 // ── Compute ───────────────────────────────────────────────────────────────────
 async function startCompute() {
   showError("");
-
-  // Validate event details
-  if (!selectedCeremony) { showError("వేడుక రకం ఎంచుకోండి"); return; }
-  if (!document.getElementById("ceremonyPlace").value.trim()) { showError("వేడుక స్థలం నమోదు చేయండి"); return; }
-  if (dateMode === "range") {
-    const from = document.getElementById("rangeFrom").value;
-    const to   = document.getElementById("rangeTo").value;
-    if (!from || !to) { showError("తేదీ పరిధి నమోదు చేయండి"); return; }
-    if (from > to) { showError("'నుండి' తేదీ 'వరకు' తేదీ కంటే తర్వాత ఉండకూడదు"); return; }
-  } else {
-    if (!document.getElementById("checkDate").value) { showError("తనిఖీ చేయాల్సిన తేదీ నమోదు చేయండి"); return; }
-  }
 
   // Collect persons
   const blocks = document.querySelectorAll(".person-block");
@@ -1382,6 +1451,84 @@ function bestWindow(r) {
 }
 
 // ── Results ───────────────────────────────────────────────────────────────────
+function _renderResultCard(r, i) {
+  const bw = r.good_windows && r.good_windows.length ? r.good_windows[0] : null;
+  const winHtml = bw
+    ? `<div style="background:linear-gradient(135deg,#E8F5E9,#F1F8E9);border:1.5px solid #66BB6A;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+         <div style="font-size:0.65rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px">⭐ ఉత్తమ ముహూర్తం</div>
+         <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+           <span style="font-size:1.3rem;font-weight:800;color:#1B5E20">${bw.best_time || bw.from}</span>
+           ${bw.choghadiya_te ? `<span style="font-size:0.75rem;background:#A5D6A7;color:#1B5E20;border-radius:10px;padding:2px 8px;font-weight:700">${bw.choghadiya_te} చోఘడియ</span>` : ''}
+           <span style="font-size:0.78rem;color:#388E3C;font-weight:600">(${bw.from}–${bw.to})</span>
+         </div>
+         <div style="font-size:0.72rem;color:#2E7D32;margin-top:4px">⭐ ${bw.nakshatra_te||''} · 📅 ${bw.tithi_te||''} · 🌅 ${bw.lagna_te||''} లగ్నం</div>
+       </div>`
+    : `<div style="background:#FFF3E0;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:0.78rem;color:#E65100">⚠️ ఈ రోజు పండితుల సలహా తీసుకోండి</div>`;
+
+  const card = document.createElement("div");
+  card.className = "result-card";
+  card.innerHTML = `
+    <div class="result-card-header">
+      <div class="result-date">
+        <div class="day">${r.date_te}</div>
+        <div class="vaaram">${r.vaaram_te}</div>
+      </div>
+      <div class="result-badge">
+        ${r.nakshatra_te}<br>${r.tithi_te}
+      </div>
+    </div>
+    <div class="result-body">
+      ${winHtml}
+      <div class="result-row">
+        <div class="result-chip">✨ <span>${r.yoga_te}</span></div>
+        <div class="result-chip">🌅 <span>${r.sunrise}</span></div>
+        <div class="result-chip">🌇 <span>${r.sunset}</span></div>
+      </div>
+      ${r.good_windows && r.good_windows.length ? `
+      <div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:8px;padding:6px 10px;margin-top:6px">
+        <div style="font-size:0.68rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px">⏰ శుభ ముహూర్తాలు</div>
+        ${r.good_windows.map((w,wi)=>`
+        <div style="display:flex;align-items:center;gap:6px;padding:3px 0;${wi<r.good_windows.length-1?'border-bottom:1px solid #C8E6C9':''}">
+          ${wi===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:3px;padding:1px 4px;font-weight:700">ఉత్తమం</span>':'<span style="font-size:0.65rem;color:#666;min-width:32px"></span>'}
+          <span style="font-size:0.8rem;font-weight:700;color:#1B5E20">${w.from}–${w.to}</span>
+          <span style="font-size:0.72rem;color:#388E3C">${w.nakshatra_te||''} · ${w.tithi_te||''} · ${w.lagna_te||''} లగ్నం</span>
+        </div>`).join('')}
+      </div>` : ""}
+      ${bw && bw.planet_rashis ? `<details style="margin-top:6px"><summary style="font-size:0.72rem;color:var(--brown-mid);cursor:pointer;padding:4px 0">🪐 గ్రహ స్థానాలు చూడండి</summary>${renderHoroscopeChart(bw.planet_rashis, bw.lagna_idx)}</details>` : ''}
+      <button class="btn-details" onclick="showDetail(${i})">
+        🔍 ముహూర్తం వివరాలు చూడండి
+      </button>
+    </div>`;
+  return card;
+}
+
+function _updateLoadMoreBtn() {
+  const btn = document.getElementById("loadMoreBtn");
+  if (!btn) return;
+  const remaining = allResults.length - _resultsShown;
+  if (remaining <= 0) {
+    btn.style.display = "none";
+  } else {
+    btn.style.display = "";
+    btn.textContent = `తదుపరి ${Math.min(remaining, _PAGE_SIZE)} ముహూర్తాలు చూడండి →  (మొత్తం: ${allResults.length - _resultsShown} మిగిలి ఉన్నాయి)`;
+  }
+}
+
+function loadMoreResults() {
+  const container = document.getElementById("cardsContainer");
+  const prevShown = _resultsShown;
+  const end = Math.min(_resultsShown + _PAGE_SIZE, allResults.length);
+  for (let i = _resultsShown; i < end; i++) {
+    container.appendChild(_renderResultCard(allResults[i], i));
+  }
+  _resultsShown = end;
+  _updateLoadMoreBtn();
+  // Scroll to first newly added card
+  if (prevShown > 0 && container.children[prevShown]) {
+    container.children[prevShown].scrollIntoView({ behavior:"smooth", block:"nearest" });
+  }
+}
+
 function showResults() {
   const hero = document.getElementById("resultsHero");
   const banner = document.getElementById("kalamBanner");
@@ -1399,8 +1546,9 @@ function showResults() {
 
   const list = document.getElementById("resultsList");
   list.innerHTML = "";
+  _resultsShown = 0;
 
-  // ── Birth chart summary panel ──────────────────────────────────────────────
+  // Birth chart summary panel
   if(savedBirthCharts.length) {
     const bcDiv = document.createElement("div");
     bcDiv.style.cssText = "background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px;border:1px solid rgba(196,154,108,0.2)";
@@ -1437,53 +1585,23 @@ function showResults() {
     setStep(3); return;
   }
 
-  allResults.forEach((r,i) => {
-    const win = bestWindow(r);
-    const winHtml = win
-      ? `<div style="background:linear-gradient(135deg,#E8F5E9,#F1F8E9);border:1.5px solid #A5D6A7;border-radius:10px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
-           <span style="font-size:1.4rem">🕐</span>
-           <div>
-             <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.05em">శుభ సమయం (వర్జ్యం మినహా)</div>
-             <div style="font-size:1.05rem;font-weight:700;color:#1B5E20">${toTime(win[0])} – ${toTime(win[1])}</div>
-           </div>
-         </div>`
-      : `<div style="background:#FFF3E0;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:0.78rem;color:#E65100">⚠️ ఈ రోజు ఖాళీ సమయం తక్కువగా ఉంది — పండితుల సలహా తీసుకోండి</div>`;
+  // Cards container (paginated)
+  const cardsContainer = document.createElement("div");
+  cardsContainer.id = "cardsContainer";
+  list.appendChild(cardsContainer);
 
-    const card = document.createElement("div");
-    card.className = "result-card";
-    card.innerHTML = `
-      <div class="result-card-header">
-        <div class="result-date">
-          <div class="day">${r.date_te}</div>
-          <div class="vaaram">${r.vaaram_te}</div>
-        </div>
-        <div class="result-badge">
-          ${r.nakshatra_te}<br>${r.tithi_te}
-        </div>
-      </div>
-      <div class="result-body">
-        ${winHtml}
-        <div class="result-row">
-          <div class="result-chip">✨ <span>${r.yoga_te}</span></div>
-          <div class="result-chip">🌅 <span>${r.sunrise}</span></div>
-          <div class="result-chip">🌇 <span>${r.sunset}</span></div>
-        </div>
-        ${r.good_windows && r.good_windows.length ? `
-        <div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:8px;padding:6px 10px;margin-top:6px">
-          <div style="font-size:0.68rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px">⏰ శుభ ముహూర్తాలు</div>
-          ${r.good_windows.map((w,wi)=>`
-          <div style="display:flex;align-items:center;gap:6px;padding:3px 0;${wi<r.good_windows.length-1?'border-bottom:1px solid #C8E6C9':''}">
-            ${wi===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:3px;padding:1px 4px;font-weight:700">ఉత్తమం</span>':'<span style="font-size:0.65rem;color:#666;min-width:32px"></span>'}
-            <span style="font-size:0.8rem;font-weight:700;color:#1B5E20">${w.from}–${w.to}</span>
-            <span style="font-size:0.72rem;color:#388E3C">${w.nakshatra_te||''} · ${w.tithi_te||''} · ${w.lagna_te||''} లగ్నం</span>
-          </div>`).join('')}
-        </div>` : ""}
-        <button class="btn-details" onclick="showDetail(${i})">
-          🔍 ముహూర్తం వివరాలు చూడండి
-        </button>
-      </div>`;
-    list.appendChild(card);
-  });
+  // Load-more button
+  const loadMoreWrap = document.createElement("div");
+  loadMoreWrap.style.cssText = "margin:16px 0 8px;text-align:center";
+  loadMoreWrap.innerHTML = `<button id="loadMoreBtn" onclick="loadMoreResults()"
+    style="background:linear-gradient(135deg,var(--saffron-dark),var(--saffron));color:white;border:none;
+           border-radius:12px;padding:12px 20px;font-size:0.85rem;font-family:inherit;font-weight:700;
+           cursor:pointer;width:100%;box-shadow:0 4px 14px rgba(193,68,14,0.3);letter-spacing:0.02em">
+  </button>`;
+  list.appendChild(loadMoreWrap);
+
+  // Render first page
+  loadMoreResults();
   setStep(3);
 }
 
@@ -1685,6 +1803,7 @@ function showDetail(i) {
           <span style="font-size:0.72rem;color:var(--brown-mid)">${w.lagna_te||''} లగ్నం</span>
         </div>
         ${w.planet_rashis ? renderHoroscopeChart(w.planet_rashis, w.lagna_idx) : '<div style="font-size:0.75rem;color:var(--brown-mid)">గ్రహ స్థానాల సమాచారం అందుబాటులో లేదు</div>'}
+        ${renderWindowChecks(w, savedBirthCharts)}
       </div>`).join('')}
     </div>` : ""}
 
