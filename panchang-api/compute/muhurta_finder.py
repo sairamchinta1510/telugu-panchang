@@ -50,6 +50,7 @@ from .muhurta_rules import (
     _masam_ok, _GOOD_NAKSHATRAS, _BAD_TITHIS, _BAD_VAARAS, _PRAYANAM_VAARA_VEDHA,
     _tara_ok, _rashi_shuddhi_ok, _panchaka_ok,
     _RASHI_SHUDDHI_FORBIDDEN, _SUDHI_NAME_TE,
+    get_anandadi_yoga, _ANANDADI_YOGA_TE,
 )
 
 _MONTH_TE = [
@@ -454,6 +455,10 @@ def find_muhurtas_for_month(
                 "varjyam":      varjyam,
                 "good_from":    good_windows[0]["from"] if good_windows else None,
                 "good_windows": good_windows,
+                **({"anandadi_yoga": _ANANDADI_YOGA_TE.get(
+                        get_anandadi_yoga(naks_idx, sun_idx)[0],
+                        get_anandadi_yoga(naks_idx, sun_idx)[0]
+                   )} if ceremony_type == "prayanam" else {}),
             })
         except Exception:
             continue   # skip days where calculation fails (polar extremes, etc.)
@@ -617,6 +622,25 @@ def check_muhurta_day(
                 "Vara-Nakshatra Vedha (Prayanam)",
                 _vedha_src,
             ))
+
+    # 2c. Anandadi Yoga (only for Prayanam)
+    if ceremony_type == "prayanam":
+        anandadi_name, anandadi_tier = get_anandadi_yoga(naks_idx, sun_idx)
+        yoga_te = _ANANDADI_YOGA_TE.get(anandadi_name, anandadi_name)
+        _tier_labels = {
+            "avoid":            f"ఆనందాది యోగం: {yoga_te} — పూర్తిగా నిషేధించబడిన యోగం",
+            "inauspicious":     f"ఆనందాది యోగం: {yoga_te} — అశుభ యోగం",
+            "restrict_2hr":     f"ఆనందాది యోగం: {yoga_te} — మొదటి 2 గంటలు నివారించాలి",
+            "restrict_96min_sun": f"ఆనందాది యోగం: {yoga_te} — ఆదివారం మొదటి 96 నిమిషాలు నివారించాలి",
+            "restrict_48min":   f"ఆనందాది యోగం: {yoga_te} — మొదటి 48 నిమిషాలు నివారించాలి",
+            "restrict_24min":   f"ఆనందాది యోగం: {yoga_te} — మొదటి 24 నిమిషాలు నివారించాలి",
+        }
+        if anandadi_tier in ("avoid", "inauspicious"):
+            bad_factors.append(_tier_labels[anandadi_tier])
+        elif anandadi_tier in _tier_labels:
+            bad_factors.append(_tier_labels[anandadi_tier])
+        else:
+            good_factors.append(f"ఆనందాది యోగం: {yoga_te} — శుభ యోగం ✓")
 
     # 3. Nakshatra
     _naks_src = (
