@@ -590,6 +590,49 @@ def test_handler_check_bad_time_format():
     assert resp["statusCode"] == 400
 
 
+def test_handler_window_detail_ok():
+    """POST /muhoortam/window-detail returns planet_rashis with all 9 grahas."""
+    h = _fresh_handler()
+    MOCK_PLANET_RASHIS = {
+        "ravi": 2, "chandra": 4, "kuja": 6, "budha": 1,
+        "guru": 9, "shukra": 11, "shani": 7, "rahu": 0, "ketu": 6,
+    }
+    with patch.object(h, "_geocode", return_value=MOCK_GEO), \
+         patch.object(h, "compute_planet_rashis", return_value=MOCK_PLANET_RASHIS):
+        event = _make_handler_event("/muhoortam/window-detail", {
+            "ceremony_place": "Hyderabad, India",
+            "date": "15/07/2026",
+        })
+        resp = h.lambda_handler(event, None)
+    assert resp["statusCode"] == 200
+    body = json.loads(resp["body"])
+    assert "planet_rashis" in body
+    pr = body["planet_rashis"]
+    for graha in ("ravi", "chandra", "kuja", "budha", "guru", "shukra", "shani", "rahu", "ketu"):
+        assert graha in pr, f"Missing graha key: {graha!r}"
+
+
+def test_handler_window_detail_missing_date():
+    h = _fresh_handler()
+    with patch.object(h, "_geocode", return_value=MOCK_GEO):
+        event = _make_handler_event("/muhoortam/window-detail", {
+            "ceremony_place": "Hyderabad, India",
+        })
+        resp = h.lambda_handler(event, None)
+    assert resp["statusCode"] == 400
+
+
+def test_handler_window_detail_bad_date_format():
+    h = _fresh_handler()
+    with patch.object(h, "_geocode", return_value=MOCK_GEO):
+        event = _make_handler_event("/muhoortam/window-detail", {
+            "ceremony_place": "Hyderabad, India",
+            "date": "2026-07-15",  # must be DD/MM/YYYY
+        })
+        resp = h.lambda_handler(event, None)
+    assert resp["statusCode"] == 400
+
+
 def test_check_muhurta_day_verdict_structure():
     """check_muhurta_day result must contain required keys and valid verdict."""
     mf = _load_finder({15})
