@@ -627,18 +627,10 @@ def check_muhurta_day(
     if ceremony_type == "prayanam":
         anandadi_name, anandadi_tier = get_anandadi_yoga(naks_idx, sun_idx)
         yoga_te = _ANANDADI_YOGA_TE.get(anandadi_name, anandadi_name)
-        _tier_labels = {
-            "avoid":            f"ఆనందాది యోగం: {yoga_te} — పూర్తిగా నిషేధించబడిన యోగం",
-            "inauspicious":     f"ఆనందాది యోగం: {yoga_te} — అశుభ యోగం",
-            "restrict_2hr":     f"ఆనందాది యోగం: {yoga_te} — మొదటి 2 గంటలు నివారించాలి",
-            "restrict_96min_sun": f"ఆనందాది యోగం: {yoga_te} — ఆదివారం మొదటి 96 నిమిషాలు నివారించాలి",
-            "restrict_48min":   f"ఆనందాది యోగం: {yoga_te} — మొదటి 48 నిమిషాలు నివారించాలి",
-            "restrict_24min":   f"ఆనందాది యోగం: {yoga_te} — మొదటి 24 నిమిషాలు నివారించాలి",
-        }
-        if anandadi_tier in ("avoid", "inauspicious"):
-            bad_factors.append(_tier_labels[anandadi_tier])
-        elif anandadi_tier in _tier_labels:
-            bad_factors.append(_tier_labels[anandadi_tier])
+        if anandadi_tier == "avoid":
+            bad_factors.append(f"ఆనందాది యోగం: {yoga_te} — రాక్షస యోగం, ప్రయాణానికి నిషేధించబడింది")
+        elif anandadi_tier == "restrict_24min":
+            bad_factors.append(f"ఆనందాది యోగం: {yoga_te} — మొదటి 24 నిమిషాలు నివారించాలి")
         else:
             good_factors.append(f"ఆనందాది యోగం: {yoga_te} — శుభ యోగం ✓")
 

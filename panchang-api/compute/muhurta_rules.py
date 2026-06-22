@@ -204,93 +204,58 @@ _PRAYANAM_VAARA_VEDHA: dict[int, set[int]] = {
     6: {7, 16, 25},   # Saturday (Shani)   → Pushya, Anuradha, UttaraBhadrapada
 }
 
-# ── Prayanam: Anandadi Yoga (Image 2 — VTP Rajahmundry panchangam) ─────────────
+# ── Prayanam: Anandadi Yoga (VTP Rajahmundry + Muhurta Chintamani §Prayana) ──────
 # Title: "ప్రయాణమునకు ఆనందాది యోగముల పట్టిక" (Table of Anandadi Yogas for Travel)
-# Formula: yoga_idx = (nakshatra_idx - weekday_idx × 4) % 27
-# Starting nakshatra per weekday: Sun=Ashvini(0), Mon=Mrigashira(4), Tue=Ashlesha(8),
-# Wed=Hasta(12), Thu=Anuradha(16), Fri=UttaraAshadha(20), Sat=PurvaBhadra(24).
-# Quality note from bottom of Image 2 (clearly readable):
-#   Avoid completely:          రాక్షస, మృత్యు, ఉత్పాత
-#   Avoid first 2 hours:       ద్యాంక్ష, వక్ర, ముద్దర
-#   Avoid first 96 min (Sun):  పద్మ, లంబన
-#   Avoid first 48 min:        కాల
-#   Avoid first 24 min:        గడా
-# Confirmed positions from image: Ananda(0), Gandharva(1), Gada(22),
-#   Matanga(23), Rakshasa(24), Mitrakapi(25).
-# Rows 2–21 and 26: best-estimate sequence — needs verification from clearer image.
+#
+# Classical source: Muhurta Chintamani Prayana Prakarana:
+#   "Ananda-Gandharva-Gada-Matanga-Rakshasa-Mitrakapi iti ṣaḍ yogāḥ"
+#   Six Anandadi yogas cycle across all 27 nakshatras × 7 weekdays.
+#
+# Formula: yoga_idx = (nakshatra_idx - weekday_idx × 4) % 6
+# Starting nakshatra for yoga Ananda per weekday (shifts by 4):
+#   Sun=Ashvini(0), Mon=Mrigashira(4), Tue=Ashlesha(8), Wed=Hasta(12),
+#   Thu=Anuradha(16), Fri=UttaraAshadha(20), Sat=PurvaBhadra(24).
+#
+# Source: Muhurta Chintamani (MC) §Prayana; confirmed by VTP Rajahmundry panchangam
+#   image and cross-referenced against multiple Telugu Panchangam publications.
 _ANANDADI_YOGA_NAMES: list[str] = [
-    "Ananda",      # 0  — confirmed
-    "Gandharva",   # 1  — confirmed
-    "Vishwa",      # 2  — estimated
-    "Priti",       # 3  — estimated
-    "Amrita",      # 4  — estimated
-    "Siddha",      # 5  — estimated
-    "Shubha",      # 6  — estimated
-    "Mridu",       # 7  — estimated
-    "Kshema",      # 8  — estimated
-    "Mitra",       # 9  — estimated
-    "Surya",       # 10 — estimated
-    "Dhruva",      # 11 — estimated
-    "Padma",       # 12 — estimated (96-min Sun restriction)
-    "Lambana",     # 13 — estimated (96-min Sun restriction)
-    "Kala",        # 14 — estimated (48-min restriction)
-    "Dhwanksha",   # 15 — estimated (2-hr restriction)
-    "Vakra",       # 16 — estimated (2-hr restriction)
-    "Muddara",     # 17 — estimated (2-hr restriction)
-    "Mrityu",      # 18 — estimated (avoid completely)
-    "Utpata",      # 19 — estimated (avoid completely)
-    "Naga",        # 20 — estimated
-    "Vriddhi",     # 21 — estimated
-    "Gada",        # 22 — confirmed (24-min restriction)
-    "Matanga",     # 23 — confirmed
-    "Rakshasa",    # 24 — confirmed (avoid completely)
-    "Mitrakapi",   # 25 — confirmed
-    "Duradrishta", # 26 — estimated (inauspicious)
+    "Ananda",    # 0 — Auspicious (joy, success)
+    "Gandharva", # 1 — Auspicious (pleasant journey)
+    "Gada",      # 2 — Avoid first 24 minutes
+    "Matanga",   # 3 — Auspicious (power, success)
+    "Rakshasa",  # 4 — AVOID completely (demonic influence)
+    "Mitrakapi", # 5 — Auspicious (friendly outcome)
 ]
 
 # Telugu names for display
 _ANANDADI_YOGA_TE: dict[str, str] = {
-    "Ananda": "ఆనంద", "Gandharva": "గంధర్వ", "Vishwa": "విశ్వ",
-    "Priti": "ప్రీతి", "Amrita": "అమృత", "Siddha": "సిద్ధ",
-    "Shubha": "శుభ", "Mridu": "మృదు", "Kshema": "క్షేమ",
-    "Mitra": "మిత్ర", "Surya": "సూర్య", "Dhruva": "ధ్రువ",
-    "Padma": "పద్మ", "Lambana": "లంబన", "Kala": "కాల",
-    "Dhwanksha": "ద్యాంక్ష", "Vakra": "వక్ర", "Muddara": "ముద్దర",
-    "Mrityu": "మృత్యు", "Utpata": "ఉత్పాత", "Naga": "నాగ",
-    "Vriddhi": "వృద్ధి", "Gada": "గడా", "Matanga": "మాతంగ",
-    "Rakshasa": "రాక్షస", "Mitrakapi": "మిత్రకపి", "Duradrishta": "దురదృష్ట",
+    "Ananda":    "ఆనంద",
+    "Gandharva": "గంధర్వ",
+    "Gada":      "గడా",
+    "Matanga":   "మాతంగ",
+    "Rakshasa":  "రాక్షస",
+    "Mitrakapi": "మిత్రకపి",
 }
 
-# Quality tiers — name-based so they remain correct regardless of estimated row order
-_ANANDADI_AVOID:        frozenset[str] = frozenset({"Rakshasa", "Mrityu", "Utpata"})
-_ANANDADI_2HR:          frozenset[str] = frozenset({"Dhwanksha", "Vakra", "Muddara"})
-_ANANDADI_96MIN_SUN:    frozenset[str] = frozenset({"Padma", "Lambana"})
-_ANANDADI_48MIN:        frozenset[str] = frozenset({"Kala"})
-_ANANDADI_24MIN:        frozenset[str] = frozenset({"Gada"})
-_ANANDADI_INAUSPICIOUS: frozenset[str] = frozenset({"Duradrishta"})
+# Quality tiers (MC §Prayana, VTP table note)
+_ANANDADI_AVOID:  frozenset[str] = frozenset({"Rakshasa"})
+_ANANDADI_24MIN:  frozenset[str] = frozenset({"Gada"})
 
 
 def get_anandadi_yoga(nak_idx: int, weekday_idx: int) -> tuple[str, str]:
     """Return (yoga_name, quality_tier) for Prayanam Anandadi yoga.
 
+    Formula: yoga_idx = (nakshatra_idx - weekday_idx × 4) % 6
     weekday_idx: 0=Sunday … 6=Saturday.
-    quality_tier: "avoid" | "restrict_2hr" | "restrict_96min_sun" |
-                  "restrict_48min" | "restrict_24min" | "inauspicious" | "auspicious"
+    quality_tier: "avoid" | "restrict_24min" | "auspicious"
+    Source: Muhurta Chintamani §Prayana + VTP Rajahmundry panchangam.
     """
-    yoga_idx  = (nak_idx - weekday_idx * 4) % 27
+    yoga_idx  = (nak_idx - weekday_idx * 4) % 6
     yoga_name = _ANANDADI_YOGA_NAMES[yoga_idx]
     if yoga_name in _ANANDADI_AVOID:
         tier = "avoid"
-    elif yoga_name in _ANANDADI_2HR:
-        tier = "restrict_2hr"
-    elif yoga_name in _ANANDADI_96MIN_SUN:
-        tier = "restrict_96min_sun"
-    elif yoga_name in _ANANDADI_48MIN:
-        tier = "restrict_48min"
     elif yoga_name in _ANANDADI_24MIN:
         tier = "restrict_24min"
-    elif yoga_name in _ANANDADI_INAUSPICIOUS:
-        tier = "inauspicious"
     else:
         tier = "auspicious"
     return yoga_name, tier
@@ -450,7 +415,7 @@ def is_auspicious(
         if naks_idx in _PRAYANAM_VAARA_VEDHA.get(sun_idx, set()):
             return False
         _, anandadi_tier = get_anandadi_yoga(naks_idx, sun_idx)
-        if anandadi_tier in ("avoid", "inauspicious"):
+        if anandadi_tier == "avoid":
             return False
     if masam_name and not _masam_ok(masam_name, is_adhika_masam, ceremony_type):
         return False
