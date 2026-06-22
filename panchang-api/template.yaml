@@ -5,7 +5,7 @@ Description: Panchang API — Lambda + HTTP API
 Globals:
   Function:
     Timeout: 10
-    MemorySize: 256
+    MemorySize: 512
     Runtime: python3.12
     Environment:
       Variables:
@@ -64,6 +64,12 @@ Resources:
           Type: HttpApi
           Properties:
             Path: /muhoortam/check
+            Method: POST
+            ApiId: !Ref PanchangHttpApi
+        MuhoortamWindowDetail:
+          Type: HttpApi
+          Properties:
+            Path: /muhoortam/window-detail
             Method: POST
             ApiId: !Ref PanchangHttpApi
 
