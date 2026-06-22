@@ -1875,7 +1875,9 @@ function showDetail(i) {
           <span style="font-size:0.82rem;font-weight:700;color:var(--maroon)">${w.best_time||w.from} (${w.from}–${w.to})</span>
           <span style="font-size:0.72rem;color:var(--brown-mid)">${w.lagna_te||''} లగ్నం</span>
         </div>
-        ${w.planet_rashis ? renderHoroscopeChart(w.planet_rashis, w.lagna_idx) : '<div style="font-size:0.75rem;color:var(--brown-mid)">గ్రహ స్థానాల సమాచారం అందుబాటులో లేదు</div>'}
+        <div id="horoscope-w${wi}" style="min-height:40px">
+          <div style="font-size:0.75rem;color:var(--brown-mid);padding:8px 0">⏳ గ్రహ స్థానాలు లోడ్ అవుతున్నాయి...</div>
+        </div>
         ${renderWindowChecks(w, savedBirthCharts)}
       </div>`).join('')}
     </div>` : ""}
@@ -1892,6 +1894,31 @@ function showDetail(i) {
 
   document.getElementById("overlay").classList.add("open");
   document.body.style.overflow = "hidden";
+  if (r.good_windows && r.good_windows.length) _loadHoroscopeForDetail(r);
+}
+async function _loadHoroscopeForDetail(r) {
+  if (!r._planetRashis) {
+    try {
+      const resp = await fetch(API_BASE + "/muhoortam/window-detail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ceremony_place: _scanPlace, date: r.date_raw }),
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      const data = await resp.json();
+      r._planetRashis = data.planet_rashis;
+    } catch (e) {
+      (r.good_windows || []).forEach((_, wi) => {
+        const el = document.getElementById("horoscope-w" + wi);
+        if (el) el.innerHTML = '<div style="font-size:0.75rem;color:var(--brown-mid)">గ్రహ స్థానాల సమాచారం అందుబాటులో లేదు</div>';
+      });
+      return;
+    }
+  }
+  (r.good_windows || []).forEach((w, wi) => {
+    const el = document.getElementById("horoscope-w" + wi);
+    if (el) el.innerHTML = renderHoroscopeChart(r._planetRashis, w.lagna_idx);
+  });
 }
 function closeSheet() {
   document.getElementById("overlay").classList.remove("open");
