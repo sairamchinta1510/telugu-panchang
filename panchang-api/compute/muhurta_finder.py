@@ -55,6 +55,7 @@ def _find_good_windows(
     is_adhika: bool,
     sun_idx: int,
     lagna_idx: int,   # kept for API compat; actual per-window lagna is recomputed
+    skip_planet_rashis: bool = False,
 ) -> list[dict]:
     """Scan the full 24 hours from rise_jd for auspicious muhurta windows.
 
@@ -106,7 +107,6 @@ def _find_good_windows(
         if good:
             from_str = jd_to_local_datetime(jd,            tz_name).strftime("%H:%M")
             to_str   = jd_to_local_datetime(window_end_jd, tz_name).strftime("%H:%M")
-            planet_rashis = compute_planet_rashis(jd)
             h_from, m_from = map(int, from_str.split(":"))
             h_to,   m_to   = map(int, to_str.split(":"))
             total_from = h_from * 60 + m_from
@@ -126,12 +126,11 @@ def _find_good_windows(
                 if slot["quality_rank"] > best_cho_rank:
                     best_cho_rank = slot["quality_rank"]
                     best_cho_te   = slot["quality_te"]
-                    # Recommend start of the best Choghadiya slot (clamped to window start)
                     best_time_str = jd_to_local_datetime(
                         max(slot["from_jd"], jd), tz_name
                     ).strftime("%H:%M")
 
-            good_windows.append({
+            entry = {
                 "from":            from_str,
                 "to":              to_str,
                 "duration_mins":   total_to - total_from,
@@ -142,11 +141,13 @@ def _find_good_windows(
                 "tithi_idx":       tithi_idx,
                 "sun_idx":         sun_idx,
                 "lagna_idx":       win_lagna_idx,
-                "planet_rashis":   planet_rashis,
                 "best_time":       best_time_str,
                 "choghadiya_te":   best_cho_te,
                 "choghadiya_rank": best_cho_rank,
-            })
+            }
+            if not skip_planet_rashis:
+                entry["planet_rashis"] = compute_planet_rashis(jd)
+            good_windows.append(entry)
 
         jd = max(window_end_jd, jd + EPSILON) + EPSILON
         if jd >= end_jd:
@@ -193,7 +194,6 @@ def find_muhurtas_for_month(
 
             lagna_idx = compute_lagna(rise_jd, lat, lon)
 
-            # Get panchang for Masa Shuddhi check (masam name + adhika flag) and Telugu labels
             pan = compute_panchang(jd, lat, lon, tz_name)
             masam_name = pan["masam"]["en"]
             is_adhika  = pan["masam"]["adhika"]
@@ -209,10 +209,18 @@ def find_muhurtas_for_month(
             if good_at_sunrise:
                 good_windows = []   # good all day — no restriction
             else:
+                # Pre-filter: if the same bad nakshatra spans the full 24 h, no
+                # good window transition can exist — skip the expensive scan.
+                good_naks = _GOOD_NAKSHATRAS.get(ceremony_type, set())
+                if naks_idx not in good_naks:
+                    naks_idx_end = int(moon_longitude(rise_jd + 1.0) / (360.0 / 27)) % 27
+                    if naks_idx_end not in good_naks and naks_idx_end == naks_idx:
+                        continue  # single bad nakshatra covers full 24 h — skip
                 good_windows = _find_good_windows(
                     rise_jd, set_jd, lat, lon, tz_name,
                     ceremony_type, birth_charts, masam_name, is_adhika,
                     sun_idx, lagna_idx,
+                    skip_planet_rashis=True,
                 )
                 if not good_windows:
                     continue   # truly bad all day
@@ -225,6 +233,7 @@ def find_muhurtas_for_month(
 
             results.append({
                 "date_te":      f"{day} {_MONTH_TE[month - 1]} {year}",
+                "date_raw":     f"{day:02d}/{month:02d}/{year}",
                 "vaaram_te":    pan["vaaram"]["te"],
                 "sunrise":      dt_rise.strftime("%H:%M"),
                 "sunset":       dt_set.strftime("%H:%M"),
