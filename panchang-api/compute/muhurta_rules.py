@@ -9,6 +9,16 @@ CEREMONY_VIVAHA         = "vivaha"
 CEREMONY_GRUHA_PRAVESAM = "gruha_pravesam"
 CEREMONY_UPANAYANAM     = "upanayanam"
 CEREMONY_POOJA          = "pooja"
+CEREMONY_YUDDHAM        = "yuddham"
+CEREMONY_ANNA_PRASANA   = "anna_prasana"
+CEREMONY_CHELAMU        = "chelamu"
+CEREMONY_KOTTA_BATTALU  = "kotta_battalu"
+CEREMONY_PRAYANAM       = "prayanam"
+CEREMONY_VIDYARAMBHAM   = "vidyarambham"
+CEREMONY_OSHADHA_SEVA   = "oshadha_seva"
+CEREMONY_NAMAKARANAM    = "namakaranam"
+CEREMONY_GARBHADANAM    = "garbhadanam"
+CEREMONY_SANKHU_STAPANA = "sankhu_stapana"
 
 # ── Auspicious nakshatras per ceremony (0-indexed: 0=Ashvini … 26=Revati) ────
 # VIVAHA: 11 standard nakshatras per Muhurta Chintamani Ch.6 + South Indian tradition.
@@ -19,19 +29,19 @@ CEREMONY_POOJA          = "pooja"
 # UPANAYANAM: Pushya(7) is excellent (Guru-Pushya Yoga prized); included here.
 _GOOD_NAKSHATRAS: dict[str, set[int]] = {
     CEREMONY_VIVAHA:         {3, 4, 9, 11, 12, 14, 16, 18, 20, 25, 26},
-    #                         Rohini, Mrigashira, Magha, UttaraPhalguni, Hasta,
-    #                         Swati, Anuradha, Moola*, UttaraAshadha, UttaraBhadra, Revati
-    #                         (* Moola 1st pada forbidden — enforced via pada rules in future)
     CEREMONY_GRUHA_PRAVESAM: {3, 4, 7, 11, 12, 13, 14, 16, 20, 21, 23, 25, 26},
-    #                         Rohini, Mrigashira, Pushyami✓, UttaraPhalguni, Hasta, Chitra,
-    #                         Swati, Anuradha, UttaraAshadha, Shravana, Shatabhisha,
-    #                         UttaraBhadra, Revati  (Ashlesha/Jyeshtha/Moola excluded)
     CEREMONY_UPANAYANAM:     {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 20, 21, 22, 23, 25, 26},
-    #                         Ashwini, Rohini, Mrigashira, Punarvasu, Pushyami✓,
-    #                         UttaraPhalguni, Hasta, Chitra, Swati, Anuradha,
-    #                         UttaraAshadha, Shravana, Dhanishtha, Shatabhisha,
-    #                         UttaraBhadra, Revati
     CEREMONY_POOJA:          {0, 3, 4, 6, 7, 9, 11, 12, 13, 14, 16, 20, 21, 22, 23, 25, 26},
+    CEREMONY_YUDDHAM:        {1, 2, 5, 8, 9, 12, 17, 18, 20, 22},
+    CEREMONY_ANNA_PRASANA:   {0, 3, 4, 7, 11, 12, 14, 16, 21, 25, 26},
+    CEREMONY_CHELAMU:        {0, 3, 4, 7, 11, 12, 14, 16, 21, 25, 26},
+    CEREMONY_KOTTA_BATTALU:  {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 20, 21, 25, 26},
+    CEREMONY_PRAYANAM:       {0, 3, 4, 6, 7, 12, 13, 14, 16, 18, 20, 21, 26},
+    CEREMONY_VIDYARAMBHAM:   {0, 3, 4, 6, 7, 12, 13, 14, 16, 20, 21, 25, 26},
+    CEREMONY_OSHADHA_SEVA:   {0, 7, 12, 21, 22, 23, 26},
+    CEREMONY_NAMAKARANAM:    {0, 3, 4, 6, 7, 11, 12, 13, 14, 16, 20, 21, 25, 26},
+    CEREMONY_GARBHADANAM:    {3, 4, 9, 11, 12, 14, 16, 18, 20, 25, 26},
+    CEREMONY_SANKHU_STAPANA: {3, 4, 11, 12, 14, 16, 20, 22, 25, 26},
 }
 
 # ── Bad tithis per ceremony (0-indexed: 0=Shukla Prathama … 14=Purnima … 29=Amavasya) ─
@@ -41,11 +51,19 @@ _RIKTA: set[int] = {3, 8, 13, 18, 23, 28}
 
 _BAD_TITHIS: dict[str, set[int]] = {
     CEREMONY_VIVAHA:         _RIKTA | {7, 14, 29},
-    #                         + Ashtami Shukla(7), Purnima(14), Amavasya(29)
     CEREMONY_GRUHA_PRAVESAM: _RIKTA | {14, 29},
-    #                         + Purnima(14), Amavasya(29)
     CEREMONY_UPANAYANAM:     _RIKTA | {14, 29},
-    CEREMONY_POOJA:          {29},   # Only Amavasya rejected for general poojas
+    CEREMONY_POOJA:          {29},
+    CEREMONY_YUDDHAM:        _RIKTA | {14, 29},
+    CEREMONY_ANNA_PRASANA:   _RIKTA | {14, 29},
+    CEREMONY_CHELAMU:        _RIKTA | {14, 29},
+    CEREMONY_KOTTA_BATTALU:  _RIKTA | {29},
+    CEREMONY_PRAYANAM:       _RIKTA | {14, 29},
+    CEREMONY_VIDYARAMBHAM:   _RIKTA | {14, 29},
+    CEREMONY_OSHADHA_SEVA:   _RIKTA | {14, 29},
+    CEREMONY_NAMAKARANAM:    _RIKTA | {14, 29},
+    CEREMONY_GARBHADANAM:    _RIKTA | {7, 14, 29},
+    CEREMONY_SANKHU_STAPANA: _RIKTA | {14, 29},
 }
 
 # ── Masa Shuddhi — forbidden lunar months ────────────────────────────────────
@@ -55,7 +73,17 @@ _CHATURMAS_MASAM: dict[str, set[str]] = {
     CEREMONY_VIVAHA:         {"Ashadha", "Shravana", "Bhadrapada"},
     CEREMONY_GRUHA_PRAVESAM: {"Ashadha", "Shravana", "Bhadrapada"},
     CEREMONY_UPANAYANAM:     {"Shravana", "Bhadrapada"},
-    CEREMONY_POOJA:          set(),   # Poojas are allowed in all months
+    CEREMONY_POOJA:          set(),
+    CEREMONY_YUDDHAM:        set(),
+    CEREMONY_ANNA_PRASANA:   set(),
+    CEREMONY_CHELAMU:        set(),
+    CEREMONY_KOTTA_BATTALU:  set(),
+    CEREMONY_PRAYANAM:       set(),
+    CEREMONY_VIDYARAMBHAM:   set(),
+    CEREMONY_OSHADHA_SEVA:   set(),
+    CEREMONY_NAMAKARANAM:    set(),
+    CEREMONY_GARBHADANAM:    {"Ashadha", "Shravana", "Bhadrapada"},
+    CEREMONY_SANKHU_STAPANA: {"Ashadha", "Shravana", "Bhadrapada"},
 }
 
 # ── Rahu Kalam / Yamaganda / Gulika segments ─────────────────────────────────
@@ -99,16 +127,44 @@ def _masam_ok(masam_name: str, is_adhika: bool, ceremony_type: str) -> bool:
     return masam_name not in _CHATURMAS_MASAM.get(ceremony_type, set())
 
 
-# ── Rashi Shuddhi — forbidden Moon positions from Janma Rashi (Image 1) ──────
-# Image 1 (Lagna Shuddhi list):
-#   వివాహమునకు సప్తమ శుద్ధి   → Vivaha: Moon must NOT be in 7th rashi from Janma Rashi
-#   ఉపనయనమునకు అష్టమ శుద్ధి  → Upanayanam: Moon must NOT be in 8th rashi from Janma Rashi
-# Position = (day_rashi - janma_rashi) % 12  (0-indexed: 0=same, 6=7th, 7=8th)
+# Lagna Shuddhi — which position (from birth rashi, 0-indexed) the muhurtha lagna
+# must NOT fall in, per traditional Telugu Panchangam (Image 1 of source notes).
+# Dvitiya(1)=2nd, Tritiya(2)=3rd, Chaturthi(3)=4th, Panchami(4)=5th, Shashthi(5)=6th,
+# Saptami(6)=7th, Ashtami(7)=8th, Navami(8)=9th, Dashami(9)=10th,
+# Ekadashi(10)=11th, Dwadashi(11)=12th.
 _RASHI_SHUDDHI_FORBIDDEN: dict[str, set[int]] = {
-    CEREMONY_VIVAHA:         {6},   # Saptama (7th position)
-    CEREMONY_UPANAYANAM:     {7},   # Ashtama (8th position)
-    CEREMONY_GRUHA_PRAVESAM: set(), # Not specified in Image 1; no restriction added
+    CEREMONY_VIVAHA:         {6},    # Saptami Sudhi — 7th from bride's janma rashi
+    CEREMONY_GRUHA_PRAVESAM: {11},   # Dwadashi Sudhi — 12th
+    CEREMONY_UPANAYANAM:     {7},    # Ashtami Sudhi — 8th
     CEREMONY_POOJA:          set(),
+    CEREMONY_YUDDHAM:        {10},   # Ekadashi Sudhi — 11th
+    CEREMONY_ANNA_PRASANA:   {9},    # Dashami Sudhi — 10th
+    CEREMONY_CHELAMU:        {8},    # Navami Sudhi — 9th
+    CEREMONY_KOTTA_BATTALU:  {5},    # Shashthi Sudhi — 6th
+    CEREMONY_PRAYANAM:       {4},    # Panchami Sudhi — 5th
+    CEREMONY_VIDYARAMBHAM:   {3},    # Chaturthi Sudhi — 4th
+    CEREMONY_OSHADHA_SEVA:   {2},    # Tritiya Sudhi — 3rd
+    CEREMONY_NAMAKARANAM:    {1},    # Dvitiya Sudhi — 2nd
+    CEREMONY_GARBHADANAM:    set(),  # Lagna Sudhi — general lagna purity (handled by panchaka)
+    CEREMONY_SANKHU_STAPANA: {3, 7}, # Chaturthi+Ashtami — 4th AND 8th
+}
+
+# Display name for the Lagna Shuddhi rule used for each ceremony (for UI page 3)
+_SUDHI_NAME_TE: dict[str, str] = {
+    CEREMONY_VIVAHA:         "సప్తమ సుద్ధి (7వ స్థానం)",
+    CEREMONY_GRUHA_PRAVESAM: "ద్వాదశ సుద్ధి (12వ స్థానం)",
+    CEREMONY_UPANAYANAM:     "అష్టమ సుద్ధి (8వ స్థానం)",
+    CEREMONY_POOJA:          "",
+    CEREMONY_YUDDHAM:        "ఏకాదశ సుద్ధి (11వ స్థానం)",
+    CEREMONY_ANNA_PRASANA:   "దశమ సుద్ధి (10వ స్థానం)",
+    CEREMONY_CHELAMU:        "నవమ సుద్ధి (9వ స్థానం)",
+    CEREMONY_KOTTA_BATTALU:  "షష్ట సుద్ధి (6వ స్థానం)",
+    CEREMONY_PRAYANAM:       "పంచమ సుద్ధి (5వ స్థానం)",
+    CEREMONY_VIDYARAMBHAM:   "చతుర్థ సుద్ధి (4వ స్థానం)",
+    CEREMONY_OSHADHA_SEVA:   "తృతీయ సుద్ధి (3వ స్థానం)",
+    CEREMONY_NAMAKARANAM:    "ద్వితీయ సుద్ధి (2వ స్థానం)",
+    CEREMONY_GARBHADANAM:    "లగ్న సుద్ధి",
+    CEREMONY_SANKHU_STAPANA: "చతుర్థ+అష్టమ సుద్ధి (4వ,8వ స్థానాలు)",
 }
 
 

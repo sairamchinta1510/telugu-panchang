@@ -294,6 +294,10 @@ def _load_finder(days_auspicious: set):
     fake_astro.moon_sun_elongation        = fake_moon_sun_elongation
     fake_astro.jd_to_local_datetime       = fake_jd_to_local_datetime
     fake_astro.find_next_index_change     = fake_find_next_index_change
+    fake_astro.compute_planet_rashis      = lambda jd: {
+        "ravi": 0, "chandra": 1, "kuja": 2, "budha": 3,
+        "guru": 4, "shukra": 5, "shani": 6, "rahu": 7, "ketu": 1
+    }
     sys.modules["compute.astro"] = fake_astro
 
     fake_pan_mod = types.ModuleType("compute.panchang")
@@ -312,6 +316,7 @@ def _load_finder(days_auspicious: set):
 
     # muhurta_rules must also be importable
     import compute.muhurta_rules  # real module (no swisseph dependency)
+    from compute.muhurta_rules import _SUDHI_NAME_TE
     sys.modules["compute.muhurta_rules"] = compute.muhurta_rules
 
     import compute.muhurta_finder as mf

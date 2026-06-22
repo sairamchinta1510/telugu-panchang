@@ -161,28 +161,88 @@ body {
 }
 
 /* ════════════════════════════════
-   CEREMONY GRID
+   CEREMONY CATEGORY TABS + GRID
 ════════════════════════════════ */
+.cer-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 10px; scrollbar-width: none; }
+.cer-tabs::-webkit-scrollbar { display: none; }
+.cer-tab {
+  flex-shrink: 0;
+  border: 1.5px solid #E8D5C4;
+  border-radius: 20px;
+  background: var(--cream2);
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--brown-mid);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.cer-tab.active {
+  border-color: var(--saffron);
+  background: linear-gradient(135deg, var(--saffron-dark), var(--saffron));
+  color: white;
+  box-shadow: 0 2px 10px rgba(193,68,14,0.3);
+}
 .ceremony-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
 .ceremony-card {
   border: 2px solid #E8D5C4;
   border-radius: var(--radius-sm);
   background: var(--cream2);
-  padding: 16px 10px 12px;
+  padding: 14px 8px 10px;
   cursor: pointer;
   text-align: center;
   transition: var(--transition);
   user-select: none;
+  display: none;
 }
+.ceremony-card.cer-visible { display: block; }
 .ceremony-card:active { transform: scale(0.97); }
 .ceremony-card.selected {
   border-color: var(--saffron);
   background: linear-gradient(135deg, var(--saffron-dark), var(--saffron));
   box-shadow: 0 4px 16px rgba(193,68,14,0.35);
 }
-.ceremony-card .cer-icon { font-size: 1.8rem; margin-bottom: 6px; display: block; }
-.ceremony-card .cer-name { font-size: 0.9rem; font-weight: 700; color: var(--brown); }
+.ceremony-card .cer-icon { font-size: 1.6rem; margin-bottom: 5px; display: block; }
+.ceremony-card .cer-name { font-size: 0.82rem; font-weight: 700; color: var(--brown); line-height: 1.3; }
+.ceremony-card .cer-name-en { font-size: 0.67rem; color: var(--brown-mid); margin-top: 2px; }
 .ceremony-card.selected .cer-name { color: var(--white); }
+.ceremony-card.selected .cer-name-en { color: rgba(255,255,255,0.8); }
+
+/* ════════════════════════════════
+   HOROSCOPE CHART (South Indian)
+════════════════════════════════ */
+.horo-wrap { margin-top: 8px; }
+.horo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  width: 100%;
+  max-width: 280px;
+  aspect-ratio: 1;
+  border: 2px solid var(--brown-light);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 0 auto;
+  background: var(--white);
+}
+.horo-cell {
+  border: 1px solid #D4B896;
+  padding: 3px;
+  font-size: 0.62rem;
+  line-height: 1.4;
+  color: var(--brown);
+  position: relative;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.horo-cell.horo-center { background: var(--cream2); border: 1px solid #EDD9C0; }
+.horo-cell.horo-lagna { background: #FFF3CC; border: 1.5px solid var(--gold); }
+.horo-cell .horo-rashi { font-size: 0.58rem; color: var(--brown-mid); font-weight: 600; }
+.horo-cell .horo-planets { font-size: 0.7rem; font-weight: 700; color: var(--maroon); line-height: 1.5; }
+.horo-lagna-mark { font-size: 0.6rem; background: var(--gold); color: white; border-radius: 2px; padding: 0 3px; position: absolute; bottom: 2px; right: 2px; }
 
 /* ════════════════════════════════
    FIELDS & INPUTS
@@ -619,22 +679,89 @@ body {
   <div class="card">
     <div class="field">
       <label>వేడుక రకం</label>
+      <!-- Category tabs -->
+      <div class="cer-tabs" id="cerTabs">
+        <div class="cer-tab active" data-cat="vivaha" onclick="selectCerCat(this)">💒 వివాహం</div>
+        <div class="cer-tab" data-cat="childhood" onclick="selectCerCat(this)">🍼 శైశవం</div>
+        <div class="cer-tab" data-cat="home" onclick="selectCerCat(this)">🏠 గృహ</div>
+        <div class="cer-tab" data-cat="life" onclick="selectCerCat(this)">🌟 జీవితం</div>
+        <div class="cer-tab" data-cat="pooja" onclick="selectCerCat(this)">🙏 పూజ</div>
+      </div>
+      <!-- All 14 ceremony cards; shown/hidden by category -->
       <div class="ceremony-grid">
-        <div class="ceremony-card" data-type="vivaha" onclick="selectCeremony(this)">
+        <div class="ceremony-card cer-visible" data-type="vivaha" data-cat="vivaha" onclick="selectCeremony(this)">
           <span class="cer-icon">💒</span>
           <div class="cer-name">వివాహం</div>
+          <div class="cer-name-en">Marriage</div>
         </div>
-        <div class="ceremony-card" data-type="gruha_pravesam" onclick="selectCeremony(this)">
-          <span class="cer-icon">🏠</span>
-          <div class="cer-name">గృహ ప్రవేశం</div>
+        <div class="ceremony-card" data-type="garbhadanam" data-cat="vivaha" onclick="selectCeremony(this)">
+          <span class="cer-icon">🌸</span>
+          <div class="cer-name">గర్భాదానం</div>
+          <div class="cer-name-en">First Night</div>
         </div>
-        <div class="ceremony-card" data-type="upanayanam" onclick="selectCeremony(this)">
+
+        <div class="ceremony-card" data-type="namakaranam" data-cat="childhood" onclick="selectCeremony(this)">
+          <span class="cer-icon">🧸</span>
+          <div class="cer-name">నామకరణం</div>
+          <div class="cer-name-en">Naming Ceremony</div>
+        </div>
+        <div class="ceremony-card" data-type="anna_prasana" data-cat="childhood" onclick="selectCeremony(this)">
+          <span class="cer-icon">🍚</span>
+          <div class="cer-name">అన్నప్రాశన</div>
+          <div class="cer-name-en">First Rice Feeding</div>
+        </div>
+        <div class="ceremony-card" data-type="chelamu" data-cat="childhood" onclick="selectCeremony(this)">
+          <span class="cer-icon">💎</span>
+          <div class="cer-name">చెలము</div>
+          <div class="cer-name-en">Ear Piercing</div>
+        </div>
+        <div class="ceremony-card" data-type="vidyarambham" data-cat="childhood" onclick="selectCeremony(this)">
+          <span class="cer-icon">📚</span>
+          <div class="cer-name">విద్యారంభం</div>
+          <div class="cer-name-en">Starting Education</div>
+        </div>
+        <div class="ceremony-card" data-type="upanayanam" data-cat="childhood" onclick="selectCeremony(this)">
           <span class="cer-icon">🪡</span>
           <div class="cer-name">ఉపనయనం</div>
+          <div class="cer-name-en">Sacred Thread</div>
         </div>
-        <div class="ceremony-card" data-type="pooja" onclick="selectCeremony(this)">
+
+        <div class="ceremony-card" data-type="gruha_pravesam" data-cat="home" onclick="selectCeremony(this)">
+          <span class="cer-icon">🏠</span>
+          <div class="cer-name">గృహ ప్రవేశం</div>
+          <div class="cer-name-en">House Entry</div>
+        </div>
+        <div class="ceremony-card" data-type="sankhu_stapana" data-cat="home" onclick="selectCeremony(this)">
+          <span class="cer-icon">🏗️</span>
+          <div class="cer-name">శంకుస్థాపన</div>
+          <div class="cer-name-en">Foundation Stone</div>
+        </div>
+
+        <div class="ceremony-card" data-type="prayanam" data-cat="life" onclick="selectCeremony(this)">
+          <span class="cer-icon">✈️</span>
+          <div class="cer-name">ప్రయాణం</div>
+          <div class="cer-name-en">Travel / Journey</div>
+        </div>
+        <div class="ceremony-card" data-type="kotta_battalu" data-cat="life" onclick="selectCeremony(this)">
+          <span class="cer-icon">👗</span>
+          <div class="cer-name">కొత్త బట్టలు</div>
+          <div class="cer-name-en">New Clothes</div>
+        </div>
+        <div class="ceremony-card" data-type="yuddham" data-cat="life" onclick="selectCeremony(this)">
+          <span class="cer-icon">⚔️</span>
+          <div class="cer-name">యుద్ధం</div>
+          <div class="cer-name-en">Battle / Contest</div>
+        </div>
+        <div class="ceremony-card" data-type="oshadha_seva" data-cat="life" onclick="selectCeremony(this)">
+          <span class="cer-icon">💊</span>
+          <div class="cer-name">ఔషధ సేవ</div>
+          <div class="cer-name-en">Taking Medicine</div>
+        </div>
+
+        <div class="ceremony-card" data-type="pooja" data-cat="pooja" onclick="selectCeremony(this)">
           <span class="cer-icon">🪔</span>
           <div class="cer-name">పూజ</div>
+          <div class="cer-name-en">Worship</div>
         </div>
       </div>
     </div>
@@ -752,14 +879,69 @@ body {
 <script>
 const API_BASE = "https://h3dp7amvn9.execute-api.ap-south-1.amazonaws.com";
 
-const CEREMONY_NAMES = { vivaha:"వివాహం", gruha_pravesam:"గృహ ప్రవేశం", upanayanam:"ఉపనయనం", pooja:"పూజ" };
+const CEREMONY_NAMES = {
+  vivaha:"వివాహం", gruha_pravesam:"గృహ ప్రవేశం", upanayanam:"ఉపనయనం", pooja:"పూజ",
+  yuddham:"యుద్ధం", anna_prasana:"అన్నప్రాశన", chelamu:"చెలము",
+  kotta_battalu:"కొత్త బట్టలు", prayanam:"ప్రయాణం", vidyarambham:"విద్యారంభం",
+  oshadha_seva:"ఔషధ సేవ", namakaranam:"నామకరణం", garbhadanam:"గర్భాదానం",
+  sankhu_stapana:"శంకుస్థాపన"
+};
 const CEREMONY_NAK_REASON = {
   vivaha:         "వివాహానికి సంప్రదాయం ప్రకారం ఎంపిక చేసిన శుభ నక్షత్రం",
   gruha_pravesam: "గృహ ప్రవేశానికి అనుకూలమైన నక్షత్రం — ఇంటిలో సుఖ శాంతులు కలుగుతాయి",
   upanayanam:     "ఉపనయనానికి శుభమైన నక్షత్రం — విద్యాభివృద్ధి కలుగుతుంది",
   pooja:          "పూజకు అనుకూలమైన నక్షత్రం — అమ్మవారి అనుగ్రహం కలుగుతుంది",
+  yuddham:        "యుద్ధానికి శుభమైన నక్షత్రం — విజయం కలుగుతుంది",
+  anna_prasana:   "అన్నప్రాశనకు అనుకూలమైన నక్షత్రం — బాలుని ఆరోగ్యం వృద్ధి అవుతుంది",
+  chelamu:        "చెలముకు శుభమైన నక్షత్రం — ఆభరణ శుభం కలుగుతుంది",
+  kotta_battalu:  "కొత్త బట్టలకు అనుకూలమైన నక్షత్రం — అదృష్టం కలుగుతుంది",
+  prayanam:       "ప్రయాణానికి శుభమైన నక్షత్రం — సురక్షితంగా చేరుకుంటారు",
+  vidyarambham:   "విద్యారంభానికి శుభమైన నక్షత్రం — జ్ఞానాభివృద్ధి కలుగుతుంది",
+  oshadha_seva:   "ఔషధ సేవకు అనుకూలమైన నక్షత్రం — శీఘ్రంగా స్వస్థత కలుగుతుంది",
+  namakaranam:    "నామకరణానికి శుభమైన నక్షత్రం — బాలుని భవిష్యత్తు ఉజ్వలంగా ఉంటుంది",
+  garbhadanam:    "గర్భాదానానికి శుభమైన నక్షత్రం — సంతాన సౌభాగ్యం కలుగుతుంది",
+  sankhu_stapana: "శంకుస్థాపనకు శుభమైన నక్షత్రం — నిర్మాణం సుదీర్ఘంగా నిలుస్తుంది",
 };
 const MONTHS_TE = ["జనవరి","ఫిబ్రవరి","మార్చి","ఏప్రిల్","మే","జూన్","జులై","ఆగస్టు","సెప్టెంబర్","అక్టోబర్","నవంబర్","డిసెంబర్"];
+
+// ── Rashi & planet data for horoscope chart ───────────────────────────────────
+const RASHI_TE = ["మేష","వృషభ","మిథున","కర్కాటక","సింహ","కన్య","తుల","వృశ్చిక","ధను","మకర","కుంభ","మీన"];
+const PLANET_TE = { ravi:"ర",chandra:"చ",kuja:"కు",budha:"బు",guru:"గు",shukra:"శు",shani:"శ",rahu:"రా",ketu:"కే" };
+// South Indian grid: rashi index → [gridRow, gridCol] (0-indexed in 4×4)
+const RASHI_POS = [[0,1],[0,2],[0,3],[1,3],[2,3],[3,3],[3,2],[3,1],[3,0],[2,0],[1,0],[0,0]];
+
+function renderHoroscopeChart(planetRashis, lagnaIdx) {
+  if (!planetRashis) return "";
+  // Build rashi→planets mapping
+  const cells = Array.from({length: 12}, () => []);
+  for (const [p, ri] of Object.entries(planetRashis)) {
+    if (ri >= 0 && ri < 12) cells[ri].push(PLANET_TE[p] || p);
+  }
+  // Build 4×4 grid
+  const grid = Array.from({length: 4}, () => Array(4).fill(null));
+  for (let ri = 0; ri < 12; ri++) {
+    const [r, c] = RASHI_POS[ri];
+    grid[r][c] = { rashi: ri, planets: cells[ri], isLagna: ri === lagnaIdx };
+  }
+  let rows = "";
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 4; c++) {
+      const cell = grid[r][c];
+      if (!cell) {
+        // Center cells
+        rows += `<div class="horo-cell horo-center"></div>`;
+      } else {
+        const cls = cell.isLagna ? "horo-cell horo-lagna" : "horo-cell";
+        rows += `<div class="${cls}">
+          <div class="horo-rashi">${RASHI_TE[cell.rashi]}</div>
+          <div class="horo-planets">${cell.planets.join(" ")}</div>
+          ${cell.isLagna ? '<span class="horo-lagna-mark">ల</span>' : ""}
+        </div>`;
+      }
+    }
+  }
+  return `<div class="horo-wrap"><div class="horo-grid">${rows}</div></div>`;
+}
 
 let selectedCeremony = null, allResults = [], personCount = 0;
 let dateMode = "range"; // "range" | "single"
@@ -911,6 +1093,16 @@ function showError(msg) {
   const t = document.getElementById("errorToast");
   t.textContent = msg; t.style.display = msg ? "block" : "none";
   if(msg) t.scrollIntoView({ behavior:"smooth", block:"center" });
+}
+
+// ── Ceremony category tabs ────────────────────────────────────────────────────
+function selectCerCat(tab) {
+  document.querySelectorAll(".cer-tab").forEach(t => t.classList.remove("active"));
+  tab.classList.add("active");
+  const cat = tab.dataset.cat;
+  document.querySelectorAll(".ceremony-card").forEach(c => {
+    c.classList.toggle("cer-visible", c.dataset.cat === cat);
+  });
 }
 
 // ── Ceremony select ───────────────────────────────────────────────────────────
@@ -1365,20 +1557,24 @@ function showCheckResult(data) {
 
     ${data.good_windows && data.good_windows.length ? `
     <div style="background:#E8F5E9;border-radius:12px;padding:14px;margin-bottom:10px">
-      <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">⏰ శుభ ముహూర్త సమయాలు</div>
+      <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">⏰ శుభ ముహూర్త సమయాలు</div>
+      ${data.sudhi_name_te ? `<div style="font-size:0.72rem;color:#1B5E20;background:#C8E6C9;border-radius:6px;padding:4px 8px;margin-bottom:10px">🔯 లగ్న సుద్ధి నియమం: ${data.sudhi_name_te}</div>` : ""}
       ${data.good_windows.map((w,i)=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;${i<data.good_windows.length-1?'border-bottom:1px solid #C8E6C9':''}">
-        ${i===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:4px;padding:2px 6px;font-weight:700;white-space:nowrap">ఉత్తమం</span>':'<span style="font-size:0.65rem;background:#A5D6A7;color:#1B5E20;border-radius:4px;padding:2px 6px;font-weight:600;white-space:nowrap">${i+1}వ</span>'}
-        <div>
-          <div style="display:flex;align-items:baseline;gap:8px">
-            <span style="font-size:1.05rem;font-weight:800;color:#1B5E20">${w.best_time||w.from}</span>
-            ${w.choghadiya_te?`<span style="font-size:0.72rem;background:#C8E6C9;color:#1B5E20;border-radius:10px;padding:1px 7px;font-weight:600">${w.choghadiya_te}</span>`:''}
-            <span style="font-size:0.72rem;color:#666">(${w.from}–${w.to})</span>
-          </div>
-          <div style="font-size:0.73rem;color:#388E3C;margin-top:2px">
-            ⭐ ${w.nakshatra_te||''} &nbsp;|&nbsp; 📅 ${w.tithi_te||''} &nbsp;|&nbsp; 🌅 ${w.lagna_te||''} లగ్నం
+      <div style="padding:8px 0;${i<data.good_windows.length-1?'border-bottom:1px solid #C8E6C9':''}">
+        <div style="display:flex;align-items:center;gap:8px">
+          ${i===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:4px;padding:2px 6px;font-weight:700;white-space:nowrap">ఉత్తమం</span>':'<span style="font-size:0.65rem;background:#A5D6A7;color:#1B5E20;border-radius:4px;padding:2px 6px;font-weight:600;white-space:nowrap">${i+1}వ</span>'}
+          <div>
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-size:1.05rem;font-weight:800;color:#1B5E20">${w.best_time||w.from}</span>
+              ${w.choghadiya_te?`<span style="font-size:0.72rem;background:#C8E6C9;color:#1B5E20;border-radius:10px;padding:1px 7px;font-weight:600">${w.choghadiya_te}</span>`:''}
+              <span style="font-size:0.72rem;color:#666">(${w.from}–${w.to})</span>
+            </div>
+            <div style="font-size:0.73rem;color:#388E3C;margin-top:2px">
+              ⭐ ${w.nakshatra_te||''} &nbsp;|&nbsp; 📅 ${w.tithi_te||''} &nbsp;|&nbsp; 🌅 ${w.lagna_te||''} లగ్నం
+            </div>
           </div>
         </div>
+        ${w.planet_rashis ? renderHoroscopeChart(w.planet_rashis, w.lagna_idx) : ""}
       </div>`).join('')}
     </div>` : ""}
 
@@ -1460,9 +1656,9 @@ function showDetail(i) {
       <div class="detail-item">
         <div class="di-icon">🌙</div>
         <div>
-          <div class="di-label">రాశి శుద్ధి</div>
+          <div class="di-label">లగ్న సుద్ధి</div>
           <div class="di-val">రాశి స్థానం అనుకూలం</div>
-          <div class="di-sub">సప్తమ / అష్టమ స్థాన దోషం లేదు</div>
+          <div class="di-sub">${r.sudhi_name_te || "సప్తమ / అష్టమ స్థాన దోషం లేదు"}</div>
           <span class="badge badge-green">✅ రాశి శుద్ధి సరి</span>
         </div>
       </div>
@@ -1477,11 +1673,27 @@ function showDetail(i) {
       </div>
     </div>
 
+    ${r.good_windows && r.good_windows.length ? `
+    <div class="detail-section">
+      <div class="detail-section-title">🪐 ముహూర్తం గ్రహ స్థానాలు</div>
+      ${r.sudhi_name_te ? `<div style="font-size:0.72rem;color:#5D1B1B;background:var(--gold-light);border:1px solid var(--gold);border-radius:6px;padding:4px 10px;margin-bottom:10px">🔯 లగ్న సుద్ధి: ${r.sudhi_name_te}</div>` : ""}
+      ${r.good_windows.map((w,wi)=>`
+      <div style="margin-bottom:${wi<r.good_windows.length-1?'14px':'0'}">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          ${wi===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:4px;padding:2px 6px;font-weight:700">ఉత్తమం</span>':'<span style="font-size:0.65rem;background:#A5D6A7;color:#1B5E20;border-radius:4px;padding:2px 6px;font-weight:600">${wi+1}వ</span>'}
+          <span style="font-size:0.82rem;font-weight:700;color:var(--maroon)">${w.best_time||w.from} (${w.from}–${w.to})</span>
+          <span style="font-size:0.72rem;color:var(--brown-mid)">${w.lagna_te||''} లగ్నం</span>
+        </div>
+        ${w.planet_rashis ? renderHoroscopeChart(w.planet_rashis, w.lagna_idx) : '<div style="font-size:0.75rem;color:var(--brown-mid)">గ్రహ స్థానాల సమాచారం అందుబాటులో లేదు</div>'}
+      </div>`).join('')}
+    </div>` : ""}
+
     <div class="detail-section">
       <div class="detail-section-title">నివారించాల్సిన సమయాలు</div>
       <div class="kalam-grid">
         ${r.rahu_kalam?`<div class="kalam-row"><span class="kalam-name">🔴 రాహు కాలం</span><span class="kalam-time">${r.rahu_kalam.start} – ${r.rahu_kalam.end}</span></div>`:""}
         ${r.yamaganda?`<div class="kalam-row"><span class="kalam-name">🔴 యమగండ కాలం</span><span class="kalam-time">${r.yamaganda.start} – ${r.yamaganda.end}</span></div>`:""}
+
         ${r.gulika_kalam?`<div class="kalam-row"><span class="kalam-name">⚠️ గులిక కాలం</span><span class="kalam-time">${r.gulika_kalam.start} – ${r.gulika_kalam.end}</span></div>`:""}
       </div>
     </div>`;
@@ -1504,6 +1716,9 @@ function resetWizard() {
   dateMode = "range";
   savedProfileCharts = {};
   document.querySelectorAll(".ceremony-card").forEach(c => c.classList.remove("selected"));
+  // Reset category tabs to default (vivaha)
+  document.querySelectorAll(".cer-tab").forEach((t,i) => t.classList.toggle("active", i===0));
+  document.querySelectorAll(".ceremony-card").forEach(c => c.classList.toggle("cer-visible", c.dataset.cat === "vivaha"));
   document.getElementById("ceremonyPlace").value = "";
   document.getElementById("personList").innerHTML = "";
   document.getElementById("addPersonBtn").style.display = "block";

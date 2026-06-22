@@ -105,3 +105,29 @@ def find_next_index_change(jd_start: float, index_fn, current_idx: int,
                     hi = mid
             return (lo + hi) / 2
     return None
+
+
+def compute_planet_rashis(jd: float) -> dict[str, int]:
+    """Compute sidereal rashi index (0=Mesha … 11=Meena) for all 9 Jyotish grahas at jd.
+
+    Returns dict with keys: ravi, chandra, kuja, budha, guru, shukra, shani, rahu, ketu.
+    """
+    _init_swe()
+    flags = swe.FLG_SWIEPH | swe.FLG_SIDEREAL
+    bodies = {
+        "ravi":   swe.SUN,
+        "chandra": swe.MOON,
+        "kuja":   swe.MARS,
+        "budha":  swe.MERCURY,
+        "guru":   swe.JUPITER,
+        "shukra": swe.VENUS,
+        "shani":  swe.SATURN,
+    }
+    rashis: dict[str, int] = {}
+    for name, pid in bodies.items():
+        xx, _ = swe.calc_ut(jd, pid, flags)
+        rashis[name] = int(xx[0] / 30) % 12
+    xx, _ = swe.calc_ut(jd, swe.TRUE_NODE, flags)
+    rashis["rahu"] = int(xx[0] / 30) % 12
+    rashis["ketu"] = (rashis["rahu"] + 6) % 12
+    return rashis

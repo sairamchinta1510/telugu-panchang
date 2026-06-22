@@ -11,7 +11,7 @@ import calendar
 from .astro import (
     local_date_to_jd, get_sunrise_sunset,
     jd_to_local_datetime, moon_longitude, moon_sun_elongation,
-    find_next_index_change,
+    find_next_index_change, compute_planet_rashis,
 )
 from .panchang import compute_panchang, NAKSHATRA_TE, TITHI_TE
 from .birth_chart import compute_lagna, RASHI_TE
@@ -19,7 +19,7 @@ from .muhurta_rules import (
     is_auspicious, compute_kalams, compute_choghadiya_slots,
     _masam_ok, _GOOD_NAKSHATRAS, _BAD_TITHIS,
     _tara_ok, _rashi_shuddhi_ok, _panchaka_ok,
-    _RASHI_SHUDDHI_FORBIDDEN,
+    _RASHI_SHUDDHI_FORBIDDEN, _SUDHI_NAME_TE,
 )
 
 _MONTH_TE = [
@@ -32,6 +32,16 @@ _CEREMONY_TE = {
     "gruha_pravesam": "గృహ ప్రవేశం",
     "upanayanam":     "ఉపనయనం",
     "pooja":          "పూజ",
+    "yuddham":        "యుద్ధం",
+    "anna_prasana":   "అన్నప్రాశన",
+    "chelamu":        "చెలము",
+    "kotta_battalu":  "కొత్త బట్టలు",
+    "prayanam":       "ప్రయాణం",
+    "vidyarambham":   "విద్యారంభం",
+    "oshadha_seva":   "ఔషధ సేవ",
+    "namakaranam":    "నామకరణం",
+    "garbhadanam":    "గర్భాదానం",
+    "sankhu_stapana": "శంకుస్థాపన",
 }
 
 
@@ -95,6 +105,7 @@ def _find_good_windows(
         if good:
             from_str = jd_to_local_datetime(jd,            tz_name).strftime("%H:%M")
             to_str   = jd_to_local_datetime(window_end_jd, tz_name).strftime("%H:%M")
+            planet_rashis = compute_planet_rashis(jd)
             h_from, m_from = map(int, from_str.split(":"))
             h_to,   m_to   = map(int, to_str.split(":"))
             total_from = h_from * 60 + m_from
@@ -126,6 +137,8 @@ def _find_good_windows(
                 "nakshatra_te":    NAKSHATRA_TE[naks_idx],
                 "tithi_te":        TITHI_TE[tithi_idx],
                 "lagna_te":        RASHI_TE[win_lagna_idx],
+                "lagna_idx":       win_lagna_idx,
+                "planet_rashis":   planet_rashis,
                 "best_time":       best_time_str,
                 "choghadiya_te":   best_cho_te,
                 "choghadiya_rank": best_cho_rank,
@@ -416,6 +429,7 @@ def check_muhurta_day(
         "nakshatra_te":     pan["nakshatra"]["te"],
         "yoga_te":          pan["yoga"]["te"],
         "masam_te":         pan["masam"]["te"],
+        "sudhi_name_te":    _SUDHI_NAME_TE.get(ceremony_type, ""),
         "sunrise":          dt_rise.strftime("%H:%M"),
         "sunset":           dt_set.strftime("%H:%M"),
         "good_factors":     good_factors,
@@ -428,4 +442,3 @@ def check_muhurta_day(
         "varjyam":          pan["varjyam"],
         "good_windows":     good_windows,
     }
-
