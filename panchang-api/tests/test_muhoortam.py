@@ -633,6 +633,16 @@ def test_handler_window_detail_bad_date_format():
     assert resp["statusCode"] == 400
 
 
+def test_handler_window_detail_missing_place():
+    h = _fresh_handler()
+    with patch.object(h, "_geocode", return_value=MOCK_GEO):
+        event = _make_handler_event("/muhoortam/window-detail", {
+            "date": "15/07/2026",
+        })
+        resp = h.lambda_handler(event, None)
+    assert resp["statusCode"] == 400
+
+
 def test_check_muhurta_day_verdict_structure():
     """check_muhurta_day result must contain required keys and valid verdict."""
     mf = _load_finder({15})
