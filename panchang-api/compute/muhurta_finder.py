@@ -6,6 +6,7 @@ Masa Shuddhi (Chaturmas), Tara Balam, and Panchaka Dosha.
 Includes Rahu Kalam, Yamaganda, and Gulika Kalam in output (essential South Indian exclusion periods).
 """
 from __future__ import annotations
+import bisect
 import calendar
 
 from .astro import (
@@ -14,6 +15,14 @@ from .astro import (
     find_next_index_change, compute_planet_rashis,
 )
 from .panchang import compute_panchang, NAKSHATRA_TE, TITHI_TE
+try:
+    from .panchang import YOGA_TE
+except ImportError:
+    YOGA_TE = [""] * 27
+try:
+    from .panchang import VAARAM_TE as _VAARAM_TE
+except ImportError:
+    _VAARAM_TE = ["ఆదివారం", "సోమవారం", "మంగళవారం", "బుధవారం", "గురువారం", "శుక్రవారం", "శనివారం"]
 from .birth_chart import compute_lagna, RASHI_TE
 from .muhurta_rules import (
     is_auspicious, compute_kalams, compute_choghadiya_slots,
@@ -45,6 +54,117 @@ _CEREMONY_TE = {
 }
 
 
+def _lookup_at_jd(transitions: list[dict], jd: float) -> int:
+    """Binary search for the active index at given jd in a sorted transitions list."""
+    jds = [t["jd"] for t in transitions]
+    pos = bisect.bisect_right(jds, jd) - 1
+    return transitions[max(0, pos)]["idx"]
+
+
+def _segments_from_cache(day_cache: dict, rise_jd: float, end_jd: float) -> list[tuple]:
+    """Build time segments by merging all precomputed transition breakpoints."""
+    breakpoints = set()
+    for key in ("lagna_transitions", "nak_transitions", "tithi_transitions"):
+        for t in day_cache.get(key, []):
+            jd = t["jd"]
+            if rise_jd < jd < end_jd:
+                breakpoints.add(jd)
+    sorted_pts = sorted(breakpoints)
+    all_pts = [rise_jd] + sorted_pts + [end_jd]
+    return [(all_pts[i], all_pts[i + 1]) for i in range(len(all_pts) - 1)]
+
+
+def _find_good_windows_from_cache(
+    day_cache: dict,
+    rise_jd: float,
+    set_jd: float,
+    tz_name: str,
+    ceremony_type: str,
+    birth_charts: list[dict],
+    masam_name: str,
+    is_adhika: bool,
+    sun_idx: int,
+    skip_planet_rashis: bool = False,
+) -> list[dict]:
+    """Cached path: use precomputed transitions instead of live swisseph calls."""
+    EPSILON = 1.0 / (24 * 60)
+    end_jd = rise_jd + 1.0
+
+    cho_slots = compute_choghadiya_slots(rise_jd, set_jd, end_jd, sun_idx)
+    lagna_trans = day_cache.get("lagna_transitions", [])
+    nak_trans = day_cache.get("nak_transitions", [])
+    tithi_trans = day_cache.get("tithi_transitions", [])
+
+    segments = _segments_from_cache(day_cache, rise_jd, end_jd)
+    good_windows: list[dict] = []
+
+    for seg_start, seg_end in segments:
+        if seg_end - seg_start < EPSILON:
+            continue
+
+        naks_idx = _lookup_at_jd(nak_trans, seg_start)
+        tithi_idx = _lookup_at_jd(tithi_trans, seg_start)
+        win_lagna_idx = _lookup_at_jd(lagna_trans, seg_start)
+        day_rashi_idx = day_cache.get(
+            "day_rashi_idx",
+            int(naks_idx * (360.0 / 27) / 30) % 12,
+        )
+
+        good = is_auspicious(
+            naks_idx, tithi_idx, sun_idx, win_lagna_idx,
+            birth_charts, ceremony_type,
+            masam_name=masam_name, is_adhika_masam=is_adhika,
+            day_rashi_idx=day_rashi_idx,
+        )
+
+        if good:
+            from_str = jd_to_local_datetime(seg_start, tz_name).strftime("%H:%M")
+            to_str = jd_to_local_datetime(seg_end, tz_name).strftime("%H:%M")
+            h_from, m_from = map(int, from_str.split(":"))
+            h_to, m_to = map(int, to_str.split(":"))
+            total_from = h_from * 60 + m_from
+            total_to = h_to * 60 + m_to
+            if total_to <= total_from:
+                total_to += 24 * 60
+
+            best_cho_rank = -1
+            best_cho_te = ""
+            best_time_str = from_str
+            for slot in cho_slots:
+                overlap_start = max(slot["from_jd"], seg_start)
+                overlap_end = min(slot["to_jd"], seg_end)
+                if overlap_end - overlap_start < EPSILON:
+                    continue
+                if slot["quality_rank"] > best_cho_rank:
+                    best_cho_rank = slot["quality_rank"]
+                    best_cho_te = slot["quality_te"]
+                    best_time_str = jd_to_local_datetime(
+                        max(slot["from_jd"], seg_start), tz_name
+                    ).strftime("%H:%M")
+
+            entry = {
+                "from": from_str,
+                "to": to_str,
+                "duration_mins": total_to - total_from,
+                "nakshatra_te": NAKSHATRA_TE[naks_idx],
+                "tithi_te": TITHI_TE[tithi_idx],
+                "lagna_te": RASHI_TE[win_lagna_idx],
+                "nak_idx": naks_idx,
+                "tithi_idx": tithi_idx,
+                "sun_idx": sun_idx,
+                "lagna_idx": win_lagna_idx,
+                "best_time": best_time_str,
+                "choghadiya_te": best_cho_te,
+                "choghadiya_rank": best_cho_rank,
+            }
+            if not skip_planet_rashis:
+                entry["planet_rashis"] = day_cache.get("planet_rashis", {})
+            good_windows.append(entry)
+
+    good_windows.sort(key=lambda w: (w["choghadiya_rank"], w["duration_mins"]), reverse=True)
+    return good_windows
+
+
 def _find_good_windows(
     rise_jd: float,
     set_jd: float,
@@ -56,6 +176,7 @@ def _find_good_windows(
     sun_idx: int,
     lagna_idx: int,   # kept for API compat; actual per-window lagna is recomputed
     skip_planet_rashis: bool = False,
+    day_cache: dict | None = None,
 ) -> list[dict]:
     """Scan the full 24 hours from rise_jd for auspicious muhurta windows.
 
@@ -75,6 +196,13 @@ def _find_good_windows(
 
     EPSILON = 1.0 / (24 * 60)   # 1 minute in JD
     end_jd  = rise_jd + 1.0     # exactly 24 hours
+
+    if day_cache is not None:
+        return _find_good_windows_from_cache(
+            day_cache, rise_jd, set_jd, tz_name,
+            ceremony_type, birth_charts, masam_name, is_adhika,
+            sun_idx, skip_planet_rashis,
+        )
 
     # Pre-compute Choghadiya slots for the full day/night
     cho_slots = compute_choghadiya_slots(rise_jd, set_jd, end_jd, sun_idx)
@@ -166,6 +294,7 @@ def find_muhurtas_for_month(
     tz_name: str,
     ceremony_type: str,
     birth_charts: list[dict],
+    month_cache: dict | None = None,
 ) -> list[dict]:
     """Scan every day of the month and return auspicious muhurta days.
 
@@ -180,23 +309,37 @@ def find_muhurtas_for_month(
 
     for day in range(1, days_in_month + 1):
         try:
-            jd      = local_date_to_jd(year, month, day, tz_name)
-            rise_jd, set_jd = get_sunrise_sunset(jd, lat, lon)
+            date_key = f"{year}-{month:02d}-{day:02d}"
+            dc = month_cache.get(date_key) if month_cache is not None else None
 
-            moon_lon  = moon_longitude(rise_jd)
-            elong     = moon_sun_elongation(rise_jd)
-            naks_idx  = int(moon_lon / (360.0 / 27)) % 27
-            tithi_idx = int(elong / 12) % 30
-            day_rashi_idx = int(moon_lon / 30) % 12
+            if dc is not None:
+                rise_jd = dc["sunrise_jd"]
+                set_jd = dc["sunset_jd"]
+                naks_idx = dc["nak_idx"]
+                tithi_idx = dc["tithi_idx"]
+                sun_idx = dc["sun_idx"]
+                lagna_idx = dc["lagna_transitions"][0]["idx"]
+                masam_name = dc["masam"]
+                is_adhika = dc["is_adhika"]
+                day_rashi_idx = dc["day_rashi_idx"]
+                dt_rise = jd_to_local_datetime(rise_jd, tz_name)
+            else:
+                jd = local_date_to_jd(year, month, day, tz_name)
+                rise_jd, set_jd = get_sunrise_sunset(jd, lat, lon)
 
-            dt_rise   = jd_to_local_datetime(rise_jd, tz_name)
-            sun_idx   = (dt_rise.weekday() + 1) % 7   # Sunday=0 … Saturday=6
+                moon_lon = moon_longitude(rise_jd)
+                elong = moon_sun_elongation(rise_jd)
+                naks_idx = int(moon_lon / (360.0 / 27)) % 27
+                tithi_idx = int(elong / 12) % 30
+                day_rashi_idx = int(moon_lon / 30) % 12
 
-            lagna_idx = compute_lagna(rise_jd, lat, lon)
+                dt_rise = jd_to_local_datetime(rise_jd, tz_name)
+                sun_idx = (dt_rise.weekday() + 1) % 7   # Sunday=0 … Saturday=6
+                lagna_idx = compute_lagna(rise_jd, lat, lon)
 
-            pan = compute_panchang(jd, lat, lon, tz_name)
-            masam_name = pan["masam"]["en"]
-            is_adhika  = pan["masam"]["adhika"]
+                pan = compute_panchang(jd, lat, lon, tz_name)
+                masam_name = pan["masam"]["en"]
+                is_adhika = pan["masam"]["adhika"]
 
             good_at_sunrise = is_auspicious(
                 naks_idx, tithi_idx, sun_idx, lagna_idx,
@@ -214,39 +357,71 @@ def find_muhurtas_for_month(
                 # good window transition can exist — skip the expensive scan.
                 good_naks = _GOOD_NAKSHATRAS.get(ceremony_type, set())
                 if naks_idx not in good_naks:
-                    naks_idx_end = int(moon_longitude(rise_jd + 1.0) / (360.0 / 27)) % 27
-                    if naks_idx_end not in good_naks and naks_idx_end == naks_idx:
-                        continue  # single bad nakshatra covers full 24 h — skip
+                    if dc is not None:
+                        nak_transitions = dc.get("nak_transitions", [])
+                        if len(nak_transitions) == 1 and nak_transitions[0]["idx"] == naks_idx:
+                            continue  # single bad nakshatra covers full 24 h — skip
+                    else:
+                        naks_idx_end = int(moon_longitude(rise_jd + 1.0) / (360.0 / 27)) % 27
+                        if naks_idx_end not in good_naks and naks_idx_end == naks_idx:
+                            continue  # single bad nakshatra covers full 24 h — skip
 
             good_windows = _find_good_windows(
                 rise_jd, set_jd, lat, lon, tz_name,
                 ceremony_type, birth_charts, masam_name, is_adhika,
                 sun_idx, lagna_idx,
                 skip_planet_rashis=True,
+                day_cache=dc,
             )
             if not good_at_sunrise and not good_windows:
                 continue   # truly bad all day
 
-            dt_set    = jd_to_local_datetime(set_jd, tz_name)
-            rise_mins = dt_rise.hour * 60 + dt_rise.minute + dt_rise.second / 60
-            set_mins  = dt_set.hour  * 60 + dt_set.minute  + dt_set.second  / 60
-
-            kalams = compute_kalams(rise_mins, set_mins, sun_idx)
+            if dc is not None:
+                sunrise = dc["sunrise"]
+                sunset = dc["sunset"]
+                rise_h, rise_m = map(int, sunrise.split(":"))
+                set_h, set_m = map(int, sunset.split(":"))
+                rise_mins = rise_h * 60 + rise_m
+                set_mins = set_h * 60 + set_m
+                kalams = {
+                    "rahu_kalam": dc["rahu_kalam"],
+                    "yamaganda": dc["yamaganda"],
+                    "gulika_kalam": dc["gulika_kalam"],
+                }
+                vaaram_te = _VAARAM_TE[sun_idx]
+                tithi_te = TITHI_TE[tithi_idx]
+                nakshatra_te = NAKSHATRA_TE[naks_idx]
+                yoga_te = YOGA_TE[dc["yoga_idx"]]
+                dur_muhurtam = dc["dur_muhurtam"]
+                varjyam = dc["varjyam"]
+            else:
+                dt_set = jd_to_local_datetime(set_jd, tz_name)
+                sunrise = dt_rise.strftime("%H:%M")
+                sunset = dt_set.strftime("%H:%M")
+                rise_mins = dt_rise.hour * 60 + dt_rise.minute + dt_rise.second / 60
+                set_mins = dt_set.hour * 60 + dt_set.minute + dt_set.second / 60
+                kalams = compute_kalams(rise_mins, set_mins, sun_idx)
+                vaaram_te = pan["vaaram"]["te"]
+                tithi_te = pan["tithi"]["te"]
+                nakshatra_te = pan["nakshatra"]["te"]
+                yoga_te = pan["yoga"]["te"]
+                dur_muhurtam = pan["dur_muhurtam"]
+                varjyam = pan["varjyam"]
 
             results.append({
                 "date_te":      f"{day} {_MONTH_TE[month - 1]} {year}",
                 "date_raw":     f"{day:02d}/{month:02d}/{year}",
-                "vaaram_te":    pan["vaaram"]["te"],
-                "sunrise":      dt_rise.strftime("%H:%M"),
-                "sunset":       dt_set.strftime("%H:%M"),
-                "tithi_te":     pan["tithi"]["te"],
-                "nakshatra_te": pan["nakshatra"]["te"],
-                "yoga_te":      pan["yoga"]["te"],
+                "vaaram_te":    vaaram_te,
+                "sunrise":      sunrise,
+                "sunset":       sunset,
+                "tithi_te":     tithi_te,
+                "nakshatra_te": nakshatra_te,
+                "yoga_te":      yoga_te,
                 "rahu_kalam":   kalams["rahu_kalam"],
                 "yamaganda":    kalams["yamaganda"],
                 "gulika_kalam": kalams["gulika_kalam"],
-                "dur_muhurtam": pan["dur_muhurtam"],
-                "varjyam":      pan["varjyam"],
+                "dur_muhurtam": dur_muhurtam,
+                "varjyam":      varjyam,
                 "good_from":    good_windows[0]["from"] if good_windows else None,
                 "good_windows": good_windows,
             })

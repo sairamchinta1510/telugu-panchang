@@ -468,6 +468,29 @@ def test_handler_find_ok():
     assert body["results"][0]["date_te"] == "15 జులై 2026"
 
 
+def test_handle_find_with_month_cache():
+    """_handle_find passes month_cache to find_muhurtas_for_month."""
+    h = _fresh_handler()
+    mock_cache = {"2026-07-01": {"sunrise_jd": 1.0, "nak_idx": 14}}
+
+    with patch.object(h, "_geocode", return_value={"lat": 17.385, "lon": 78.487, "tz_name": "Asia/Kolkata"}), \
+         patch.object(h, "read_month_cache", return_value=mock_cache) as mock_read, \
+         patch.object(h, "find_muhurtas_for_month", return_value=[]) as mock_find:
+        result = h._handle_find({
+            "year": 2026,
+            "month": 7,
+            "ceremony_type": "vivaha",
+            "ceremony_place": "Hyderabad",
+            "birth_charts": [{}],
+        })
+
+    assert result["statusCode"] == 200
+    mock_read.assert_called_once_with(
+        2026, 7, pytest.approx(17.385, abs=1), pytest.approx(78.487, abs=1)
+    )
+    assert mock_find.call_args.kwargs.get("month_cache") == mock_cache
+
+
 def test_handler_find_bad_month():
     h = _fresh_handler()
     with patch.object(h, "_geocode", return_value=MOCK_GEO), \

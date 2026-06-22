@@ -10,8 +10,30 @@ Globals:
     Environment:
       Variables:
         PYTHONDONTWRITEBYTECODE: "1"
+        PANCHANG_CACHE_BUCKET: !Ref PanchangCacheBucket
 
 Resources:
+  PanchangCacheBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOldCache
+            Status: Enabled
+            ExpirationInDays: 120
+
+  PanchangCachePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource: !Sub "arn:aws:s3:::${PanchangCacheBucket}/*"
+
   PanchangFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -47,6 +69,8 @@ Resources:
       Handler: handler_muhoortam.lambda_handler
       Description: Telugu Muhoortam computation API
       Timeout: 30
+      Policies:
+        - !Ref PanchangCachePolicy
       Events:
         MuhoortamBirthChart:
           Type: HttpApi
@@ -73,9 +97,30 @@ Resources:
             Method: POST
             ApiId: !Ref PanchangHttpApi
 
+  PrecomputeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: handler_precompute.lambda_handler
+      Description: Nightly panchang cache precompute for major Indian cities
+      Timeout: 300
+      MemorySize: 512
+      Policies:
+        - !Ref PanchangCachePolicy
+      Events:
+        NightlyCron:
+          Type: Schedule
+          Properties:
+            Schedule: "cron(0 1 * * ? *)"
+            Description: "Nightly panchang precompute at 01:00 UTC (06:30 IST)"
+            Enabled: true
+
 Outputs:
   ApiEndpoint:
     Description: Panchang API endpoint URL
     Value: !Sub "https://${PanchangHttpApi}.execute-api.${AWS::Region}.amazonaws.com/panchang"
   FunctionArn:
     Value: !GetAtt PanchangFunction.Arn
+  CacheBucketName:
+    Description: S3 bucket for panchang precompute cache
+    Value: !Ref PanchangCacheBucket

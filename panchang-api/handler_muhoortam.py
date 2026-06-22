@@ -7,6 +7,7 @@ Lambda entry point for the Muhoortam API.
 """
 from __future__ import annotations
 import json
+import threading
 import traceback
 import urllib.request
 import urllib.parse
@@ -16,6 +17,8 @@ from timezonefinder import TimezoneFinder
 from compute.birth_chart import compute_birth_chart
 from compute.muhurta_finder import find_muhurtas_for_month, check_muhurta_day
 from compute.astro import local_date_to_jd, compute_planet_rashis
+from compute.precompute import precompute_month
+from compute.s3_cache import read_month_cache, write_month_cache
 
 _tf = TimezoneFinder()
 
@@ -131,15 +134,37 @@ def _handle_find(body: dict) -> dict:
     except Exception:
         return _error(502, "Geocoding service unavailable")
 
+    month_cache = read_month_cache(year, month, geo["lat"], geo["lon"])
+
     try:
         results = find_muhurtas_for_month(
             year, month,
             geo["lat"], geo["lon"], geo["tz_name"],
             ceremony_type, birth_charts,
+            month_cache=month_cache,
         )
     except Exception:
         traceback.print_exc()
         return _error(500, "Muhurta calculation failed")
+
+    if month_cache is None:
+        def _populate_cache() -> None:
+            try:
+                cache_data = precompute_month(
+                    year,
+                    month,
+                    geo["lat"],
+                    geo["lon"],
+                    geo["tz_name"],
+                )
+                write_month_cache(year, month, geo["lat"], geo["lon"], cache_data)
+            except Exception:
+                pass
+
+        try:
+            threading.Thread(target=_populate_cache, daemon=True).start()
+        except Exception:
+            pass
 
     return _ok({"results": results, "count": len(results)})
 
