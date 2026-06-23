@@ -584,11 +584,11 @@ def check_muhurta_day(
                         f"{name}: రాశి శుద్ధి అననుకూలం — చంద్రుడు {pos}వ స్థానంలో ఉన్నాడు"
                     )
 
-    # 7. Panchaka Dosha
+    # 7. Panchaka Dosha — warning only; major samskaras proceed with Panchaka Shanti
     if _panchaka_ok(naks_idx, sun_idx, tithi_idx, lagna_idx):
         good_factors.append("పంచక దోషం లేదు ✓")
     else:
-        bad_factors.append("పంచక దోషం ఉంది — (వారం+తిథి+నక్షత్రం+లగ్నం) % 9 దోష సంఖ్య")
+        good_factors.append("పంచక దోషం ఉంది — పంచక శాంతి చేయించుకోవాలి ⚠")
 
     overall_good = is_auspicious(
         naks_idx, tithi_idx, sun_idx, lagna_idx,

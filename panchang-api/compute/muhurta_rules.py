@@ -175,7 +175,7 @@ _UTTARAYANAM_ONLY: set[str] = {
 _BAD_VAARAS: dict[str, set[int]] = {
     CEREMONY_VIVAHA:         {0, 2, 6},
     CEREMONY_GRUHA_PRAVESAM: {0, 2, 6},
-    CEREMONY_UPANAYANAM:     {0, 2},          # Sat(6) allowed per MC Ch.8 / BV §Upanayana
+    CEREMONY_UPANAYANAM:     {2},             # Only Tue(2) blocked; Sun/Sat allowed per Telugu Sampradayam
     CEREMONY_ANNA_PRASANA:   {0, 2, 6},
     CEREMONY_NAMAKARANAM:    {0, 2, 6},
     CEREMONY_GARBHADANAM:    {0, 2, 6},
@@ -498,8 +498,8 @@ def is_auspicious(
             jrashi = chart.get("janma_rashi_idx", -1)
             if jrashi >= 0 and not _rashi_shuddhi_ok(day_rashi_idx, jrashi, ceremony_type):
                 return False
-    if not _panchaka_ok(naks_idx, sun_idx, tithi_idx, lagna_idx):
-        return False
+    # Panchaka is not a hard block — major samskaras proceed with Panchaka Shanti.
+    # It is shown as a warning in check_muhurta_day() instead.
     return True
 
 
