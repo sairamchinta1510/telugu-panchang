@@ -127,10 +127,17 @@ _BAD_TITHIS: dict[str, set[int]] = {
 # Chaturmas core prohibition (Dharmasindhu): Ashadha, Shravana, Bhadrapada,
 # Ashvina (four months of Vishnu's sleep, ending at Kartika Shukla Ekadashi).
 # Any Adhika (intercalary) masa is forbidden for all samskaras.
+#
+# Telugu tradition:
+#   Vivaha — NO Chaturmasya restriction. Weddings are permitted in any
+#     non-Adhika masa; the masa choice is governed only by preferred
+#     vivaha months (Vaisakha, Jyeshtha, Magha, Phalguna etc.).
+#   Upanayanam — restricted to Uttarayanam entirely (see _UTTARAYANAM_ONLY);
+#     the _CHATURMAS_MASAM entry is therefore empty (no additional masa ban).
 _CHATURMAS_MASAM: dict[str, set[str]] = {
-    CEREMONY_VIVAHA:         {"Ashadha", "Shravana", "Bhadrapada", "Ashvina"},
+    CEREMONY_VIVAHA:         set(),   # No Chaturmasya ban — Telugu tradition
     CEREMONY_GRUHA_PRAVESAM: {"Ashadha", "Shravana", "Bhadrapada", "Ashvina"},
-    CEREMONY_UPANAYANAM:     {"Shravana", "Bhadrapada", "Ashvina"},
+    CEREMONY_UPANAYANAM:     set(),   # Covered fully by _UTTARAYANAM_ONLY
     CEREMONY_POOJA:          set(),
     CEREMONY_YUDDHAM:        set(),
     CEREMONY_ANNA_PRASANA:   set(),
