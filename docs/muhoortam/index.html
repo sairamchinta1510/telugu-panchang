@@ -633,6 +633,35 @@ body {
 }
 .numInputWrapper span.arrowUp, .numInputWrapper span.arrowDown { border-color: rgba(196,154,108,0.5) !important; }
 .flatpickr-input { cursor: pointer !important; }
+
+/* ── Flatpickr mobile: prevent first column clipping on iPhone portrait ── */
+@media (max-width: 480px) {
+  .flatpickr-calendar {
+    position: fixed !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    box-sizing: border-box !important;
+  }
+  .flatpickr-days,
+  .dayContainer {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  .flatpickr-day {
+    flex: 1 1 0 !important;
+    max-width: calc((100vw - 24px) / 7) !important;
+    height: calc((100vw - 24px) / 7) !important;
+    line-height: calc((100vw - 24px) / 7) !important;
+  }
+  .flatpickr-weekdays { width: 100% !important; }
+  .flatpickr-weekday {
+    flex: 1 1 0 !important;
+    max-width: calc((100vw - 24px) / 7) !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -1146,7 +1175,16 @@ async function savePersonProfile(idx) {
   const todayStr = f(t), endStr = f(n);
   const fpOpts = { dateFormat: "Y-m-d", disableMobile: true, allowInput: false,
     position: "auto center",
-    onOpen(_, __, fp) { fp.input.blur(); fp.calendarContainer.style.zIndex = "9999"; } };
+    onOpen(_, __, fp) {
+      fp.input.blur();
+      const cal = fp.calendarContainer;
+      cal.style.zIndex = "9999";
+      // On narrow screens the calendar is CSS-fixed; anchor top below the input
+      if (window.innerWidth <= 480) {
+        const rect = fp.input.getBoundingClientRect();
+        cal.style.top = (rect.bottom + 6) + "px";
+      }
+    } };
   flatpickr("#rangeFrom", { ...fpOpts, defaultDate: todayStr });
   flatpickr("#rangeTo",   { ...fpOpts, defaultDate: endStr });
   flatpickr("#checkDate", { ...fpOpts });
@@ -1298,7 +1336,15 @@ function addPerson() {
   document.getElementById("personList").appendChild(div);
   flatpickr(`#dob${idx}`, { dateFormat: "Y-m-d", maxDate: new Date(), disableMobile: true,
     position: "auto center", allowInput: false,
-    onOpen(_, __, fp) { fp.input.blur(); fp.calendarContainer.style.zIndex = "9999"; },
+    onOpen(_, __, fp) {
+      fp.input.blur();
+      const cal = fp.calendarContainer;
+      cal.style.zIndex = "9999";
+      if (window.innerWidth <= 480) {
+        const rect = fp.input.getBoundingClientRect();
+        cal.style.top = (rect.bottom + 6) + "px";
+      }
+    },
     onChange() { delete savedProfileCharts[idx]; } });
   _renumberPersonBlocks();
   document.getElementById("addPersonBtn").style.display = document.querySelectorAll(".person-block").length>=6?"none":"block";
