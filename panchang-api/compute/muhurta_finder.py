@@ -502,43 +502,53 @@ def check_muhurta_day(
     # 0. Ayanam check (only for Uttarayanam-only ceremonies)
     if ceremony_type in ("upanayanam",):
         ayanam_name = pan["ayanam"]["te"]
+        _ayanam_src = (
+            "Muhurta Chintamani, Samskara Prakarana (Upanayana section): "
+            "'दक्षिणायने व्रतवन्धनिषेधात् उत्तरायणे ... प्रशस्तम्' "
+            "(Since thread-ceremony is forbidden in Dakshinayana, Uttarayana is commendable). "
+            "Verified: Archive.org muhurta-chintamani-kedar-datt-joshi_202501"
+        )
         if is_uttarayanam:
             good_factors.append(_good(
                 f"అయనం: {ayanam_name} — {cer_te}కు శుభ అయనం ✓",
                 "Ayanam Shuddhi",
-                "Muhurta Chintamani Ch.8; Dharmasindhu §samskaras — "
-                "Upanayanam must be performed in Uttarayanam (Sun longitude 0°–179°)",
+                _ayanam_src,
             ))
         else:
             bad_factors.append(_bad(
                 f"అయనం: {ayanam_name} — {cer_te}కు కేవలం ఉత్తరాయణంలో మాత్రమే చేయాలి",
                 "Ayanam Shuddhi",
-                "Muhurta Chintamani Ch.8; Dharmasindhu §samskaras — "
-                "Upanayanam must be performed in Uttarayanam (Sun longitude 0°–179°)",
+                _ayanam_src,
             ))
 
     # 1. Masa Shuddhi
+    _masa_src = (
+        "Dharmasindhu (Kashinath Upadhyaya, 1790) §Chaturmasya — "
+        "Ashadha–Ashvina forbidden for major samskaras during Vishnu's sleep. "
+        "Adhika masa forbidden for all samskaras. "
+        "Note: Exact shloka not yet verified from digitised text"
+    )
     if masam_name and not _masam_ok(masam_name, is_adhika, ceremony_type):
         label = "అధిక మాసం" if is_adhika else pan["masam"]["te"] + " మాసం"
         bad_factors.append(_bad(
             f"{label} — {cer_te}కు నిషిద్ధ మాసం (చాతుర్మాస్య నియమం)",
             "Masa Shuddhi — Chaturmasya prohibition",
-            "Dharmasindhu §Chaturmasya; Muhurta Chintamani Ch.5 — "
-            "Ashadha, Shravana, Bhadrapada, Ashvina forbidden for certain samskaras; "
-            "Adhika (intercalary) masa forbidden for all samskaras",
+            _masa_src,
         ))
     else:
         good_factors.append(_good(
             f"మాసం: {pan['masam']['te']} — {cer_te}కు అనుకూలం",
             "Masa Shuddhi",
-            "Dharmasindhu §Chaturmasya; Muhurta Chintamani Ch.5",
+            _masa_src,
         ))
 
     # 2. Vaara Shuddhi
     vaara_te = pan["vaaram"]["te"]
     _vaara_src = (
-        "Muhurta Chintamani Ch.6 (Vivaha) / Ch.8 (Upanayanam) / Ch.9 (Gruha Pravesam); "
-        "Dharmasindhu §samskaras — Sun(0), Tue(2), Sat(6) inauspicious for most samskaras"
+        "Muhurta Chintamani, Samskara Prakarana (Upanayana section): "
+        "'हित्वा शनिकुजवारौ' (Avoiding Saturday and Tuesday) — Shaangadhari quote in commentary. "
+        "Verified: Archive.org muhurta-chintamani-kedar-datt-joshi_202501. "
+        "Rules for other ceremonies not yet verified from primary text"
     )
     if sun_idx in _BAD_VAARAS.get(ceremony_type, set()):
         bad_factors.append(_bad(
@@ -557,9 +567,9 @@ def check_muhurta_day(
     if ceremony_type == "prayanam":
         vedha_naks = _PRAYANAM_VAARA_VEDHA.get(sun_idx, set())
         _vedha_src = (
-            "Muhurta Chintamani Ch.10 §Prayana-nakshatra-vedha; "
-            "Venkatrama & Co. VTP travel advisory — each weekday's ruling planet "
-            "afflicts 3 specific nakshatras, making them inauspicious for travel"
+            "Muhurta Chintamani, Prayana section — "
+            "each weekday's ruling planet afflicts 3 specific nakshatras for travel. "
+            "Note: Exact shloka not yet verified from digitised text"
         )
         if naks_idx in vedha_naks:
             bad_factors.append(_bad(
@@ -576,8 +586,12 @@ def check_muhurta_day(
 
     # 3. Nakshatra
     _naks_src = (
-        "Muhurta Chintamani Ch.6 (Vivaha: 12 nakshatras) / Ch.8 (Upanayanam) / "
-        "Ch.9 (Gruha Pravesam); Venkatrama & Co. VTP nakshatra shuddhi tables"
+        "Muhurta Chintamani, Samskara Prakarana (Upanayana section): "
+        "'क्षिप्रध्रुवाहिचरमूलमृदुत्रिपूर्वारोद्रे ... व्रतं सत्' — "
+        "22 nakshatras approved (Kshipra, Dhruva, Ahi, Chara, Mula, Mridu, Tripurva, Ardra groups); "
+        "'न चापरां' (not the others — 5 forbidden: Bharani, Krittika, Magha, Jyeshtha, Vishakha). "
+        "Verified: Archive.org muhurta-chintamani-kedar-datt-joshi_202501. "
+        "Nakshatra lists for other ceremonies not yet verified from primary text"
     )
     if naks_idx in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
         good_factors.append(_good(
@@ -594,8 +608,11 @@ def check_muhurta_day(
 
     # 4. Tithi
     _tithi_src = (
-        "Muhurta Chintamani Ch.3 §Tithi-Shuddhi; Dharmasindhu — "
-        "Rikta tithis (4th, 9th, 14th in each paksha) and ceremony-specific bad tithis excluded"
+        "Muhurta Chintamani, Shubhashubha Prakarana, shloka 4: "
+        "'रिक्तासु ... यन्मङ्गलं तासु कृतं च मूढैः ... नाशमायाति' "
+        "(Whatever auspicious act is done in Rikta tithis comes to ruin). "
+        "Commentary defines Rikta = Chaturthi(4), Navami(9), Chaturdashi(14). "
+        "Verified: Archive.org muhurta-chintamani-kedar-datt-joshi_202501"
     )
     if tithi_idx in _BAD_TITHIS.get(ceremony_type, set()):
         bad_factors.append(_bad(
@@ -612,8 +629,11 @@ def check_muhurta_day(
 
     # 5. Tara Balam per person
     _tara_src = (
-        "Muhurta Chintamani Ch.2 §Tara-Balam — count from Janma Nakshatra; "
-        "1st (Janma), 3rd (Vipat), 5th (Pratyak), 7th (Naidhana) taras are inauspicious"
+        "Muhurta Chintamani, Gochar Prakarana, shloka 12: "
+        "'जन्माख्यसम्पद्विपदः क्षेमप्रत्यरिसाधकाः वध-मित्र-अतिमित्र' — "
+        "9 taras named; commentary: '३।५।७ तारा अनिष्ट हैं' (3rd Vipat, 5th Pratyari, 7th Vadha inauspicious). "
+        "1st (Janma) tara also treated as dosha in remedies shloka 13. "
+        "Verified: Archive.org muhurta-chintamani-of-daivagya-ramacharya-mahidhar-sharma"
     )
     for i, chart in enumerate(birth_charts):
         name = chart.get("name") or f"వ్యక్తి {i + 1}"
@@ -633,8 +653,10 @@ def check_muhurta_day(
     # 6. Rashi Shuddhi (only ceremonies with restrictions)
     _rashi_src = (
         "Telugu Panchangam (Venkatrama & Co. VTP Rajahmundry) Lagna Shuddhi tables — "
-        "each samskara has a specific forbidden position of Moon's rashi from Janma Rashi: "
-        "Vivaha=7th (Saptama), Upanayanam=8th (Ashtama), Gruha Pravesam=12th (Dwadasha)"
+        "Vivaha: avoid 7th rashi (Saptama Shuddhi); "
+        "Upanayanam: avoid 8th rashi (Ashtama Shuddhi); "
+        "Gruha Pravesam: avoid 12th rashi (Dwadasha Shuddhi). "
+        "Note: Physical panchangam not digitally accessible — not yet verified from primary text"
     )
     if day_rashi_idx >= 0 and _RASHI_SHUDDHI_FORBIDDEN.get(ceremony_type):
         for i, chart in enumerate(birth_charts):
@@ -657,9 +679,12 @@ def check_muhurta_day(
 
     # 7. Panchaka Dosha
     _panchaka_src = (
-        "South Indian tradition; Venkatrama & Co. VTP — "
+        "South Indian tradition; Venkatrama & Co. VTP daily columns — "
         "formula: (Vara + Tithi + Nakshatra + Lagna) mod 9; "
-        "remainders 1,2,4,6,8 = dosha; remainders 0,3,5,7 = safe (Panchaka Rahita)"
+        "remainders 1,2,4,6,8 = dosha; remainders 0,3,5,7 = safe (Panchaka Rahita). "
+        "WARNING: This arithmetic formula was NOT found in Muhurta Chintamani or Dharmasindhu "
+        "during text verification. Source is South Indian panchangam tradition — "
+        "primary Sanskrit text citation unverified"
     )
     if _panchaka_ok(naks_idx, sun_idx, tithi_idx, lagna_idx):
         good_factors.append(_good(
