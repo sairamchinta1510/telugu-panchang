@@ -61,7 +61,11 @@ def get_sunrise_sunset(jd: float, lat: float, lon: float) -> tuple[float, float]
         raise ValueError(f"Longitude must be in [-180, 180], got {lon}")
     
     geopos = (lon, lat, 0.0)  # Swiss Ephemeris: longitude FIRST, then latitude
-    jd_search = float(int(jd - 0.5)) + 0.5  # midnight UTC of the date
+    # jd is always local noon (from local_date_to_jd). Subtracting 0.5 days
+    # gives local midnight — guaranteed to be before sunrise for any timezone.
+    # Using midnight UTC instead would miss early-UTC sunrises (e.g. IST locations
+    # where sunrise at ~05:30 IST = ~23:56 UTC falls before UTC midnight).
+    jd_search = jd - 0.5
 
     ret_rise, tret_rise = swe.rise_trans(
         jd_search, swe.SUN, swe.CALC_RISE, geopos, _STANDARD_PRESSURE_MB, _STANDARD_TEMP_C)
