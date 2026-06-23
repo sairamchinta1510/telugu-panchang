@@ -490,81 +490,189 @@ def check_muhurta_day(
     kalams    = compute_kalams(rise_mins, set_mins, sun_idx)
 
     cer_te = _CEREMONY_TE.get(ceremony_type, ceremony_type)
-    good_factors: list[str] = []
-    bad_factors:  list[str] = []
+    good_factors: list[dict] = []
+    bad_factors:  list[dict] = []
+
+    def _good(te: str, rule_en: str, source_en: str) -> dict:
+        return {"te": te, "rule_en": rule_en, "source_en": source_en}
+
+    def _bad(te: str, rule_en: str, source_en: str) -> dict:
+        return {"te": te, "rule_en": rule_en, "source_en": source_en}
 
     # 0. Ayanam check (only for Uttarayanam-only ceremonies)
     if ceremony_type in ("upanayanam",):
         ayanam_name = pan["ayanam"]["te"]
         if is_uttarayanam:
-            good_factors.append(f"అయనం: {ayanam_name} — {cer_te}కు శుభ అయనం ✓")
+            good_factors.append(_good(
+                f"అయనం: {ayanam_name} — {cer_te}కు శుభ అయనం ✓",
+                "Ayanam Shuddhi",
+                "Muhurta Chintamani Ch.8; Dharmasindhu §samskaras — "
+                "Upanayanam must be performed in Uttarayanam (Sun longitude 0°–179°)",
+            ))
         else:
-            bad_factors.append(f"అయనం: {ayanam_name} — {cer_te}కు కేవలం ఉత్తరాయణంలో మాత్రమే చేయాలి")
+            bad_factors.append(_bad(
+                f"అయనం: {ayanam_name} — {cer_te}కు కేవలం ఉత్తరాయణంలో మాత్రమే చేయాలి",
+                "Ayanam Shuddhi",
+                "Muhurta Chintamani Ch.8; Dharmasindhu §samskaras — "
+                "Upanayanam must be performed in Uttarayanam (Sun longitude 0°–179°)",
+            ))
 
     # 1. Masa Shuddhi
     if masam_name and not _masam_ok(masam_name, is_adhika, ceremony_type):
         label = "అధిక మాసం" if is_adhika else pan["masam"]["te"] + " మాసం"
-        bad_factors.append(f"{label} — {cer_te}కు నిషిద్ధ మాసం (చాతుర్మాస్య నియమం)")
+        bad_factors.append(_bad(
+            f"{label} — {cer_te}కు నిషిద్ధ మాసం (చాతుర్మాస్య నియమం)",
+            "Masa Shuddhi — Chaturmasya prohibition",
+            "Dharmasindhu §Chaturmasya; Muhurta Chintamani Ch.5 — "
+            "Ashadha, Shravana, Bhadrapada, Ashvina forbidden for certain samskaras; "
+            "Adhika (intercalary) masa forbidden for all samskaras",
+        ))
     else:
-        good_factors.append(f"మాసం: {pan['masam']['te']} — {cer_te}కు అనుకూలం")
+        good_factors.append(_good(
+            f"మాసం: {pan['masam']['te']} — {cer_te}కు అనుకూలం",
+            "Masa Shuddhi",
+            "Dharmasindhu §Chaturmasya; Muhurta Chintamani Ch.5",
+        ))
 
     # 2. Vaara Shuddhi
     vaara_te = pan["vaaram"]["te"]
+    _vaara_src = (
+        "Muhurta Chintamani Ch.6 (Vivaha) / Ch.8 (Upanayanam) / Ch.9 (Gruha Pravesam); "
+        "Dharmasindhu §samskaras — Sun(0), Tue(2), Sat(6) inauspicious for most samskaras"
+    )
     if sun_idx in _BAD_VAARAS.get(ceremony_type, set()):
-        bad_factors.append(f"వారం: {vaara_te} — {cer_te}కు నిషిద్ధ వారం (సూర్య/మంగళ/శని దోషం)")
+        bad_factors.append(_bad(
+            f"వారం: {vaara_te} — {cer_te}కు నిషిద్ధ వారం (సూర్య/మంగళ/శని దోషం)",
+            "Vaara Shuddhi",
+            _vaara_src,
+        ))
     else:
-        good_factors.append(f"వారం: {vaara_te} — {cer_te}కు అనుకూల వారం ✓")
+        good_factors.append(_good(
+            f"వారం: {vaara_te} — {cer_te}కు అనుకూల వారం ✓",
+            "Vaara Shuddhi",
+            _vaara_src,
+        ))
 
     # 2b. Vara-Nakshatra Vedha (only for Prayanam)
     if ceremony_type == "prayanam":
         vedha_naks = _PRAYANAM_VAARA_VEDHA.get(sun_idx, set())
+        _vedha_src = (
+            "Muhurta Chintamani Ch.10 §Prayana-nakshatra-vedha; "
+            "Venkatrama & Co. VTP travel advisory — each weekday's ruling planet "
+            "afflicts 3 specific nakshatras, making them inauspicious for travel"
+        )
         if naks_idx in vedha_naks:
-            bad_factors.append(f"వార-నక్షత్ర వేధ: {pan['nakshatra']['te']} — ఈ {vaara_te}న వేధింపబడిన నక్షత్రం")
+            bad_factors.append(_bad(
+                f"వార-నక్షత్ర వేధ: {pan['nakshatra']['te']} — ఈ {vaara_te}న వేధింపబడిన నక్షత్రం",
+                "Vara-Nakshatra Vedha (Prayanam)",
+                _vedha_src,
+            ))
         else:
-            good_factors.append(f"వార-నక్షత్ర వేధ: {pan['nakshatra']['te']} — ఈ {vaara_te}న వేధ లేదు ✓")
+            good_factors.append(_good(
+                f"వార-నక్షత్ర వేధ: {pan['nakshatra']['te']} — ఈ {vaara_te}న వేధ లేదు ✓",
+                "Vara-Nakshatra Vedha (Prayanam)",
+                _vedha_src,
+            ))
 
     # 3. Nakshatra
+    _naks_src = (
+        "Muhurta Chintamani Ch.6 (Vivaha: 12 nakshatras) / Ch.8 (Upanayanam) / "
+        "Ch.9 (Gruha Pravesam); Venkatrama & Co. VTP nakshatra shuddhi tables"
+    )
     if naks_idx in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
-        good_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు శుభమైన నక్షత్రం ✓")
+        good_factors.append(_good(
+            f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు శుభమైన నక్షత్రం ✓",
+            "Nakshatra Shuddhi",
+            _naks_src,
+        ))
     else:
-        bad_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు")
+        bad_factors.append(_bad(
+            f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు",
+            "Nakshatra Shuddhi",
+            _naks_src,
+        ))
 
     # 4. Tithi
+    _tithi_src = (
+        "Muhurta Chintamani Ch.3 §Tithi-Shuddhi; Dharmasindhu — "
+        "Rikta tithis (4th, 9th, 14th in each paksha) and ceremony-specific bad tithis excluded"
+    )
     if tithi_idx in _BAD_TITHIS.get(ceremony_type, set()):
-        bad_factors.append(f"తిథి: {pan['tithi']['te']} — నివారించాల్సిన తిథి (రిక్త/దోష తిథి)")
+        bad_factors.append(_bad(
+            f"తిథి: {pan['tithi']['te']} — నివారించాల్సిన తిథి (రిక్త/దోష తిథి)",
+            "Tithi Shuddhi",
+            _tithi_src,
+        ))
     else:
-        good_factors.append(f"తిథి: {pan['tithi']['te']} — శుభ తిథి ✓")
+        good_factors.append(_good(
+            f"తిథి: {pan['tithi']['te']} — శుభ తిథి ✓",
+            "Tithi Shuddhi",
+            _tithi_src,
+        ))
 
     # 5. Tara Balam per person
+    _tara_src = (
+        "Muhurta Chintamani Ch.2 §Tara-Balam — count from Janma Nakshatra; "
+        "1st (Janma), 3rd (Vipat), 5th (Pratyak), 7th (Naidhana) taras are inauspicious"
+    )
     for i, chart in enumerate(birth_charts):
         name = chart.get("name") or f"వ్యక్తి {i + 1}"
         if _tara_ok(chart["janma_nakshatra_idx"], naks_idx):
-            good_factors.append(f"{name}: తార బలం అనుకూలం ✓")
+            good_factors.append(_good(
+                f"{name}: తార బలం అనుకూలం ✓",
+                "Tara Balam",
+                _tara_src,
+            ))
         else:
-            bad_factors.append(
-                f"{name}: తార బలం అననుకూలం — జన్మ నక్షత్రానికి "
-                f"వ్యతిరేక తార (1, 3, 5 లేదా 7వ తార)"
-            )
+            bad_factors.append(_bad(
+                f"{name}: తార బలం అననుకూలం — జన్మ నక్షత్రానికి వ్యతిరేక తార (1, 3, 5 లేదా 7వ తార)",
+                "Tara Balam",
+                _tara_src,
+            ))
 
     # 6. Rashi Shuddhi (only ceremonies with restrictions)
+    _rashi_src = (
+        "Telugu Panchangam (Venkatrama & Co. VTP Rajahmundry) Lagna Shuddhi tables — "
+        "each samskara has a specific forbidden position of Moon's rashi from Janma Rashi: "
+        "Vivaha=7th (Saptama), Upanayanam=8th (Ashtama), Gruha Pravesam=12th (Dwadasha)"
+    )
     if day_rashi_idx >= 0 and _RASHI_SHUDDHI_FORBIDDEN.get(ceremony_type):
         for i, chart in enumerate(birth_charts):
             name = chart.get("name") or f"వ్యక్తి {i + 1}"
             jrashi = chart.get("janma_rashi_idx", -1)
             if jrashi >= 0:
                 if _rashi_shuddhi_ok(day_rashi_idx, jrashi, ceremony_type):
-                    good_factors.append(f"{name}: రాశి శుద్ధి అనుకూలం ✓")
+                    good_factors.append(_good(
+                        f"{name}: రాశి శుద్ధి అనుకూలం ✓",
+                        "Rashi Shuddhi",
+                        _rashi_src,
+                    ))
                 else:
                     pos = (day_rashi_idx - jrashi) % 12 + 1
-                    bad_factors.append(
-                        f"{name}: రాశి శుద్ధి అననుకూలం — చంద్రుడు {pos}వ స్థానంలో ఉన్నాడు"
-                    )
+                    bad_factors.append(_bad(
+                        f"{name}: రాశి శుద్ధి అననుకూలం — చంద్రుడు {pos}వ స్థానంలో ఉన్నాడు",
+                        "Rashi Shuddhi",
+                        _rashi_src,
+                    ))
 
     # 7. Panchaka Dosha
+    _panchaka_src = (
+        "South Indian tradition; Venkatrama & Co. VTP — "
+        "formula: (Vara + Tithi + Nakshatra + Lagna) mod 9; "
+        "remainders 1,2,4,6,8 = dosha; remainders 0,3,5,7 = safe (Panchaka Rahita)"
+    )
     if _panchaka_ok(naks_idx, sun_idx, tithi_idx, lagna_idx):
-        good_factors.append("పంచక దోషం లేదు ✓")
+        good_factors.append(_good(
+            "పంచక దోషం లేదు ✓",
+            "Panchaka Dosha",
+            _panchaka_src,
+        ))
     else:
-        bad_factors.append("పంచక దోషం ఉంది — (వారం+తిథి+నక్షత్రం+లగ్నం) % 9 దోష సంఖ్య")
+        bad_factors.append(_bad(
+            "పంచక దోషం ఉంది — (వారం+తిథి+నక్షత్రం+లగ్నం) % 9 దోష సంఖ్య",
+            "Panchaka Dosha",
+            _panchaka_src,
+        ))
 
     overall_good = is_auspicious(
         naks_idx, tithi_idx, sun_idx, lagna_idx,
@@ -583,7 +691,12 @@ def check_muhurta_day(
 
     if not overall_good and good_windows:
         windows_str = ", ".join(f"{w['from']}–{w['to']}" for w in good_windows)
-        good_factors.append(f"పగటిపూట శుభ ముహూర్త సమయాలు: {windows_str} ✓")
+        good_factors.append(_good(
+            f"పగటిపూట శుభ ముహూర్త సమయాలు: {windows_str} ✓",
+            "Good Muhurta Windows",
+            "Lagna transitions, Choghadiya, Rahu Kalam exclusion — "
+            "Muhurta Chintamani §Choghadiya; South Indian kalam rules (VTP)",
+        ))
 
     # ── Time analysis ────────────────────────────────────────────────────────────
     def _in_window(w: dict, mins: float) -> bool:

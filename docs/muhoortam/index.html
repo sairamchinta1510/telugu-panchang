@@ -1812,19 +1812,40 @@ function showCheckResult(data) {
     ${data.good_factors.length ? `
     <div style="background:#E8F5E9;border-radius:12px;padding:14px;margin-bottom:10px">
       <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">✅ అనుకూల అంశాలు</div>
-      ${data.good_factors.map(f=>`<div style="font-size:0.82rem;color:#1B5E20;padding:5px 0;border-bottom:1px solid rgba(0,100,0,0.08)">${f}</div>`).join("")}
+      ${data.good_factors.map((f,fi)=>`
+        <div style="padding:6px 0;border-bottom:1px solid rgba(0,100,0,0.08)">
+          <div style="font-size:0.82rem;color:#1B5E20">${typeof f==='string'?f:f.te}</div>
+          ${(f&&f.rule_en)?`<div style="display:flex;align-items:baseline;gap:4px;margin-top:3px;flex-wrap:wrap">
+            <span style="font-size:0.65rem;font-weight:700;color:#2E7D32;background:#C8E6C9;border-radius:4px;padding:1px 5px">${f.rule_en}</span>
+            <span style="font-size:0.63rem;color:#558B2F;font-style:italic">${f.source_en}</span>
+          </div>`:''}
+        </div>`).join("")}
     </div>` : ""}
 
     ${data.bad_factors.length ? `
     <div style="background:#FFEBEE;border-radius:12px;padding:14px;margin-bottom:10px">
       <div style="font-size:0.7rem;font-weight:700;color:#C62828;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">❌ అననుకూల అంశాలు</div>
-      ${data.bad_factors.map(f=>`<div style="font-size:0.82rem;color:#B71C1C;padding:5px 0;border-bottom:1px solid rgba(180,0,0,0.08)">${f}</div>`).join("")}
+      ${data.bad_factors.map((f,fi)=>`
+        <div style="padding:6px 0;border-bottom:1px solid rgba(180,0,0,0.08)">
+          <div style="font-size:0.82rem;color:#B71C1C">${typeof f==='string'?f:f.te}</div>
+          ${(f&&f.rule_en)?`<div style="display:flex;align-items:baseline;gap:4px;margin-top:3px;flex-wrap:wrap">
+            <span style="font-size:0.65rem;font-weight:700;color:#C62828;background:#FFCDD2;border-radius:4px;padding:1px 5px">${f.rule_en}</span>
+            <span style="font-size:0.63rem;color:#B71C1C;font-style:italic">${f.source_en}</span>
+          </div>`:''}
+        </div>`).join("")}
     </div>` : ""}
 
     ${data.time_issues.length ? `
     <div style="background:#FFF3E0;border-radius:12px;padding:14px;margin-bottom:10px">
       <div style="font-size:0.7rem;font-weight:700;color:#E65100;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">⏰ సమయ విశ్లేషణ</div>
-      ${data.time_issues.map(f=>`<div style="font-size:0.82rem;color:#BF360C;padding:5px 0">${f}</div>`).join("")}
+      ${data.time_issues.map(f=>`
+        <div style="padding:5px 0;border-bottom:1px solid rgba(200,80,0,0.08)">
+          <div style="font-size:0.82rem;color:#BF360C">${typeof f==='string'?f:f.te}</div>
+          ${(f&&f.rule_en)?`<div style="display:flex;align-items:baseline;gap:4px;margin-top:3px;flex-wrap:wrap">
+            <span style="font-size:0.65rem;font-weight:700;color:#E65100;background:#FFE0B2;border-radius:4px;padding:1px 5px">${f.rule_en}</span>
+            <span style="font-size:0.63rem;color:#BF360C;font-style:italic">${f.source_en}</span>
+          </div>`:''}
+        </div>`).join("")}
     </div>` : ""}
 
     ${data.good_windows && data.good_windows.length ? `
