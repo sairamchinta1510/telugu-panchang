@@ -508,10 +508,13 @@ const UI = (() => {
 
   function render(data, loc) {
     const p = data.panchang;
-    const now = new Date();
+    // Build a date object from the API-returned date (already in the location's timezone).
+    // Using UTC noon avoids browser-timezone shifts that would roll the date backward or forward.
+    const [_year, _month, _day] = data.date.split('-').map(Number);
+    const locationDate = new Date(Date.UTC(_year, _month - 1, _day, 12, 0, 0));
 
-    // Date banner
-    set('gregorian-date', now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' }));
+    // Date banner — reflects the location's date, not the browser's local date
+    set('gregorian-date', locationDate.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric', timeZone: 'UTC' }));
     const masamDisplayTe = (p.masam.adhika ? 'అధిక ' : '') + p.masam.te;
     set('telugu-date', `${masamDisplayTe} మాసం · ${p.paksham.te}`);
     set('samvatsara', `${p.samvatsara.en} సంవత్సరం`);

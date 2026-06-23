@@ -1400,13 +1400,16 @@ async function _runCheck(birthCharts) {
 }
 
 async function _runFind(birthCharts) {
-  const fromDate = new Date(document.getElementById("rangeFrom").value);
-  const toDate   = new Date(document.getElementById("rangeTo").value);
+  // Parse YYYY-MM-DD strings directly to avoid UTC-vs-local off-by-one day
+  // (new Date("YYYY-MM-DD") is UTC midnight; getDate() would return prev day in UTC+ zones)
+  const [fy, fm, fd] = document.getElementById("rangeFrom").value.split('-').map(Number);
+  const [ty, tm, td] = document.getElementById("rangeTo").value.split('-').map(Number);
 
   // Build full month list once — but only scan as needed
   _monthsList = [];
-  let cur = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
-  while (cur <= toDate) {
+  let cur = new Date(fy, fm - 1, 1);
+  const curEnd = new Date(ty, tm - 1, 1);
+  while (cur <= curEnd) {
     _monthsList.push({ year: cur.getFullYear(), month: cur.getMonth()+1 });
     cur.setMonth(cur.getMonth()+1);
   }
@@ -1414,8 +1417,8 @@ async function _runFind(birthCharts) {
   _scanComplete   = false;
   _scanBirthCharts = birthCharts;
   _scanPlace      = document.getElementById("ceremonyPlace").value.trim();
-  _scanFromDate   = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
-  _scanToDate     = new Date(toDate.getFullYear(),   toDate.getMonth(),   toDate.getDate());
+  _scanFromDate   = new Date(fy, fm - 1, fd);
+  _scanToDate     = new Date(ty, tm - 1, td);
   allResults      = [];
 
   // Fetch just enough months to get the first PAGE_SIZE results
