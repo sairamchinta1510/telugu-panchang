@@ -541,10 +541,17 @@ def check_muhurta_day(
             good_factors.append(f"అమృతాది యోగం: {am_te} — శుభ యోగం ✓")
 
     # 3. Nakshatra
-    if naks_idx in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
-        good_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు శుభమైన నక్షత్రం ✓")
+    if ceremony_type == "prayanam":
+        # For Prayanam, Amritadi table (VTP) is primary; shloka nakshatra list is secondary.
+        if naks_idx in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
+            good_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — శ్లోకంలో శుభ నక్షత్రం ✓")
+        else:
+            good_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — అమృతాది యోగం శుభంగా ఉన్నందున శ్లోక నక్షత్రం ద్వితీయం")
     else:
-        bad_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు")
+        if naks_idx in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
+            good_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు శుభమైన నక్షత్రం ✓")
+        else:
+            bad_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు")
 
     # 4. Tithi
     if tithi_idx in _BAD_TITHIS.get(ceremony_type, set()):

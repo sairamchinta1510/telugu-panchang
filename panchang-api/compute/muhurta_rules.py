@@ -482,8 +482,12 @@ def is_auspicious(
             return False
     if masam_name and not _masam_ok(masam_name, is_adhika_masam, ceremony_type):
         return False
-    if naks_idx not in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
-        return False
+    # For Prayanam, the Amritadi table (VTP) already encodes nakshatra×weekday quality
+    # and takes precedence over the standalone nakshatra shloka.
+    # The nakshatra shloka is secondary when Amritadi = Amrita/Siddha (already verified above).
+    if ceremony_type != CEREMONY_PRAYANAM:
+        if naks_idx not in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
+            return False
     if tithi_idx in _BAD_TITHIS.get(ceremony_type, set()):
         return False
     for chart in birth_charts:
