@@ -8,11 +8,10 @@ Includes Rahu Kalam, Yamaganda, and Gulika Kalam in output (essential South Indi
 from __future__ import annotations
 import bisect
 import calendar
-import datetime as _dt
 
 try:
     from .astro import (
-        local_date_to_jd, local_datetime_to_jd, get_sunrise_sunset,
+        local_date_to_jd, get_sunrise_sunset,
         jd_to_local_datetime, moon_longitude, moon_sun_elongation,
         find_next_index_change, compute_planet_rashis, sun_longitude,
     )
@@ -25,16 +24,6 @@ except ImportError:
 
     def sun_longitude(jd: float) -> float:
         return 0.0
-
-    def local_datetime_to_jd(year: int, month: int, day: int,   # type: ignore[misc]
-                              hour: int, minute: int, tz_name: str) -> float:
-        """Pure-Python fallback (no swisseph) used when astro is mocked in tests."""
-        import pytz
-        from datetime import datetime as _datetime
-        tz = pytz.timezone(tz_name)
-        local_dt = tz.localize(_datetime(year, month, day, hour, minute, 0))
-        utc_dt = local_dt.astimezone(pytz.utc)
-        return utc_dt.timestamp() / 86400.0 + 2440587.5
 from .panchang import compute_panchang, NAKSHATRA_TE, TITHI_TE
 try:
     from .panchang import YOGA_TE
@@ -440,11 +429,10 @@ def find_muhurtas_for_month(
                 varjyam = pan["varjyam"]
 
             results.append({
-                "date_te":             f"{day} {_MONTH_TE[month - 1]} {year}",
-                "date_raw":            f"{day:02d}/{month:02d}/{year}",
-                "vaaram_te":           vaaram_te,
-                "gregorian_vaaram_te": _VAARAM_TE[(_dt.date(year, month, day).weekday() + 1) % 7],
-                "sunrise":             sunrise,
+                "date_te":      f"{day} {_MONTH_TE[month - 1]} {year}",
+                "date_raw":     f"{day:02d}/{month:02d}/{year}",
+                "vaaram_te":    vaaram_te,
+                "sunrise":      sunrise,
                 "sunset":       sunset,
                 "tithi_te":     tithi_te,
                 "nakshatra_te": nakshatra_te,
@@ -503,128 +491,35 @@ def check_muhurta_day(
     is_adhika  = pan["masam"]["adhika"]
     is_uttarayanam = sun_longitude(rise_jd) < 180
 
-    # When a specific time is requested, recompute all astro values at that
-    # exact moment so that nakshatra/tithi/yoga/lagna reflect the actual sky
-    # at the ceremony time (not at sunrise, which may differ after transitions).
-    check_jd: float | None = None
-    if check_hour >= 0:
-        check_jd      = local_datetime_to_jd(year, month, day, check_hour, check_minute, tz_name)
-        moon_lon      = moon_longitude(check_jd)
-        elong         = moon_sun_elongation(check_jd)
-        naks_idx      = int(moon_lon / (360.0 / 27)) % 27
-        tithi_idx     = int(elong / 12) % 30
-        day_rashi_idx = int(moon_lon / 30) % 12
-        lagna_idx     = compute_lagna(check_jd, lat, lon)
-
-    # Yoga at the evaluation time (sunrise when no time given, check time otherwise)
-    _eval_jd = check_jd if check_jd is not None else rise_jd
-    _sun_lon_eval = sun_longitude(_eval_jd)
-    _moon_lon_eval = moon_longitude(_eval_jd) if check_jd is not None else moon_lon
-    yoga_idx  = int((_sun_lon_eval + _moon_lon_eval) / (360.0 / 27)) % 27
-    yoga_te   = YOGA_TE[yoga_idx] if yoga_idx < len(YOGA_TE) else pan["yoga"]["te"]
-
-    # Display names: use check-time values when a time is given
-    nakshatra_te_display = NAKSHATRA_TE[naks_idx]
-    tithi_te_display     = TITHI_TE[tithi_idx]
-
     rise_mins = dt_rise.hour * 60 + dt_rise.minute + dt_rise.second / 60
     set_mins  = dt_set.hour  * 60 + dt_set.minute  + dt_set.second  / 60
     kalams    = compute_kalams(rise_mins, set_mins, sun_idx)
 
     cer_te = _CEREMONY_TE.get(ceremony_type, ceremony_type)
-    good_factors: list[dict] = []
-    bad_factors:  list[dict] = []
-
-    def _good(te: str, rule_en: str, source_en: str) -> dict:
-        return {"te": te, "rule_en": rule_en, "source_en": source_en}
-
-    def _bad(te: str, rule_en: str, source_en: str) -> dict:
-        return {"te": te, "rule_en": rule_en, "source_en": source_en}
+    good_factors: list[str] = []
+    bad_factors:  list[str] = []
 
     # 0. Ayanam check (only for Uttarayanam-only ceremonies)
     if ceremony_type in ("upanayanam",):
         ayanam_name = pan["ayanam"]["te"]
-        _ayanam_src = (
-            "Muhurta Chintamani, Samskara Prakarana (Upanayana section): "
-            "'दक्षिणायने व्रतवन्धनिषेधात् उत्तरायणे ... प्रशस्तम्' "
-            "(Since thread-ceremony is forbidden in Dakshinayana, Uttarayana is commendable). "
-            "Verified: Archive.org muhurta-chintamani-kedar-datt-joshi_202501"
-        )
         if is_uttarayanam:
-            good_factors.append(_good(
-                f"అయనం: {ayanam_name} — {cer_te}కు శుభ అయనం ✓",
-                "Ayanam Shuddhi",
-                _ayanam_src,
-            ))
+            good_factors.append(f"అయనం: {ayanam_name} — {cer_te}కు శుభ అయనం ✓")
         else:
-            bad_factors.append(_bad(
-                f"అయనం: {ayanam_name} — {cer_te}కు కేవలం ఉత్తరాయణంలో మాత్రమే చేయాలి",
-                "Ayanam Shuddhi",
-                _ayanam_src,
-            ))
+            bad_factors.append(f"అయనం: {ayanam_name} — {cer_te}కు కేవలం ఉత్తరాయణంలో మాత్రమే చేయాలి")
 
     # 1. Masa Shuddhi
-    _masa_src = (
-        "Dharmasindhu (Kashinath Upadhyaya, 1790) §Chaturmasya — "
-        "Ashadha–Ashvina forbidden for major samskaras during Vishnu's sleep. "
-        "Adhika masa forbidden for all samskaras. "
-        "Note: Exact shloka not yet verified from digitised text"
-    )
     if masam_name and not _masam_ok(masam_name, is_adhika, ceremony_type):
         label = "అధిక మాసం" if is_adhika else pan["masam"]["te"] + " మాసం"
-        bad_factors.append(_bad(
-            f"{label} — {cer_te}కు నిషిద్ధ మాసం (చాతుర్మాస్య నియమం)",
-            "Masa Shuddhi — Chaturmasya prohibition",
-            _masa_src,
-        ))
+        bad_factors.append(f"{label} — {cer_te}కు నిషిద్ధ మాసం (చాతుర్మాస్య నియమం)")
     else:
-        good_factors.append(_good(
-            f"మాసం: {pan['masam']['te']} — {cer_te}కు అనుకూలం",
-            "Masa Shuddhi",
-            _masa_src,
-        ))
+        good_factors.append(f"మాసం: {pan['masam']['te']} — {cer_te}కు అనుకూలం")
 
     # 2. Vaara Shuddhi
     vaara_te = pan["vaaram"]["te"]
-    _vaara_src = (
-        "Muhurta Chintamani, Samskara Prakarana (Upanayana section): "
-        "'हित्वा शनिकुजवारौ' (Avoiding Saturday and Tuesday) — Shaangadhari quote in commentary. "
-        "Verified: Archive.org muhurta-chintamani-kedar-datt-joshi_202501. "
-        "Rules for other ceremonies not yet verified from primary text"
-    )
     if sun_idx in _BAD_VAARAS.get(ceremony_type, set()):
-        bad_factors.append(_bad(
-            f"వారం: {vaara_te} — {cer_te}కు నిషిద్ధ వారం (సూర్య/మంగళ/శని దోషం)",
-            "Vaara Shuddhi",
-            _vaara_src,
-        ))
+        bad_factors.append(f"వారం: {vaara_te} — {cer_te}కు నిషిద్ధ వారం (సూర్య/మంగళ/శని దోషం)")
     else:
-        good_factors.append(_good(
-            f"వారం: {vaara_te} — {cer_te}కు అనుకూల వారం ✓",
-            "Vaara Shuddhi",
-            _vaara_src,
-        ))
-
-    # 2b. Vara-Nakshatra Vedha (only for Prayanam)
-    if ceremony_type == "prayanam":
-        vedha_naks = _PRAYANAM_VAARA_VEDHA.get(sun_idx, set())
-        _vedha_src = (
-            "Muhurta Chintamani, Prayana section — "
-            "each weekday's ruling planet afflicts 3 specific nakshatras for travel. "
-            "Note: Exact shloka not yet verified from digitised text"
-        )
-        if naks_idx in vedha_naks:
-            bad_factors.append(_bad(
-                f"వార-నక్షత్ర వేధ: {pan['nakshatra']['te']} — ఈ {vaara_te}న వేధింపబడిన నక్షత్రం",
-                "Vara-Nakshatra Vedha (Prayanam)",
-                _vedha_src,
-            ))
-        else:
-            good_factors.append(_good(
-                f"వార-నక్షత్ర వేధ: {pan['nakshatra']['te']} — ఈ {vaara_te}న వేధ లేదు ✓",
-                "Vara-Nakshatra Vedha (Prayanam)",
-                _vedha_src,
-            ))
+        good_factors.append(f"వారం: {vaara_te} — {cer_te}కు అనుకూల వారం ✓")
 
     # 2c. Anandadi Yoga (only for Prayanam)
     if ceremony_type == "prayanam":
@@ -648,119 +543,47 @@ def check_muhurta_day(
             good_factors.append(f"అమృతాది యోగం: {am_te} — శుభ యోగం ✓")
 
     # 3. Nakshatra
-    _naks_src = (
-        "Muhurta Chintamani, Samskara Prakarana (Upanayana section): "
-        "'क्षिप्रध्रुवाहिचरमूलमृदुत्रिपूर्वारोद्रे ... व्रतं सत्' — "
-        "22 nakshatras approved (Kshipra, Dhruva, Ahi, Chara, Mula, Mridu, Tripurva, Ardra groups); "
-        "'न चापरां' (not the others — 5 forbidden: Bharani, Krittika, Magha, Jyeshtha, Vishakha). "
-        "Verified: Archive.org muhurta-chintamani-kedar-datt-joshi_202501. "
-        "Nakshatra lists for other ceremonies not yet verified from primary text"
-    )
     if naks_idx in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
-        good_factors.append(_good(
-            f"నక్షత్రం: {nakshatra_te_display} — {cer_te}కు శుభమైన నక్షత్రం ✓",
-            "Nakshatra Shuddhi",
-            _naks_src,
-        ))
+        good_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు శుభమైన నక్షత్రం ✓")
     else:
-        bad_factors.append(_bad(
-            f"నక్షత్రం: {nakshatra_te_display} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు",
-            "Nakshatra Shuddhi",
-            _naks_src,
-        ))
+        bad_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు")
 
     # 4. Tithi
-    _tithi_src = (
-        "Muhurta Chintamani, Shubhashubha Prakarana, shloka 4: "
-        "'रिक्तासु ... यन्मङ्गलं तासु कृतं च मूढैः ... नाशमायाति' "
-        "(Whatever auspicious act is done in Rikta tithis comes to ruin). "
-        "Commentary defines Rikta = Chaturthi(4), Navami(9), Chaturdashi(14). "
-        "Verified: Archive.org muhurta-chintamani-kedar-datt-joshi_202501"
-    )
     if tithi_idx in _BAD_TITHIS.get(ceremony_type, set()):
-        bad_factors.append(_bad(
-            f"తిథి: {tithi_te_display} — నివారించాల్సిన తిథి (రిక్త/దోష తిథి)",
-            "Tithi Shuddhi",
-            _tithi_src,
-        ))
+        bad_factors.append(f"తిథి: {pan['tithi']['te']} — నివారించాల్సిన తిథి (రిక్త/దోష తిథి)")
     else:
-        good_factors.append(_good(
-            f"తిథి: {tithi_te_display} — శుభ తిథి ✓",
-            "Tithi Shuddhi",
-            _tithi_src,
-        ))
+        good_factors.append(f"తిథి: {pan['tithi']['te']} — శుభ తిథి ✓")
 
     # 5. Tara Balam per person
-    _tara_src = (
-        "Muhurta Chintamani, Gochar Prakarana, shloka 12: "
-        "'जन्माख्यसम्पद्विपदः क्षेमप्रत्यरिसाधकाः वध-मित्र-अतिमित्र' — "
-        "9 taras named; commentary: '३।५।७ तारा अनिष्ट हैं' (3rd Vipat, 5th Pratyari, 7th Vadha inauspicious). "
-        "1st (Janma) tara also treated as dosha in remedies shloka 13. "
-        "Verified: Archive.org muhurta-chintamani-of-daivagya-ramacharya-mahidhar-sharma"
-    )
     for i, chart in enumerate(birth_charts):
         name = chart.get("name") or f"వ్యక్తి {i + 1}"
         if _tara_ok(chart["janma_nakshatra_idx"], naks_idx):
-            good_factors.append(_good(
-                f"{name}: తార బలం అనుకూలం ✓",
-                "Tara Balam",
-                _tara_src,
-            ))
+            good_factors.append(f"{name}: తార బలం అనుకూలం ✓")
         else:
-            bad_factors.append(_bad(
-                f"{name}: తార బలం అననుకూలం — జన్మ నక్షత్రానికి వ్యతిరేక తార (1, 3, 5 లేదా 7వ తార)",
-                "Tara Balam",
-                _tara_src,
-            ))
+            bad_factors.append(
+                f"{name}: తార బలం అననుకూలం — జన్మ నక్షత్రానికి "
+                f"వ్యతిరేక తార (1, 3, 5 లేదా 7వ తార)"
+            )
 
     # 6. Rashi Shuddhi (only ceremonies with restrictions)
-    _rashi_src = (
-        "Telugu Panchangam (Venkatrama & Co. VTP Rajahmundry) Lagna Shuddhi tables — "
-        "Vivaha: avoid 7th rashi (Saptama Shuddhi); "
-        "Upanayanam: avoid 8th rashi (Ashtama Shuddhi); "
-        "Gruha Pravesam: avoid 12th rashi (Dwadasha Shuddhi). "
-        "Note: Physical panchangam not digitally accessible — not yet verified from primary text"
-    )
     if day_rashi_idx >= 0 and _RASHI_SHUDDHI_FORBIDDEN.get(ceremony_type):
         for i, chart in enumerate(birth_charts):
             name = chart.get("name") or f"వ్యక్తి {i + 1}"
             jrashi = chart.get("janma_rashi_idx", -1)
             if jrashi >= 0:
                 if _rashi_shuddhi_ok(day_rashi_idx, jrashi, ceremony_type):
-                    good_factors.append(_good(
-                        f"{name}: రాశి శుద్ధి అనుకూలం ✓",
-                        "Rashi Shuddhi",
-                        _rashi_src,
-                    ))
+                    good_factors.append(f"{name}: రాశి శుద్ధి అనుకూలం ✓")
                 else:
                     pos = (day_rashi_idx - jrashi) % 12 + 1
-                    bad_factors.append(_bad(
-                        f"{name}: రాశి శుద్ధి అననుకూలం — చంద్రుడు {pos}వ స్థానంలో ఉన్నాడు",
-                        "Rashi Shuddhi",
-                        _rashi_src,
-                    ))
+                    bad_factors.append(
+                        f"{name}: రాశి శుద్ధి అననుకూలం — చంద్రుడు {pos}వ స్థానంలో ఉన్నాడు"
+                    )
 
     # 7. Panchaka Dosha
-    _panchaka_src = (
-        "South Indian tradition; Venkatrama & Co. VTP daily columns — "
-        "formula: (Vara + Tithi + Nakshatra + Lagna) mod 9; "
-        "remainders 1,2,4,6,8 = dosha; remainders 0,3,5,7 = safe (Panchaka Rahita). "
-        "WARNING: This arithmetic formula was NOT found in Muhurta Chintamani or Dharmasindhu "
-        "during text verification. Source is South Indian panchangam tradition — "
-        "primary Sanskrit text citation unverified"
-    )
     if _panchaka_ok(naks_idx, sun_idx, tithi_idx, lagna_idx):
-        good_factors.append(_good(
-            "పంచక దోషం లేదు ✓",
-            "Panchaka Dosha",
-            _panchaka_src,
-        ))
+        good_factors.append("పంచక దోషం లేదు ✓")
     else:
-        bad_factors.append(_bad(
-            "పంచక దోషం ఉంది — (వారం+తిథి+నక్షత్రం+లగ్నం) % 9 దోష సంఖ్య",
-            "Panchaka Dosha",
-            _panchaka_src,
-        ))
+        bad_factors.append("పంచక దోషం ఉంది — (వారం+తిథి+నక్షత్రం+లగ్నం) % 9 దోష సంఖ్య")
 
     overall_good = is_auspicious(
         naks_idx, tithi_idx, sun_idx, lagna_idx,
@@ -779,12 +602,7 @@ def check_muhurta_day(
 
     if not overall_good and good_windows:
         windows_str = ", ".join(f"{w['from']}–{w['to']}" for w in good_windows)
-        good_factors.append(_good(
-            f"పగటిపూట శుభ ముహూర్త సమయాలు: {windows_str} ✓",
-            "Good Muhurta Windows",
-            "Lagna transitions, Choghadiya, Rahu Kalam exclusion — "
-            "Muhurta Chintamani §Choghadiya; South Indian kalam rules (VTP)",
-        ))
+        good_factors.append(f"పగటిపూట శుభ ముహూర్త సమయాలు: {windows_str} ✓")
 
     # ── Time analysis ────────────────────────────────────────────────────────────
     def _in_window(w: dict, mins: float) -> bool:
@@ -857,15 +675,14 @@ def check_muhurta_day(
         verdict = "bad"
 
     return {
-        "verdict":              verdict,
-        "overall_day_good":     overall_good or bool(good_windows),
-        "time_verdict":         time_verdict,
-        "date_te":              f"{day} {_MONTH_TE[month - 1]} {year}",
-        "vaaram_te":            pan["vaaram"]["te"],
-        "gregorian_vaaram_te":  _VAARAM_TE[(_dt.date(year, month, day).weekday() + 1) % 7],
-        "tithi_te":         tithi_te_display,
-        "nakshatra_te":     nakshatra_te_display,
-        "yoga_te":          yoga_te,
+        "verdict":          verdict,
+        "overall_day_good": overall_good or bool(good_windows),
+        "time_verdict":     time_verdict,
+        "date_te":          f"{day} {_MONTH_TE[month - 1]} {year}",
+        "vaaram_te":        pan["vaaram"]["te"],
+        "tithi_te":         pan["tithi"]["te"],
+        "nakshatra_te":     pan["nakshatra"]["te"],
+        "yoga_te":          pan["yoga"]["te"],
         "masam_te":         pan["masam"]["te"],
         "sudhi_name_te":    _SUDHI_NAME_TE.get(ceremony_type, ""),
         "sunrise":          dt_rise.strftime("%H:%M"),

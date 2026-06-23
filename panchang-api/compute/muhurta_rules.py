@@ -482,8 +482,6 @@ def is_auspicious(
     if sun_idx in _BAD_VAARAS.get(ceremony_type, set()):
         return False
     if ceremony_type == CEREMONY_PRAYANAM:
-        if naks_idx in _PRAYANAM_VAARA_VEDHA.get(sun_idx, set()):
-            return False
         _, anandadi_tier = get_anandadi_yoga(naks_idx, sun_idx)
         if anandadi_tier == "avoid":
             return False
