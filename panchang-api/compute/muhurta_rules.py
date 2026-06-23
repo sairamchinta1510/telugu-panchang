@@ -265,69 +265,61 @@ def get_anandadi_yoga(nak_idx: int, weekday_idx: int) -> tuple[str, str]:
 # "అమృతాది యోగముల పట్టిక" — General auspiciousness grid used for Prayanam and
 # all samskaras in Telugu Panchangam tradition.
 #
-# Source: VTP Rajahmundry panchangam (Image 1) + Telugu Panchangam publications.
-# Cross-verified: UttaraAshadha/Sun=Amrita ✓, Dhanishtha/Sun=Mrityu ✓ (confirmed
-# from image; consistent with multiple secondary Telugu panchangam sources).
+# Source: VTP Rajahmundry panchangam — directly transcribed from printed table.
+# Cross-verified: UttaraAshadha/Sun=Amrita ✓, Dhanishtha/Sun=Mrityu ✓
+#                 UttaraPhalguni/Sun=Amrita ✓ (corrected from earlier web-sourced table)
 #
 # Rows = nakshatra index 0 (Ashvini) … 26 (Revati)
 # Cols = weekday 0 (Sun) … 6 (Sat)
-# Values: 0=Amrita, 1=Siddha, 2=Prabala, 3=Mrityu, 4=Marana, 5=Visha
-#   Amrita  — most auspicious (నెక్సర్) ✓
-#   Siddha  — auspicious (సిద్ధ) ✓
-#   Prabala — middling; allow with note (ప్రబల) ⚠
-#   Mrityu  — inauspicious; block (మృత్యు) ✗
-#   Marana  — very inauspicious; block (మారణ) ✗
-#   Visha   — inauspicious; block (విష) ✗
+# Values: 0=Amrita, 1=Siddha, 2=PrabalaArishta, 3=Mrityu
+#   Amrita         — most auspicious (అమ్య) ✓
+#   Siddha         — auspicious (సిద్ధ) ✓
+#   PrabalaArishta — inauspicious; block (ప్రబలారిష్ట) ✗
+#   Mrityu         — inauspicious; block (మృత్యు) ✗
 _AMRITADI_TABLE: list[tuple[int, ...]] = [
     # Sun  Mon  Tue  Wed  Thu  Fri  Sat
-    (1,   0,   3,   4,   2,   5,   1),  #  0 Ashvini
-    (3,   1,   0,   2,   4,   1,   5),  #  1 Bharani
-    (1,   3,   1,   0,   5,   2,   4),  #  2 Krittika
-    (4,   1,   3,   0,   1,   2,   5),  #  3 Rohini
-    (5,   4,   1,   2,   3,   0,   1),  #  4 Mrigashira
-    (1,   5,   4,   0,   1,   3,   2),  #  5 Ardra
-    (2,   1,   5,   1,   4,   0,   3),  #  6 Punarvasu
-    (5,   2,   1,   3,   1,   0,   4),  #  7 Pushya
-    (3,   1,   2,   1,   5,   4,   0),  #  8 Ashlesha
-    (0,   3,   1,   2,   1,   5,   4),  #  9 Magha
-    (1,   0,   3,   1,   2,   4,   5),  # 10 PurvaPhalguni
-    (4,   1,   0,   5,   1,   2,   3),  # 11 UttaraPhalguni
-    (2,   4,   1,   0,   3,   1,   5),  # 12 Hasta
-    (1,   2,   4,   1,   0,   3,   1),  # 13 Chitra
-    (5,   1,   2,   1,   4,   0,   3),  # 14 Swati
-    (4,   5,   1,   3,   2,   1,   0),  # 15 Vishakha
-    (1,   3,   5,   0,   1,   4,   2),  # 16 Anuradha
-    (2,   1,   3,   5,   1,   0,   4),  # 17 Jyeshtha
-    (1,   2,   1,   3,   0,   5,   4),  # 18 Moola
-    (4,   1,   2,   1,   3,   0,   5),  # 19 PurvaAshadha
-    (0,   4,   1,   2,   1,   3,   1),  # 20 UttaraAshadha  ← Sun=Amrita confirmed
-    (5,   0,   4,   1,   1,   2,   3),  # 21 Shravana
-    (3,   5,   0,   1,   2,   1,   4),  # 22 Dhanishtha     ← Sun=Mrityu confirmed
-    (1,   3,   5,   0,   1,   2,   4),  # 23 Shatabhisha
-    (2,   1,   3,   4,   1,   0,   5),  # 24 PurvaBhadra
-    (1,   2,   1,   0,   3,   5,   4),  # 25 UttaraBhadra
-    (4,   1,   2,   1,   0,   3,   5),  # 26 Revati
+    (1,   1,   1,   3,   0,   0,   1),  #  0 Ashvini
+    (2,   1,   1,   1,   1,   1,   1),  #  1 Bharani
+    (1,   3,   1,   0,   3,   1,   0),  #  2 Krittika
+    (1,   0,   0,   1,   3,   1,   0),  #  3 Rohini
+    (1,   0,   1,   1,   0,   1,   1),  #  4 Mrigashira
+    (1,   1,   3,   1,   3,   1,   1),  #  5 Ardra
+    (1,   0,   1,   1,   0,   1,   1),  #  6 Punarvasu
+    (1,   1,   1,   1,   0,   3,   1),  #  7 Pushya
+    (1,   1,   1,   1,   1,   3,   3),  #  8 Ashlesha
+    (3,   3,   1,   1,   0,   0,   0),  #  9 Magha
+    (1,   1,   1,   0,   1,   1,   1),  # 10 PurvaPhalguni
+    (0,   1,   0,   0,   3,   1,   3),  # 11 UttaraPhalguni  ← Sun=Amrita ✓
+    (0,   1,   1,   3,   1,   0,   3),  # 12 Hasta
+    (1,   2,   1,   1,   1,   1,   3),  # 13 Chitra
+    (1,   0,   1,   1,   0,   1,   0),  # 14 Swati
+    (3,   3,   3,   1,   1,   1,   1),  # 15 Vishakha
+    (3,   1,   1,   1,   1,   1,   1),  # 16 Anuradha
+    (3,   1,   1,   1,   2,   3,   1),  # 17 Jyeshtha
+    (0,   1,   0,   3,   1,   0,   1),  # 18 Moola
+    (1,   2,   1,   0,   1,   2,   1),  # 19 PurvaAshadha
+    (0,   3,   2,   0,   1,   1,   1),  # 20 UttaraAshadha   ← Sun=Amrita ✓
+    (0,   0,   1,   1,   1,   3,   1),  # 21 Shravana
+    (3,   1,   1,   2,   1,   1,   1),  # 22 Dhanishtha      ← Sun=Mrityu ✓
+    (1,   1,   3,   1,   3,   1,   0),  # 23 Shatabhisha
+    (1,   3,   3,   0,   1,   1,   3),  # 24 PurvaBhadra
+    (0,   1,   0,   1,   1,   1,   1),  # 25 UttaraBhadra
+    (0,   1,   1,   3,   1,   0,   2),  # 26 Revati
 ]
 
-_AMRITADI_NAMES_EN: list[str] = ["Amrita", "Siddha", "Prabala", "Mrityu", "Marana", "Visha"]
-_AMRITADI_NAMES_TE: list[str] = ["అమృత",  "సిద్ధ",  "ప్రబల",  "మృత్యు", "మారణ",  "విష"]
-_AMRITADI_BAD: frozenset[int] = frozenset({3, 4, 5})   # Mrityu, Marana, Visha
+_AMRITADI_NAMES_EN: list[str] = ["Amrita", "Siddha", "PrabalaArishta", "Mrityu"]
+_AMRITADI_NAMES_TE: list[str] = ["అమృత",  "సిద్ధ",  "ప్రబలారిష్ట",    "మృత్యు"]
+_AMRITADI_BAD: frozenset[int] = frozenset({2, 3})   # PrabalaArishta, Mrityu
 
 
 def get_amritadi_yoga(nak_idx: int, weekday_idx: int) -> tuple[str, str, str]:
     """Return (name_en, name_te, quality_tier) for Amritadi yoga.
 
-    quality_tier: "auspicious" | "middling" | "avoid"
-    Source: VTP Rajahmundry panchangam + Telugu Panchangam publications.
+    quality_tier: "auspicious" | "avoid"
+    Source: VTP Rajahmundry panchangam — directly transcribed.
     """
     val = _AMRITADI_TABLE[nak_idx][weekday_idx]
-    tier: str
-    if val in _AMRITADI_BAD:
-        tier = "avoid"
-    elif val == 2:
-        tier = "middling"
-    else:
-        tier = "auspicious"
+    tier = "avoid" if val in _AMRITADI_BAD else "auspicious"
     return _AMRITADI_NAMES_EN[val], _AMRITADI_NAMES_TE[val], tier
 
 

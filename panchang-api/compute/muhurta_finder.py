@@ -537,8 +537,6 @@ def check_muhurta_day(
         am_en, am_te, am_tier = get_amritadi_yoga(naks_idx, sun_idx)
         if am_tier == "avoid":
             bad_factors.append(f"అమృతాది యోగం: {am_te} — ప్రయాణానికి అశుభ యోగం")
-        elif am_tier == "middling":
-            bad_factors.append(f"అమృతాది యోగం: {am_te} — మధ్యస్థ యోగం, అత్యవసరమైతే మాత్రమే")
         else:
             good_factors.append(f"అమృతాది యోగం: {am_te} — శుభ యోగం ✓")
 
