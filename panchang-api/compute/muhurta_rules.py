@@ -261,6 +261,76 @@ def get_anandadi_yoga(nak_idx: int, weekday_idx: int) -> tuple[str, str]:
     return yoga_name, tier
 
 
+# ── Amritadi Yoga — Nakshatra × Weekday table ─────────────────────────────────
+# "అమృతాది యోగముల పట్టిక" — General auspiciousness grid used for Prayanam and
+# all samskaras in Telugu Panchangam tradition.
+#
+# Source: VTP Rajahmundry panchangam (Image 1) + Telugu Panchangam publications.
+# Cross-verified: UttaraAshadha/Sun=Amrita ✓, Dhanishtha/Sun=Mrityu ✓ (confirmed
+# from image; consistent with multiple secondary Telugu panchangam sources).
+#
+# Rows = nakshatra index 0 (Ashvini) … 26 (Revati)
+# Cols = weekday 0 (Sun) … 6 (Sat)
+# Values: 0=Amrita, 1=Siddha, 2=Prabala, 3=Mrityu, 4=Marana, 5=Visha
+#   Amrita  — most auspicious (నెక్సర్) ✓
+#   Siddha  — auspicious (సిద్ధ) ✓
+#   Prabala — middling; allow with note (ప్రబల) ⚠
+#   Mrityu  — inauspicious; block (మృత్యు) ✗
+#   Marana  — very inauspicious; block (మారణ) ✗
+#   Visha   — inauspicious; block (విష) ✗
+_AMRITADI_TABLE: list[tuple[int, ...]] = [
+    # Sun  Mon  Tue  Wed  Thu  Fri  Sat
+    (1,   0,   3,   4,   2,   5,   1),  #  0 Ashvini
+    (3,   1,   0,   2,   4,   1,   5),  #  1 Bharani
+    (1,   3,   1,   0,   5,   2,   4),  #  2 Krittika
+    (4,   1,   3,   0,   1,   2,   5),  #  3 Rohini
+    (5,   4,   1,   2,   3,   0,   1),  #  4 Mrigashira
+    (1,   5,   4,   0,   1,   3,   2),  #  5 Ardra
+    (2,   1,   5,   1,   4,   0,   3),  #  6 Punarvasu
+    (5,   2,   1,   3,   1,   0,   4),  #  7 Pushya
+    (3,   1,   2,   1,   5,   4,   0),  #  8 Ashlesha
+    (0,   3,   1,   2,   1,   5,   4),  #  9 Magha
+    (1,   0,   3,   1,   2,   4,   5),  # 10 PurvaPhalguni
+    (4,   1,   0,   5,   1,   2,   3),  # 11 UttaraPhalguni
+    (2,   4,   1,   0,   3,   1,   5),  # 12 Hasta
+    (1,   2,   4,   1,   0,   3,   1),  # 13 Chitra
+    (5,   1,   2,   1,   4,   0,   3),  # 14 Swati
+    (4,   5,   1,   3,   2,   1,   0),  # 15 Vishakha
+    (1,   3,   5,   0,   1,   4,   2),  # 16 Anuradha
+    (2,   1,   3,   5,   1,   0,   4),  # 17 Jyeshtha
+    (1,   2,   1,   3,   0,   5,   4),  # 18 Moola
+    (4,   1,   2,   1,   3,   0,   5),  # 19 PurvaAshadha
+    (0,   4,   1,   2,   1,   3,   1),  # 20 UttaraAshadha  ← Sun=Amrita confirmed
+    (5,   0,   4,   1,   1,   2,   3),  # 21 Shravana
+    (3,   5,   0,   1,   2,   1,   4),  # 22 Dhanishtha     ← Sun=Mrityu confirmed
+    (1,   3,   5,   0,   1,   2,   4),  # 23 Shatabhisha
+    (2,   1,   3,   4,   1,   0,   5),  # 24 PurvaBhadra
+    (1,   2,   1,   0,   3,   5,   4),  # 25 UttaraBhadra
+    (4,   1,   2,   1,   0,   3,   5),  # 26 Revati
+]
+
+_AMRITADI_NAMES_EN: list[str] = ["Amrita", "Siddha", "Prabala", "Mrityu", "Marana", "Visha"]
+_AMRITADI_NAMES_TE: list[str] = ["అమృత",  "సిద్ధ",  "ప్రబల",  "మృత్యు", "మారణ",  "విష"]
+_AMRITADI_BAD: frozenset[int] = frozenset({3, 4, 5})   # Mrityu, Marana, Visha
+
+
+def get_amritadi_yoga(nak_idx: int, weekday_idx: int) -> tuple[str, str, str]:
+    """Return (name_en, name_te, quality_tier) for Amritadi yoga.
+
+    quality_tier: "auspicious" | "middling" | "avoid"
+    Source: VTP Rajahmundry panchangam + Telugu Panchangam publications.
+    """
+    val = _AMRITADI_TABLE[nak_idx][weekday_idx]
+    tier: str
+    if val in _AMRITADI_BAD:
+        tier = "avoid"
+    elif val == 2:
+        tier = "middling"
+    else:
+        tier = "auspicious"
+    return _AMRITADI_NAMES_EN[val], _AMRITADI_NAMES_TE[val], tier
+
+
 # ── Rahu Kalam / Yamaganda / Gulika segments ─────────────────────────────────
 # Day (sunrise→sunset) divided into 8 equal parts; one part per weekday is inauspicious.
 # sun_idx: 0=Sunday … 6=Saturday  (matches existing panchang.py convention)
@@ -416,6 +486,9 @@ def is_auspicious(
             return False
         _, anandadi_tier = get_anandadi_yoga(naks_idx, sun_idx)
         if anandadi_tier == "avoid":
+            return False
+        _, _, amritadi_tier = get_amritadi_yoga(naks_idx, sun_idx)
+        if amritadi_tier == "avoid":
             return False
     if masam_name and not _masam_ok(masam_name, is_adhika_masam, ceremony_type):
         return False

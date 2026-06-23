@@ -51,6 +51,7 @@ from .muhurta_rules import (
     _tara_ok, _rashi_shuddhi_ok, _panchaka_ok,
     _RASHI_SHUDDHI_FORBIDDEN, _SUDHI_NAME_TE,
     get_anandadi_yoga, _ANANDADI_YOGA_TE,
+    get_amritadi_yoga,
 )
 
 _MONTH_TE = [
@@ -458,7 +459,9 @@ def find_muhurtas_for_month(
                 **({"anandadi_yoga": _ANANDADI_YOGA_TE.get(
                         get_anandadi_yoga(naks_idx, sun_idx)[0],
                         get_anandadi_yoga(naks_idx, sun_idx)[0]
-                   )} if ceremony_type == "prayanam" else {}),
+                   ),
+                    "amritadi_yoga": get_amritadi_yoga(naks_idx, sun_idx)[1],
+                   } if ceremony_type == "prayanam" else {}),
             })
         except Exception:
             continue   # skip days where calculation fails (polar extremes, etc.)
@@ -633,6 +636,16 @@ def check_muhurta_day(
             bad_factors.append(f"ఆనందాది యోగం: {yoga_te} — మొదటి 24 నిమిషాలు నివారించాలి")
         else:
             good_factors.append(f"ఆనందాది యోగం: {yoga_te} — శుభ యోగం ✓")
+
+    # 2d. Amritadi Yoga (only for Prayanam)
+    if ceremony_type == "prayanam":
+        am_en, am_te, am_tier = get_amritadi_yoga(naks_idx, sun_idx)
+        if am_tier == "avoid":
+            bad_factors.append(f"అమృతాది యోగం: {am_te} — ప్రయాణానికి అశుభ యోగం")
+        elif am_tier == "middling":
+            bad_factors.append(f"అమృతాది యోగం: {am_te} — మధ్యస్థ యోగం, అత్యవసరమైతే మాత్రమే")
+        else:
+            good_factors.append(f"అమృతాది యోగం: {am_te} — శుభ యోగం ✓")
 
     # 3. Nakshatra
     _naks_src = (
