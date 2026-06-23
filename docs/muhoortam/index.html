@@ -1544,11 +1544,16 @@ function _renderResultCard(r, i) {
 
   const card = document.createElement("div");
   card.className = "result-card";
+  const _vaaramHtml = (r.gregorian_vaaram_te && r.gregorian_vaaram_te !== r.vaaram_te)
+    ? `<div class="vaaram">${r.gregorian_vaaram_te}
+         <span title="క్యాలెండర్ తేది ప్రకారం వారం. పంచాంగ వారం సూర్యోదయం ఆధారంగా మారవచ్చు." style="font-size:0.65rem;background:#FFF3E0;color:#E65100;border-radius:10px;padding:1px 6px;margin-left:4px;cursor:help">క్యాలెండర్</span></div>
+       <div style="font-size:0.72rem;color:#E65100;margin-top:2px">⚠️ పంచాంగ వారం: ${r.vaaram_te}</div>`
+    : `<div class="vaaram">${r.vaaram_te}</div>`;
   card.innerHTML = `
     <div class="result-card-header">
       <div class="result-date">
         <div class="day">${r.date_te}</div>
-        <div class="vaaram">${r.vaaram_te}</div>
+        ${_vaaramHtml}
       </div>
       <div class="result-badge">
         ${r.nakshatra_te}<br>${r.tithi_te}
@@ -1740,7 +1745,13 @@ function showCheckResult(data) {
     <div style="background:${v.bg};border:2px solid ${v.border};border-radius:16px;padding:18px;margin-bottom:14px;text-align:center">
       <div style="font-size:2.8rem">${v.icon}</div>
       <div style="font-weight:800;font-size:1.15rem;color:${v.color};margin-top:6px">${v.label}</div>
-      <div style="font-size:0.88rem;color:var(--brown-mid);margin-top:6px">${data.date_te} — ${data.vaaram_te}</div>
+      <div style="font-size:0.88rem;color:var(--brown-mid);margin-top:6px">
+        ${data.date_te} — ${data.vaaram_te}
+        ${(data.gregorian_vaaram_te && data.gregorian_vaaram_te !== data.vaaram_te) ? `
+        <div style="margin-top:4px;font-size:0.78rem;background:#FFF3E0;border:1px solid #FFCC80;border-radius:8px;padding:5px 10px;display:inline-block;text-align:left">
+          ⚠️ <b>క్యాలెండర్ వారం:</b> ${data.gregorian_vaaram_te} &nbsp;|&nbsp; <b>పంచాంగ వారం (సూర్యోదయం):</b> ${data.vaaram_te}
+        </div>` : ""}
+      </div>
       ${data.good_windows && data.good_windows.length ? `
       <div style="margin-top:14px;background:rgba(255,255,255,0.75);border:1.5px solid ${v.border};border-radius:12px;padding:10px 14px;display:inline-block;text-align:left">
         <div style="font-size:0.65rem;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">⏰ ఉత్తమ ముహూర్తం</div>
@@ -1808,7 +1819,7 @@ function showCheckResult(data) {
 function showDetail(i) {
   const r = allResults[i];
   const cName = CEREMONY_NAMES[selectedCeremony]||selectedCeremony;
-  document.getElementById("sheetTitle").textContent = `${r.date_te} · ${r.vaaram_te}`;
+  document.getElementById("sheetTitle").textContent = `${r.date_te} · ${r.vaaram_te}${(r.gregorian_vaaram_te && r.gregorian_vaaram_te !== r.vaaram_te) ? ' (పంచాంగం)' : ''}`;
   document.getElementById("sheetDate").textContent  = `${cName} ముహూర్తం వివరాలు`;
 
   document.getElementById("sheetBody").innerHTML = `

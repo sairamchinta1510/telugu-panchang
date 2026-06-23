@@ -8,6 +8,7 @@ Includes Rahu Kalam, Yamaganda, and Gulika Kalam in output (essential South Indi
 from __future__ import annotations
 import bisect
 import calendar
+import datetime as _dt
 
 try:
     from .astro import (
@@ -427,10 +428,11 @@ def find_muhurtas_for_month(
                 varjyam = pan["varjyam"]
 
             results.append({
-                "date_te":      f"{day} {_MONTH_TE[month - 1]} {year}",
-                "date_raw":     f"{day:02d}/{month:02d}/{year}",
-                "vaaram_te":    vaaram_te,
-                "sunrise":      sunrise,
+                "date_te":             f"{day} {_MONTH_TE[month - 1]} {year}",
+                "date_raw":            f"{day:02d}/{month:02d}/{year}",
+                "vaaram_te":           vaaram_te,
+                "gregorian_vaaram_te": _VAARAM_TE[(_dt.date(year, month, day).weekday() + 1) % 7],
+                "sunrise":             sunrise,
                 "sunset":       sunset,
                 "tithi_te":     tithi_te,
                 "nakshatra_te": nakshatra_te,
@@ -654,11 +656,12 @@ def check_muhurta_day(
         verdict = "bad"
 
     return {
-        "verdict":          verdict,
-        "overall_day_good": overall_good or bool(good_windows),
-        "time_verdict":     time_verdict,
-        "date_te":          f"{day} {_MONTH_TE[month - 1]} {year}",
-        "vaaram_te":        pan["vaaram"]["te"],
+        "verdict":              verdict,
+        "overall_day_good":     overall_good or bool(good_windows),
+        "time_verdict":         time_verdict,
+        "date_te":              f"{day} {_MONTH_TE[month - 1]} {year}",
+        "vaaram_te":            pan["vaaram"]["te"],
+        "gregorian_vaaram_te":  _VAARAM_TE[(_dt.date(year, month, day).weekday() + 1) % 7],
         "tithi_te":         pan["tithi"]["te"],
         "nakshatra_te":     pan["nakshatra"]["te"],
         "yoga_te":          pan["yoga"]["te"],
