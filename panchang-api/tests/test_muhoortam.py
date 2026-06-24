@@ -977,6 +977,27 @@ def test_lagna_quality_clean_lagna_7th_raises_score():
     assert result["score"] >= 65
 
 
+def test_sthira_lagna_scores_higher_than_dvisva_vivaha():
+    """Sthira (fixed) lagna must score higher than Dvisva (mutable) for Vivaha."""
+    # Same planet positions, same ceremony — only lagna type differs
+    rashis = {"guru": 11, "chandra": 2, "kuja": 5, "shani": 0, "rahu": 3, "ketu": 9, "shukra": 2}
+    # Vrischika (7) is Sthira; Kanya (5) is Dvisva
+    result_sthira = check_lagna_graha_quality(7, rashis, "vivaha")
+    result_dvisva = check_lagna_graha_quality(5, rashis, "vivaha")
+    assert result_sthira["score"] > result_dvisva["score"], (
+        f"Sthira lagna should outrank Dvisva: {result_sthira['score']} vs {result_dvisva['score']}"
+    )
+    assert any("స్థిర" in m for m in result_sthira["benefits_te"])
+
+
+def test_chara_lagna_warns_for_vivaha():
+    """Chara (moveable) lagna should add a warning for Vivaha."""
+    rashis = {"guru": 5, "chandra": 2, "kuja": 9, "shani": 9, "rahu": 3, "ketu": 9, "shukra": 2}
+    # Tula (6) is Chara
+    result = check_lagna_graha_quality(6, rashis, "vivaha")
+    assert any("చర లగ్నం" in m for m in result["warnings_te"])
+
+
 def test_good_windows_include_lagna_quality():
     """Windows from _find_good_windows should include a lagna_quality dict."""
     mf = _load_finder({1})

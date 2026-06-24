@@ -646,6 +646,14 @@ def _guru_aspects_lagna(guru_rashi: int, lagna_idx: int) -> bool:
     }
 
 
+# Lagna classification by sign type
+# Sthira (fixed/stable): best for permanent ceremonies (vivaha, gruha pravesam)
+# Chara (moveable): preferred for travel; less ideal for vivaha
+# Dvisva (dual/mutable): neutral
+_STHIRA_LAGNAS = frozenset({1, 4, 7, 10})   # Vrishabha, Simha, Vrischika, Kumbha
+_CHARA_LAGNAS  = frozenset({0, 3, 6, 9})    # Mesha, Karka, Tula, Makara
+# dvisva: 2, 5, 8, 11 (Mithuna, Kanya, Dhanu, Meena)
+
 # Per-ceremony lagna graha rules. Values:
 #   "hard"    — triggers block, window is eliminated
 #   "warn"    — soft warning shown to user, window kept
@@ -660,28 +668,33 @@ _LAGNA_RULES: dict[str, dict[str, str]] = {
         "moon_in_6_8":            "warn",
         "shukra_in_dusthana":     "warn",
         "guru_in_kendra_trikona": "benefit",
+        "sthira_lagna":           "benefit",  # fixed sign preferred for permanence
     },
     CEREMONY_GRUHA_PRAVESAM: {
         "malefic_in_lagna":       "hard",
         "guru_aspect_lagna":      "benefit",
         "moon_in_6_8":            "warn",
         "guru_in_kendra_trikona": "benefit",
+        "sthira_lagna":           "benefit",
     },
     CEREMONY_UPANAYANAM: {
         "malefic_in_lagna":       "hard",
         "guru_aspect_lagna":      "benefit",
         "guru_in_kendra_trikona": "benefit",
+        "sthira_lagna":           "benefit",
     },
     CEREMONY_GARBHADANAM: {
         "malefic_in_lagna":       "hard",
         "shukra_combust":         "hard",
         "guru_aspect_lagna":      "benefit",
         "guru_in_kendra_trikona": "benefit",
+        "sthira_lagna":           "benefit",
     },
     CEREMONY_SANKHU_STAPANA: {
         "malefic_in_lagna":       "hard",
         "guru_aspect_lagna":      "benefit",
         "guru_in_kendra_trikona": "benefit",
+        "sthira_lagna":           "benefit",
     },
     CEREMONY_ANNA_PRASANA: {
         "malefic_in_lagna":       "warn",
@@ -852,6 +865,17 @@ def check_lagna_graha_quality(
                 ord_te = _HOUSE_ORD_TE.get(guru_house, f"{guru_house}వ")
                 benefits.append(f"గురువు {ord_te} స్థానంలో (త్రికోణం) — శుభం ✓")
                 score += 8
+
+    # 8. Sthira (fixed) lagna — preferred for permanent ceremonies ────────────
+    # Per Muhurta Chintamani: Sthira lagnas (Vrishabha, Simha, Vrischika, Kumbha)
+    # give permanence and stability; ranked above dual and moveable signs.
+    if _rule("sthira_lagna") != "none":
+        if lagna_idx in _STHIRA_LAGNAS:
+            benefits.append("స్థిర లగ్నం — శాశ్వత శుభ కార్యాలకు ఉత్తమం ✓")
+            score += 25
+        elif lagna_idx in _CHARA_LAGNAS:
+            warnings.append("చర లగ్నం — స్థిర లగ్నం ఉత్తమం; ఈ లగ్నం శాశ్వత కార్యాలకు తక్కువ అనువైనది ⚠")
+            score -= 10
 
     return {
         "score":          max(0, min(100, score)),
