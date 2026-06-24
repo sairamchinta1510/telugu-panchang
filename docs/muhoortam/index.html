@@ -1738,7 +1738,33 @@ function showCheckResult(data) {
       </div>
     ${(()=>{
       const bestWindow = (data.good_windows?.[0] || data.night_good_windows?.[0]);
-      return bestWindow ? `
+      if (!bestWindow) return '';
+      const lq = bestWindow.lagna_quality || {};
+      const sc = lq.score_components || [];
+      const total = lq.score || 0;
+      const scoreBar = total > 0 ? `
+        <div style="margin-top:8px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span style="font-size:0.65rem;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.06em">లగ్న నాణ్యత స్కోర్</span>
+            <span style="font-size:0.9rem;font-weight:800;color:${v.color}">${total}<span style="font-size:0.65rem;font-weight:600;opacity:0.7">/150</span></span>
+          </div>
+          <div style="background:rgba(0,0,0,0.08);border-radius:6px;height:6px;width:160px">
+            <div style="background:${v.color};border-radius:6px;height:6px;width:${Math.round(total/150*160)}px"></div>
+          </div>
+          ${sc.length ? `<details style="margin-top:6px">
+            <summary style="font-size:0.65rem;color:${v.color};cursor:pointer;font-weight:600;list-style:none">స్కోర్ వివరాలు ▾</summary>
+            <div style="margin-top:5px;font-size:0.7rem;line-height:1.7;background:rgba(255,255,255,0.6);border-radius:6px;padding:6px 8px">
+              ${sc.map(c=>`<div style="display:flex;justify-content:space-between;gap:12px">
+                <span style="color:#333">${c.te}</span>
+                <span style="font-weight:700;color:${c.delta>0?'#2E7D32':c.delta<0?'#C62828':'#555'};white-space:nowrap">${c.delta>0?'+':''}${c.delta}</span>
+              </div>`).join('')}
+              <div style="border-top:1px solid rgba(0,0,0,0.12);margin-top:4px;padding-top:4px;display:flex;justify-content:space-between;font-weight:800">
+                <span>మొత్తం</span><span style="color:${v.color}">${total}</span>
+              </div>
+            </div>
+          </details>` : ''}
+        </div>` : '';
+      return `
       <div style="margin-top:14px;background:rgba(255,255,255,0.75);border:1.5px solid ${v.border};border-radius:12px;padding:10px 14px;display:inline-block;text-align:left">
         <div style="font-size:0.65rem;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">⏰ ఉత్తమ ముహూర్తం</div>
         <div style="font-size:1.3rem;font-weight:800;color:${v.color}">${bestWindow.best_time || bestWindow.from}</div>
@@ -1746,7 +1772,8 @@ function showCheckResult(data) {
         <div style="font-size:0.75rem;color:var(--brown-mid);margin-top:4px">
           ⭐ ${bestWindow.nakshatra_te} &nbsp;·&nbsp; 📅 ${bestWindow.tithi_te} &nbsp;·&nbsp; 🌅 ${bestWindow.lagna_te} లగ్నం
         </div>
-      </div>` : '';
+        ${scoreBar}
+      </div>`;
     })()}
     </div>
 
@@ -1806,6 +1833,7 @@ function showCheckResult(data) {
               <span style="font-size:1.05rem;font-weight:800;color:#1B5E20">${w.best_time||w.from}</span>
               ${w.choghadiya_te?`<span style="font-size:0.72rem;background:#C8E6C9;color:#1B5E20;border-radius:10px;padding:1px 7px;font-weight:600">${w.choghadiya_te}</span>`:''}
               <span style="font-size:0.72rem;color:#666">(${w.from}–${w.to})</span>
+              ${(w.lagna_quality&&w.lagna_quality.score)?`<span style="font-size:0.65rem;background:#E8F5E9;border:1px solid #A5D6A7;color:#2E7D32;border-radius:8px;padding:1px 6px;font-weight:700">⭐ ${w.lagna_quality.score}/150</span>`:''}
             </div>
             <div style="font-size:0.73rem;color:#388E3C;margin-top:2px">
               ⭐ ${w.nakshatra_te||''} &nbsp;|&nbsp; 📅 ${w.tithi_te||''} &nbsp;|&nbsp; 🌅 ${w.lagna_te||''} లగ్నం
@@ -1832,6 +1860,7 @@ function showCheckResult(data) {
               <span style="font-size:1.05rem;font-weight:800;color:#4A148C">${w.best_time||w.from}</span>
               ${w.choghadiya_te?`<span style="font-size:0.72rem;background:#D1C4E9;color:#4A148C;border-radius:10px;padding:1px 7px;font-weight:600">${w.choghadiya_te}</span>`:''}
               <span style="font-size:0.72rem;color:#666">(${w.from}–${w.to})</span>
+              ${(w.lagna_quality&&w.lagna_quality.score)?`<span style="font-size:0.65rem;background:#EDE7F6;border:1px solid #CE93D8;color:#4A148C;border-radius:8px;padding:1px 6px;font-weight:700">⭐ ${w.lagna_quality.score}/150</span>`:''}
             </div>
             <div style="font-size:0.73rem;color:#6A1B9A;margin-top:2px">
               ⭐ ${w.nakshatra_te||''} &nbsp;|&nbsp; 📅 ${w.tithi_te||''} &nbsp;|&nbsp; 🌅 ${w.lagna_te||''} లగ్నం
