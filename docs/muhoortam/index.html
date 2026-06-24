@@ -7,8 +7,6 @@
 <title>శుభ ముహూర్తం</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;600;700&family=Noto+Serif+Telugu:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <style>
 :root {
   --saffron: #C1440E;
@@ -604,63 +602,29 @@ body {
   .result-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
 }
 
-/* ── Flatpickr theme ─────────────────────────────────────────────────── */
-.flatpickr-calendar {
-  font-family: 'Noto Sans Telugu', 'Segoe UI', system-ui, sans-serif !important;
-  border-radius: 14px !important;
-  box-shadow: 0 8px 32px rgba(91,30,0,0.22) !important;
-  border: 1px solid rgba(196,154,108,0.35) !important;
-  background: var(--white) !important;
-  max-width: calc(100vw - 24px) !important;
+/* ── Native date input styling ───────────────────────────────────────── */
+input[type="date"] {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1.5px solid var(--brown-light);
+  border-radius: 10px;
+  font-family: 'Noto Sans Telugu', 'Segoe UI', system-ui, sans-serif;
+  font-size: 15px;
+  color: var(--brown);
+  background: var(--white);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
 }
-.flatpickr-months { background: var(--maroon) !important; border-radius: 14px 14px 0 0 !important; }
-.flatpickr-months .flatpickr-month { background: transparent !important; color: #fff !important; }
-.flatpickr-current-month .flatpickr-monthDropdown-months,
-.flatpickr-current-month .flatpickr-monthDropdown-months option {
-  background: var(--maroon) !important; color: #fff !important;
+input[type="date"]:focus {
+  outline: none;
+  border-color: var(--saffron);
+  box-shadow: 0 0 0 3px rgba(193,68,14,0.12);
 }
-.flatpickr-current-month input.cur-year { color: #fff !important; font-weight: 700 !important; }
-.flatpickr-months .flatpickr-prev-month svg, .flatpickr-months .flatpickr-next-month svg { fill: #fff !important; }
-.flatpickr-weekday { background: var(--cream2) !important; color: var(--brown-mid) !important; font-weight: 700; font-size: 0.75rem; }
-.flatpickr-day { border-radius: 8px !important; color: var(--brown) !important; }
-.flatpickr-day:hover, .flatpickr-day:focus { background: var(--cream2) !important; border-color: var(--gold) !important; }
-.flatpickr-day.selected, .flatpickr-day.selected:hover {
-  background: var(--saffron) !important; border-color: var(--saffron) !important; color: #fff !important;
-}
-.flatpickr-day.today { border-color: var(--saffron-light) !important; font-weight: 700; }
-.flatpickr-day.flatpickr-disabled, .flatpickr-day.flatpickr-disabled:hover {
-  color: #ccc !important; background: transparent !important;
-}
-.numInputWrapper span.arrowUp, .numInputWrapper span.arrowDown { border-color: rgba(196,154,108,0.5) !important; }
-.flatpickr-input { cursor: pointer !important; }
-
-/* ── Flatpickr mobile: prevent first column clipping on iPhone portrait ── */
-@media (max-width: 480px) {
-  .flatpickr-calendar {
-    position: fixed !important;
-    left: 12px !important;
-    right: 12px !important;
-    width: calc(100vw - 24px) !important;
-    max-width: calc(100vw - 24px) !important;
-    box-sizing: border-box !important;
-  }
-  .flatpickr-days,
-  .dayContainer {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
-  .flatpickr-day {
-    flex: 1 1 0 !important;
-    max-width: calc((100vw - 24px) / 7) !important;
-    height: calc((100vw - 24px) / 7) !important;
-    line-height: calc((100vw - 24px) / 7) !important;
-  }
-  .flatpickr-weekdays { width: 100% !important; }
-  .flatpickr-weekday {
-    flex: 1 1 0 !important;
-    max-width: calc((100vw - 24px) / 7) !important;
-  }
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+  cursor: pointer;
+  filter: invert(25%) sepia(40%) saturate(800%) hue-rotate(340deg);
 }
 </style>
 </head>
@@ -804,11 +768,11 @@ body {
         <div class="date-range">
           <div>
             <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 నుండి</label>
-            <input type="text" id="rangeFrom" placeholder="తేదీ ఎంచుకోండి" style="cursor:pointer">
+            <input type="date" id="rangeFrom">
           </div>
           <div>
             <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 వరకు</label>
-            <input type="text" id="rangeTo" placeholder="తేదీ ఎంచుకోండి" style="cursor:pointer">
+            <input type="date" id="rangeTo">
           </div>
         </div>
       </div>
@@ -818,7 +782,7 @@ body {
         <div class="two-col">
           <div class="field" style="margin-bottom:0">
             <label>తనిఖీ చేయాల్సిన తేదీ</label>
-            <input type="text" id="checkDate" placeholder="తేదీ ఎంచుకోండి" style="cursor:pointer">
+            <input type="date" id="checkDate">
           </div>
           <div class="field" style="margin-bottom:0">
             <label>సమయం (ఐచ్ఛికం)</label>
@@ -1105,8 +1069,7 @@ function addFromProfile(idx) {
     document.getElementById("pname"+targetId).value = p.name;
     if (p.dob) {
       const input = document.getElementById("dob"+targetId);
-      const fp = input._flatpickr;
-      if (fp) fp.setDate(p.dob, true); else input.value = p.dob;
+      input.value = p.dob || '';
     }
     if (p.time) document.getElementById("time"+targetId).value = p.time;
     if (p.place) {
@@ -1120,8 +1083,7 @@ function addFromProfile(idx) {
     document.getElementById("pname"+id).value = p.name;
     if (p.dob) {
       const input = document.getElementById("dob"+id);
-      const fp = input._flatpickr;
-      if (fp) fp.setDate(p.dob, true); else input.value = p.dob;
+      input.value = p.dob || '';
     }
     if (p.time) document.getElementById("time"+id).value = p.time;
     if (p.place) {
@@ -1168,26 +1130,12 @@ async function savePersonProfile(idx) {
   }
 }
 
-// Default dates + Flatpickr for range pickers
+// Default dates for range pickers
 (function() {
   const t = new Date(), n = new Date(t); n.setMonth(n.getMonth()+3);
   const f = d => d.toISOString().slice(0,10);
-  const todayStr = f(t), endStr = f(n);
-  const fpOpts = { dateFormat: "Y-m-d", disableMobile: true, allowInput: false,
-    position: "auto center",
-    onOpen(_, __, fp) {
-      fp.input.blur();
-      const cal = fp.calendarContainer;
-      cal.style.zIndex = "9999";
-      // On narrow screens the calendar is CSS-fixed; anchor top below the input
-      if (window.innerWidth <= 480) {
-        const rect = fp.input.getBoundingClientRect();
-        cal.style.top = (rect.bottom + 6) + "px";
-      }
-    } };
-  flatpickr("#rangeFrom", { ...fpOpts, defaultDate: todayStr });
-  flatpickr("#rangeTo",   { ...fpOpts, defaultDate: endStr });
-  flatpickr("#checkDate", { ...fpOpts });
+  document.getElementById("rangeFrom").value = f(t);
+  document.getElementById("rangeTo").value   = f(n);
 })();
 
 // ── Step progress ─────────────────────────────────────────────────────────────
@@ -1312,8 +1260,10 @@ function addPerson() {
     <div class="two-col">
       <div class="field" style="margin-bottom:0">
         <label>జన్మ తేదీ</label>
-        <input type="text" id="dob${idx}" placeholder="తేదీ ఎంచుకోండి"
-               style="padding:11px 10px;font-size:15px;cursor:pointer">
+        <input type="date" id="dob${idx}"
+               max="${new Date().toISOString().slice(0,10)}"
+               style="padding:11px 10px;font-size:15px"
+               onchange="delete savedProfileCharts[${idx}]">
       </div>
       <div class="field" style="margin-bottom:0">
         <label>జన్మ సమయం</label>
@@ -1334,18 +1284,6 @@ function addPerson() {
     </div>
     <button class="save-profile-btn" style="margin-top:8px;background:var(--gold-light);border:1px solid var(--gold);border-radius:8px;padding:6px 14px;font-size:0.75rem;font-family:inherit;color:var(--brown);cursor:pointer" onclick="savePersonProfile(${idx})">💾 Save Profile</button>`;
   document.getElementById("personList").appendChild(div);
-  flatpickr(`#dob${idx}`, { dateFormat: "Y-m-d", maxDate: new Date(), disableMobile: true,
-    position: "auto center", allowInput: false,
-    onOpen(_, __, fp) {
-      fp.input.blur();
-      const cal = fp.calendarContainer;
-      cal.style.zIndex = "9999";
-      if (window.innerWidth <= 480) {
-        const rect = fp.input.getBoundingClientRect();
-        cal.style.top = (rect.bottom + 6) + "px";
-      }
-    },
-    onChange() { delete savedProfileCharts[idx]; } });
   _renumberPersonBlocks();
   document.getElementById("addPersonBtn").style.display = document.querySelectorAll(".person-block").length>=6?"none":"block";
   _updateRemoveBtns();
