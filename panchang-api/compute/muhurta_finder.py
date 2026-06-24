@@ -652,6 +652,31 @@ def check_muhurta_day(
     # via night Amrita Choghadiya (at least one night window with vara_shanti=True)
     vara_shanti_required = vara_bad and any(w.get("vara_shanti") for w in all_windows)
 
+    # When no specific time was requested, re-anchor evaluation context to the
+    # best muhurta window so factors reflect the actual recommended time
+    # (nakshatra/tithi at the best window, not at sunrise).
+    if check_hour < 0 and all_windows:
+        best = all_windows[0]
+        naks_idx  = best["nak_idx"]
+        tithi_idx = best["tithi_idx"]
+        lagna_idx = best["lagna_idx"]
+        bw_h, bw_m = map(int, best["from"].split(":"))
+        _bw_jd = midnight_jd + bw_h / 24.0 + bw_m / (24.0 * 60)
+        if _bw_jd < rise_jd:           # post-midnight window (e.g. 00:xx–02:xx)
+            _bw_jd += 1.0
+        day_rashi_idx           = int(moon_longitude(_bw_jd) / 30) % 12
+        is_night                = _bw_jd > set_jd
+        choghadiya_rank_at_time = best["choghadiya_rank"]
+        overall_good = is_auspicious(
+            naks_idx, tithi_idx, sun_idx, lagna_idx,
+            birth_charts, ceremony_type,
+            masam_name=masam_name, is_adhika_masam=is_adhika,
+            day_rashi_idx=day_rashi_idx,
+            is_uttarayanam=is_uttarayanam,
+            is_night=is_night,
+            choghadiya_rank=choghadiya_rank_at_time,
+        )
+
     cer_te        = _CEREMONY_TE.get(ceremony_type, ceremony_type)
     good_factors: list[str] = []
     bad_factors:  list[str] = []
