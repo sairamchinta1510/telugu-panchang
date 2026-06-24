@@ -98,10 +98,11 @@ def _find_good_windows_from_cache(
     sun_idx: int,
     is_uttarayanam: bool = True,
     skip_planet_rashis: bool = False,
+    next_rise_jd: float = 0.0,
 ) -> list[dict]:
     """Cached path: use precomputed transitions instead of live swisseph calls."""
     EPSILON = 1.0 / (24 * 60)
-    end_jd = rise_jd + 1.0
+    end_jd = next_rise_jd if next_rise_jd > rise_jd else rise_jd + 1.0
 
     cho_slots = compute_choghadiya_slots(rise_jd, set_jd, end_jd, sun_idx)
     lagna_trans = day_cache.get("lagna_transitions", [])
@@ -123,12 +124,26 @@ def _find_good_windows_from_cache(
             int(naks_idx * (360.0 / 27) / 30) % 12,
         )
 
+        is_night_seg = seg_start >= set_jd
+
+        # Compute best choghadiya rank for this segment
+        best_cho_rank_seg = -1
+        for slot in cho_slots:
+            overlap_start = max(slot["from_jd"], seg_start)
+            overlap_end = min(slot["to_jd"], seg_end)
+            if overlap_end - overlap_start < EPSILON:
+                continue
+            if slot["quality_rank"] > best_cho_rank_seg:
+                best_cho_rank_seg = slot["quality_rank"]
+
         good = is_auspicious(
             naks_idx, tithi_idx, sun_idx, win_lagna_idx,
             birth_charts, ceremony_type,
             masam_name=masam_name, is_adhika_masam=is_adhika,
             day_rashi_idx=day_rashi_idx,
             is_uttarayanam=is_uttarayanam,
+            is_night=is_night_seg,
+            choghadiya_rank=best_cho_rank_seg,
         )
 
         if good:
@@ -156,6 +171,12 @@ def _find_good_windows_from_cache(
                         max(slot["from_jd"], seg_start), tz_name
                     ).strftime("%H:%M")
 
+            vara_shanti = (
+                sun_idx in _BAD_VAARAS.get(ceremony_type, set())
+                and is_night_seg
+                and best_cho_rank == 6
+            )
+
             entry = {
                 "from": from_str,
                 "to": to_str,
@@ -170,6 +191,7 @@ def _find_good_windows_from_cache(
                 "best_time": best_time_str,
                 "choghadiya_te": best_cho_te,
                 "choghadiya_rank": best_cho_rank,
+                "vara_shanti": vara_shanti,
             }
             if not skip_planet_rashis:
                 entry["planet_rashis"] = day_cache.get("planet_rashis", {})
@@ -192,8 +214,9 @@ def _find_good_windows(
     is_uttarayanam: bool = True,
     skip_planet_rashis: bool = False,
     day_cache: dict | None = None,
+    next_rise_jd: float = 0.0,
 ) -> list[dict]:
-    """Scan the full 24 hours from rise_jd for auspicious muhurta windows.
+    """Scan the full Vedic day (rise_jd → next_rise_jd) for auspicious muhurta windows.
 
     Tithi, nakshatra, AND lagna change during the day; each segment between
     transitions is evaluated independently with the actual lagna at that time.
@@ -203,20 +226,21 @@ def _find_good_windows(
     Returns list of dicts sorted best-first (highest Choghadiya rank, then longest).
     Each dict: {from, to, duration_mins, nakshatra_te, tithi_te, lagna_te,
                 nak_idx, tithi_idx, sun_idx, best_time, choghadiya_te,
-                choghadiya_rank}
+                choghadiya_rank, vara_shanti}
     """
     def _ti(j): return int(moon_sun_elongation(j) / 12) % 30
     def _ni(j): return int(moon_longitude(j) / (360.0 / 27)) % 27
     def _li(j): return compute_lagna(j, lat, lon)
 
     EPSILON = 1.0 / (24 * 60)   # 1 minute in JD
-    end_jd  = rise_jd + 1.0     # exactly 24 hours
+    end_jd  = next_rise_jd if next_rise_jd > rise_jd else rise_jd + 1.0
 
     if day_cache is not None:
         return _find_good_windows_from_cache(
             day_cache, rise_jd, set_jd, tz_name,
             ceremony_type, birth_charts, masam_name, is_adhika,
             sun_idx, is_uttarayanam, skip_planet_rashis,
+            next_rise_jd=end_jd,
         )
 
     # Pre-compute Choghadiya slots for the full day/night
@@ -240,12 +264,26 @@ def _find_good_windows(
         candidates = [c for c in [t_change, n_change, l_change] if c is not None and c < end_jd]
         window_end_jd = min(candidates) if candidates else end_jd
 
+        is_night_seg = jd >= set_jd
+
+        # Compute best choghadiya rank for this segment
+        best_cho_rank_seg = -1
+        for slot in cho_slots:
+            overlap_start = max(slot["from_jd"], jd)
+            overlap_end   = min(slot["to_jd"], window_end_jd)
+            if overlap_end - overlap_start < EPSILON:
+                continue
+            if slot["quality_rank"] > best_cho_rank_seg:
+                best_cho_rank_seg = slot["quality_rank"]
+
         good = is_auspicious(
             naks_idx, tithi_idx, sun_idx, win_lagna_idx,
             birth_charts, ceremony_type,
             masam_name=masam_name, is_adhika_masam=is_adhika,
             day_rashi_idx=day_rashi_idx,
             is_uttarayanam=is_uttarayanam,
+            is_night=is_night_seg,
+            choghadiya_rank=best_cho_rank_seg,
         )
 
         if good:
@@ -288,6 +326,11 @@ def _find_good_windows(
                 "best_time":       best_time_str,
                 "choghadiya_te":   best_cho_te,
                 "choghadiya_rank": best_cho_rank,
+                "vara_shanti":     (
+                    sun_idx in _BAD_VAARAS.get(ceremony_type, set())
+                    and is_night_seg
+                    and best_cho_rank == 6
+                ),
             }
             if not skip_planet_rashis:
                 entry["planet_rashis"] = compute_planet_rashis(jd)
@@ -467,39 +510,153 @@ def check_muhurta_day(
 ) -> dict:
     """Check a specific date (and optional time) for muhurta auspiciousness.
 
-    Returns a detailed breakdown of good/bad factors, panchang info,
-    and an overall verdict of 'good', 'mixed', or 'bad'.
+    Uses the Vedic day model: day runs from today's sunrise to next day's sunrise.
+    When check_hour >= 0, nakshatra/tithi/lagna are evaluated at the requested time,
+    not at sunrise. Night times (after sunset, before next sunrise) are valid and
+    may qualify via Amrita Choghadiya vara exception per Telugu Sampradaya.
 
     check_hour=-1 means no specific time was requested (day-level check only).
     """
+    import calendar as _cal
+
     jd = local_date_to_jd(year, month, day, tz_name)
     rise_jd, set_jd = get_sunrise_sunset(jd, lat, lon)
 
-    moon_lon      = moon_longitude(rise_jd)
-    elong         = moon_sun_elongation(rise_jd)
-    naks_idx      = int(moon_lon / (360.0 / 27)) % 27
-    tithi_idx     = int(elong / 12) % 30
-    day_rashi_idx = int(moon_lon / 30) % 12
+    # Compute next-day sunrise for the Vedic day boundary
+    _, days_in_month = _cal.monthrange(year, month)
+    if day < days_in_month:
+        ny, nm, nd = year, month, day + 1
+    elif month < 12:
+        ny, nm, nd = year, month + 1, 1
+    else:
+        ny, nm, nd = year + 1, 1, 1
+    next_rise_jd, _ = get_sunrise_sunset(local_date_to_jd(ny, nm, nd, tz_name), lat, lon)
 
-    dt_rise   = jd_to_local_datetime(rise_jd, tz_name)
-    dt_set    = jd_to_local_datetime(set_jd, tz_name)
-    sun_idx   = (dt_rise.weekday() + 1) % 7
+    # Sunrise-anchored values (used for day-level labels — vara/masa don't change intraday)
+    moon_lon_rise  = moon_longitude(rise_jd)
+    elong_rise     = moon_sun_elongation(rise_jd)
+    naks_idx_rise  = int(moon_lon_rise / (360.0 / 27)) % 27
+    tithi_idx_rise = int(elong_rise / 12) % 30
+    day_rashi_idx  = int(moon_lon_rise / 30) % 12
 
-    lagna_idx = compute_lagna(rise_jd, lat, lon)
-    pan       = compute_panchang(jd, lat, lon, tz_name)
-    masam_name = pan["masam"]["en"]
-    is_adhika  = pan["masam"]["adhika"]
+    dt_rise = jd_to_local_datetime(rise_jd, tz_name)
+    dt_set  = jd_to_local_datetime(set_jd, tz_name)
+    sun_idx = (dt_rise.weekday() + 1) % 7
+
+    lagna_idx_rise = compute_lagna(rise_jd, lat, lon)
+    pan            = compute_panchang(jd, lat, lon, tz_name)
+    masam_name     = pan["masam"]["en"]
+    is_adhika      = pan["masam"]["adhika"]
     is_uttarayanam = sun_longitude(rise_jd) < 180
 
     rise_mins = dt_rise.hour * 60 + dt_rise.minute + dt_rise.second / 60
     set_mins  = dt_set.hour  * 60 + dt_set.minute  + dt_set.second  / 60
     kalams    = compute_kalams(rise_mins, set_mins, sun_idx)
 
-    cer_te = _CEREMONY_TE.get(ceremony_type, ceremony_type)
+    # Midnight JD for this civil date
+    midnight_jd = rise_jd - rise_mins / (24.0 * 60)
+
+    # Intraday transition helpers
+    def _ti(j): return int(moon_sun_elongation(j) / 12) % 30
+    def _ni(j): return int(moon_longitude(j) / (360.0 / 27)) % 27
+
+    EPSILON = 1.0 / (24 * 60)
+
+    # Build transition list for the full Vedic day (rise → next rise)
+    transitions: list[dict] = []
+    cur_jd    = rise_jd
+    cur_naks  = naks_idx_rise
+    cur_tithi = tithi_idx_rise
+    while cur_jd < next_rise_jd - EPSILON:
+        n_change = find_next_index_change(cur_jd, _ni, cur_naks,  step_hours=1.0, max_hours=28)
+        t_change = find_next_index_change(cur_jd, _ti, cur_tithi, step_hours=1.0, max_hours=28)
+        candidates = [c for c in [n_change, t_change] if c is not None and c < next_rise_jd]
+        if not candidates:
+            break
+        chg_jd   = min(candidates)
+        after_jd = chg_jd + EPSILON
+        new_naks  = _ni(after_jd)
+        new_tithi = _ti(after_jd)
+        chg_time  = jd_to_local_datetime(chg_jd, tz_name).strftime("%H:%M")
+        if new_naks != cur_naks:
+            transitions.append({"type": "nakshatra", "from_te": NAKSHATRA_TE[cur_naks],
+                                 "to_te": NAKSHATRA_TE[new_naks], "time": chg_time})
+        if new_tithi != cur_tithi:
+            transitions.append({"type": "tithi", "from_te": TITHI_TE[cur_tithi],
+                                 "to_te": TITHI_TE[new_tithi], "time": chg_time})
+        cur_naks  = new_naks
+        cur_tithi = new_tithi
+        cur_jd    = chg_jd + EPSILON
+
+    # Determine nakshatra/tithi/lagna at the requested time (or sunrise)
+    if check_hour >= 0:
+        check_jd = midnight_jd + check_hour / 24.0 + check_minute / (24.0 * 60)
+        naks_idx      = _ni(check_jd)
+        tithi_idx     = _ti(check_jd)
+        lagna_idx     = compute_lagna(check_jd, lat, lon)
+        day_rashi_idx = int(moon_longitude(check_jd) / 30) % 12
+        is_night      = check_jd > set_jd
+    else:
+        check_jd      = rise_jd
+        naks_idx      = naks_idx_rise
+        tithi_idx     = tithi_idx_rise
+        lagna_idx     = lagna_idx_rise
+        is_night      = False
+
+    # Choghadiya at the checked time
+    cho_slots = compute_choghadiya_slots(rise_jd, set_jd, next_rise_jd, sun_idx)
+    choghadiya_rank_at_time = -1
+    choghadiya_te_at_time   = ""
+    for slot in cho_slots:
+        if slot["from_jd"] <= check_jd < slot["to_jd"]:
+            choghadiya_rank_at_time = slot["quality_rank"]
+            choghadiya_te_at_time   = slot["quality_te"]
+            break
+
+    vara_bad = sun_idx in _BAD_VAARAS.get(ceremony_type, set())
+
+    overall_good = is_auspicious(
+        naks_idx, tithi_idx, sun_idx, lagna_idx,
+        birth_charts, ceremony_type,
+        masam_name=masam_name, is_adhika_masam=is_adhika,
+        day_rashi_idx=day_rashi_idx,
+        is_uttarayanam=is_uttarayanam,
+        is_night=is_night,
+        choghadiya_rank=choghadiya_rank_at_time,
+    )
+
+    # Find all good windows (day + night, full Vedic day) — computed early so
+    # vara_shanti_required can be used in factor messages below
+    all_windows = _find_good_windows(
+        rise_jd, set_jd, lat, lon, tz_name,
+        ceremony_type, birth_charts, masam_name, is_adhika,
+        sun_idx, lagna_idx_rise,
+        is_uttarayanam=is_uttarayanam,
+        next_rise_jd=next_rise_jd,
+    )
+
+    # Split into day windows (before sunset) and night windows (after sunset)
+    def _is_after_sunset(from_str: str) -> bool:
+        fh, fm = map(int, from_str.split(":"))
+        sh, sm = map(int, dt_set.strftime("%H:%M").split(":"))
+        from_mins = fh * 60 + fm
+        set_m2    = sh * 60 + sm
+        if from_mins < 6 * 60:          # early morning (00-06h) is post-midnight night
+            return True
+        return from_mins >= set_m2
+
+    good_windows       = [w for w in all_windows if not _is_after_sunset(w["from"])]
+    night_good_windows = [w for w in all_windows if     _is_after_sunset(w["from"])]
+
+    # vara_shanti_required: True if vara is bad but mitigated on this Vedic day
+    # via night Amrita Choghadiya (at least one night window with vara_shanti=True)
+    vara_shanti_required = vara_bad and any(w.get("vara_shanti") for w in all_windows)
+
+    cer_te        = _CEREMONY_TE.get(ceremony_type, ceremony_type)
     good_factors: list[str] = []
     bad_factors:  list[str] = []
 
-    # 0. Ayanam check (only for Uttarayanam-only ceremonies)
+    # 0. Ayanam
     if ceremony_type in ("upanayanam",):
         ayanam_name = pan["ayanam"]["te"]
         if is_uttarayanam:
@@ -516,12 +673,17 @@ def check_muhurta_day(
 
     # 2. Vaara Shuddhi
     vaara_te = pan["vaaram"]["te"]
-    if sun_idx in _BAD_VAARAS.get(ceremony_type, set()):
-        bad_factors.append(f"వారం: {vaara_te} — {cer_te}కు నిషిద్ధ వారం (సూర్య/మంగళ/శని దోషం)")
+    if vara_bad:
+        if vara_shanti_required:
+            bad_factors.append(
+                f"వారం: {vaara_te} — రాత్రి అమృత చోఘడియాలో శాంతి పూజతో నివర్తించవచ్చు ⚠"
+            )
+        else:
+            bad_factors.append(f"వారం: {vaara_te} — {cer_te}కు నిషిద్ధ వారం (సూర్య/మంగళ/శని దోషం)")
     else:
         good_factors.append(f"వారం: {vaara_te} — {cer_te}కు అనుకూల వారం ✓")
 
-    # 2c. Anandadi Yoga (only for Prayanam)
+    # 2c. Anandadi Yoga (Prayanam only)
     if ceremony_type == "prayanam":
         anandadi_name, anandadi_tier = get_anandadi_yoga(naks_idx, sun_idx)
         yoga_te = _ANANDADI_YOGA_TE.get(anandadi_name, anandadi_name)
@@ -532,7 +694,7 @@ def check_muhurta_day(
         else:
             good_factors.append(f"ఆనందాది యోగం: {yoga_te} — శుభ యోగం ✓")
 
-    # 2d. Amritadi Yoga (only for Prayanam)
+    # 2d. Amritadi Yoga (Prayanam only)
     if ceremony_type == "prayanam":
         am_en, am_te, am_tier = get_amritadi_yoga(naks_idx, sun_idx)
         if am_tier == "avoid":
@@ -540,26 +702,25 @@ def check_muhurta_day(
         else:
             good_factors.append(f"అమృతాది యోగం: {am_te} — శుభ యోగం ✓")
 
-    # 3. Nakshatra
+    # 3. Nakshatra — evaluated at requested time
     if ceremony_type == "prayanam":
-        # For Prayanam, Amritadi table (VTP) is primary; shloka nakshatra list is secondary.
         if naks_idx in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
-            good_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — శ్లోకంలో శుభ నక్షత్రం ✓")
+            good_factors.append(f"నక్షత్రం: {NAKSHATRA_TE[naks_idx]} — శ్లోకంలో శుభ నక్షత్రం ✓")
         else:
-            good_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — అమృతాది యోగం శుభంగా ఉన్నందున శ్లోక నక్షత్రం ద్వితీయం")
+            good_factors.append(f"నక్షత్రం: {NAKSHATRA_TE[naks_idx]} — అమృతాది యోగం శుభంగా ఉన్నందున శ్లోక నక్షత్రం ద్వితీయం")
     else:
         if naks_idx in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
-            good_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు శుభమైన నక్షత్రం ✓")
+            good_factors.append(f"నక్షత్రం: {NAKSHATRA_TE[naks_idx]} — {cer_te}కు శుభమైన నక్షత్రం ✓")
         else:
-            bad_factors.append(f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు")
+            bad_factors.append(f"నక్షత్రం: {NAKSHATRA_TE[naks_idx]} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు")
 
-    # 4. Tithi
+    # 4. Tithi — evaluated at requested time
     if tithi_idx in _BAD_TITHIS.get(ceremony_type, set()):
-        bad_factors.append(f"తిథి: {pan['tithi']['te']} — నివారించాల్సిన తిథి (రిక్త/దోష తిథి)")
+        bad_factors.append(f"తిథి: {TITHI_TE[tithi_idx]} — నివారించాల్సిన తిథి (రిక్త/దోష తిథి)")
     else:
-        good_factors.append(f"తిథి: {pan['tithi']['te']} — శుభ తిథి ✓")
+        good_factors.append(f"తిథి: {TITHI_TE[tithi_idx]} — శుభ తిథి ✓")
 
-    # 5. Tara Balam per person
+    # 5. Tara Balam
     for i, chart in enumerate(birth_charts):
         name = chart.get("name") or f"వ్యక్తి {i + 1}"
         if _tara_ok(chart["janma_nakshatra_idx"], naks_idx):
@@ -570,7 +731,7 @@ def check_muhurta_day(
                 f"వ్యతిరేక తార (1, 3, 5 లేదా 7వ తార)"
             )
 
-    # 6. Rashi Shuddhi (only ceremonies with restrictions)
+    # 6. Rashi Shuddhi
     if day_rashi_idx >= 0 and _RASHI_SHUDDHI_FORBIDDEN.get(ceremony_type):
         for i, chart in enumerate(birth_charts):
             name = chart.get("name") or f"వ్యక్తి {i + 1}"
@@ -584,32 +745,20 @@ def check_muhurta_day(
                         f"{name}: రాశి శుద్ధి అననుకూలం — చంద్రుడు {pos}వ స్థానంలో ఉన్నాడు"
                     )
 
-    # 7. Panchaka Dosha — warning only; major samskaras proceed with Panchaka Shanti
+    # 7. Panchaka Dosha
     if _panchaka_ok(naks_idx, sun_idx, tithi_idx, lagna_idx):
         good_factors.append("పంచక దోషం లేదు ✓")
     else:
         good_factors.append("పంచక దోషం ఉంది — పంచక శాంతి చేయించుకోవాలి ⚠")
 
-    overall_good = is_auspicious(
-        naks_idx, tithi_idx, sun_idx, lagna_idx,
-        birth_charts, ceremony_type,
-        masam_name=masam_name, is_adhika_masam=is_adhika,
-        day_rashi_idx=day_rashi_idx,
-        is_uttarayanam=is_uttarayanam,
-    )
-
-    good_windows = _find_good_windows(
-        rise_jd, set_jd, lat, lon, tz_name,
-        ceremony_type, birth_charts, masam_name, is_adhika,
-        sun_idx, lagna_idx,
-        is_uttarayanam=is_uttarayanam,
-    )
-
     if not overall_good and good_windows:
         windows_str = ", ".join(f"{w['from']}–{w['to']}" for w in good_windows)
         good_factors.append(f"పగటిపూట శుభ ముహూర్త సమయాలు: {windows_str} ✓")
+    if night_good_windows:
+        nw_str = ", ".join(f"{w['from']}–{w['to']}" for w in night_good_windows)
+        good_factors.append(f"రాత్రి శుభ ముహూర్త సమయాలు: {nw_str} ✓")
 
-    # ── Time analysis ────────────────────────────────────────────────────────────
+    # Time analysis
     def _in_window(w: dict, mins: float) -> bool:
         if not w:
             return False
@@ -622,22 +771,16 @@ def check_muhurta_day(
 
     if check_hour >= 0:
         check_mins = check_hour * 60 + check_minute
-        time_bad = False
+        time_bad   = False
 
         if _in_window(kalams["rahu_kalam"], check_mins):
-            time_issues.append(
-                f"రాహు కాలం ({kalams['rahu_kalam']['start']}–{kalams['rahu_kalam']['end']})లో ఉంది"
-            )
+            time_issues.append(f"రాహు కాలం ({kalams['rahu_kalam']['start']}–{kalams['rahu_kalam']['end']})లో ఉంది")
             time_bad = True
         if _in_window(kalams["yamaganda"], check_mins):
-            time_issues.append(
-                f"యమగండ కాలం ({kalams['yamaganda']['start']}–{kalams['yamaganda']['end']})లో ఉంది"
-            )
+            time_issues.append(f"యమగండ కాలం ({kalams['yamaganda']['start']}–{kalams['yamaganda']['end']})లో ఉంది")
             time_bad = True
         if _in_window(kalams["gulika_kalam"], check_mins):
-            time_issues.append(
-                f"గులిక కాలం ({kalams['gulika_kalam']['start']}–{kalams['gulika_kalam']['end']})లో ఉంది"
-            )
+            time_issues.append(f"గులిక కాలం ({kalams['gulika_kalam']['start']}–{kalams['gulika_kalam']['end']})లో ఉంది")
             time_bad = True
         for v in ([pan.get("varjyam")] if isinstance(pan.get("varjyam"), dict) else (pan.get("varjyam") or [])):
             if _in_window(v, check_mins):
@@ -648,57 +791,67 @@ def check_muhurta_day(
                 time_issues.append(f"దుర్ముహూర్తం ({d['start']}–{d['end']})లో ఉంది")
                 time_bad = True
 
-        # Check if the requested time falls within any good muhurta window
         def _in_good_window(mins: float) -> bool:
-            if not good_windows:
-                # No windows found: use overall_good (good all day if True)
+            all_w = good_windows + night_good_windows
+            if not all_w:
                 return overall_good
-            for w in good_windows:
-                sh, sm = map(int, w["from"].split(":"))
+            for w in all_w:
+                wh, wm = map(int, w["from"].split(":"))
                 eh, em = map(int, w["to"].split(":"))
-                if (sh * 60 + sm) <= mins <= (eh * 60 + em):
+                wstart = wh * 60 + wm
+                wend   = eh * 60 + em
+                if wend < wstart:
+                    wend += 24 * 60
+                check_m = mins if mins >= wstart else mins + 24 * 60
+                if wstart <= check_m <= wend:
                     return True
             return False
 
         in_good = _in_good_window(check_mins)
-
         if time_bad:
             time_verdict = "bad"
         elif in_good:
             time_verdict = "good"
         else:
-            time_verdict = "outside"   # not in kalam but not in a good muhurta window either
+            time_verdict = "outside"
 
     # Overall verdict
-    day_has_good_window = overall_good or bool(good_windows)
+    day_has_good = overall_good or bool(good_windows) or bool(night_good_windows)
 
-    if day_has_good_window and time_verdict in (None, "good"):
+    if day_has_good and time_verdict in (None, "good"):
         verdict = "good"
-    elif day_has_good_window and time_verdict in ("bad", "outside"):
+    elif day_has_good and time_verdict in ("bad", "outside"):
         verdict = "mixed"
     else:
         verdict = "bad"
 
     return {
-        "verdict":          verdict,
-        "overall_day_good": overall_good or bool(good_windows),
-        "time_verdict":     time_verdict,
-        "date_te":          f"{day} {_MONTH_TE[month - 1]} {year}",
-        "vaaram_te":        pan["vaaram"]["te"],
-        "tithi_te":         pan["tithi"]["te"],
-        "nakshatra_te":     pan["nakshatra"]["te"],
-        "yoga_te":          pan["yoga"]["te"],
-        "masam_te":         pan["masam"]["te"],
-        "sudhi_name_te":    _SUDHI_NAME_TE.get(ceremony_type, ""),
-        "sunrise":          dt_rise.strftime("%H:%M"),
-        "sunset":           dt_set.strftime("%H:%M"),
-        "good_factors":     good_factors,
-        "bad_factors":      bad_factors,
-        "time_issues":      time_issues,
-        "rahu_kalam":       kalams["rahu_kalam"],
-        "yamaganda":        kalams["yamaganda"],
-        "gulika_kalam":     kalams["gulika_kalam"],
-        "dur_muhurtam":     pan["dur_muhurtam"],
-        "varjyam":          pan["varjyam"],
-        "good_windows":     good_windows,
+        "verdict":                verdict,
+        "overall_day_good":       day_has_good,
+        "time_verdict":           time_verdict,
+        "vara_shanti_required":   vara_shanti_required,
+        "date_te":                f"{day} {_MONTH_TE[month - 1]} {year}",
+        "vaaram_te":              pan["vaaram"]["te"],
+        # nakshatra/tithi at the requested time (or sunrise if no time given)
+        "nakshatra_te":           NAKSHATRA_TE[naks_idx],
+        "tithi_te":               TITHI_TE[tithi_idx],
+        # sunrise reference values
+        "nakshatra_at_sunrise_te": NAKSHATRA_TE[naks_idx_rise],
+        "tithi_at_sunrise_te":     TITHI_TE[tithi_idx_rise],
+        "yoga_te":                pan["yoga"]["te"],
+        "masam_te":               pan["masam"]["te"],
+        "sudhi_name_te":          _SUDHI_NAME_TE.get(ceremony_type, ""),
+        "sunrise":                dt_rise.strftime("%H:%M"),
+        "sunset":                 dt_set.strftime("%H:%M"),
+        "good_factors":           good_factors,
+        "bad_factors":            bad_factors,
+        "time_issues":            time_issues,
+        "transitions":            transitions,
+        "rahu_kalam":             kalams["rahu_kalam"],
+        "yamaganda":              kalams["yamaganda"],
+        "gulika_kalam":           kalams["gulika_kalam"],
+        "dur_muhurtam":           pan["dur_muhurtam"],
+        "varjyam":                pan["varjyam"],
+        "good_windows":           good_windows,
+        "night_good_windows":     night_good_windows,
     }

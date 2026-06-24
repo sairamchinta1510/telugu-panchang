@@ -454,6 +454,8 @@ def is_auspicious(
     is_adhika_masam: bool = False,
     day_rashi_idx: int = -1,
     is_uttarayanam: bool | None = None,
+    is_night: bool = False,
+    choghadiya_rank: int = -1,
 ) -> bool:
     """Return True if the given panchang state is auspicious for the ceremony.
 
@@ -472,7 +474,11 @@ def is_auspicious(
         if not is_uttarayanam:
             return False
     if sun_idx in _BAD_VAARAS.get(ceremony_type, set()):
-        return False
+        # Telugu Sampradaya: Amrita Choghadiya at night mitigates vara dosha
+        if is_night and choghadiya_rank == 6:
+            pass  # soft warning — handled by caller
+        else:
+            return False
     if ceremony_type == CEREMONY_PRAYANAM:
         _, anandadi_tier = get_anandadi_yoga(naks_idx, sun_idx)
         if anandadi_tier == "avoid":
