@@ -46,6 +46,7 @@ from .muhurta_rules import (
     get_anandadi_yoga, _ANANDADI_YOGA_TE,
     get_amritadi_yoga,
     check_lagna_graha_quality,
+    _guru_aspects_lagna,
 )
 
 _MONTH_TE = [
@@ -153,6 +154,7 @@ def _find_good_windows_from_cache(
             is_uttarayanam=is_uttarayanam,
             is_night=is_night_seg,
             choghadiya_rank=best_cho_rank_seg,
+            planet_rashis=planet_rashis_day,
         )
 
         if not good:
@@ -190,10 +192,16 @@ def _find_good_windows_from_cache(
                     max(slot["from_jd"], seg_start), tz_name
                 ).strftime("%H:%M")
 
+        _vara_bad_seg = sun_idx in _BAD_VAARAS.get(ceremony_type, set())
+        _guru_rashi_seg = planet_rashis_day.get("guru", -1)
         vara_shanti = (
-            sun_idx in _BAD_VAARAS.get(ceremony_type, set())
-            and is_night_seg
-            and best_cho_rank == 6
+            _vara_bad_seg and is_night_seg and (
+                best_cho_rank == 6
+                or (
+                    _guru_rashi_seg >= 0
+                    and _guru_aspects_lagna(_guru_rashi_seg, win_lagna_idx)
+                )
+            )
         )
 
         entry = {
@@ -320,6 +328,7 @@ def _find_good_windows(
             is_uttarayanam=is_uttarayanam,
             is_night=is_night_seg,
             choghadiya_rank=best_cho_rank_seg,
+            planet_rashis=_planet_rashis_day,
         )
 
         if not good:
@@ -364,6 +373,8 @@ def _find_good_windows(
                     max(slot["from_jd"], jd), tz_name
                 ).strftime("%H:%M")
 
+        _vara_bad_win = sun_idx in _BAD_VAARAS.get(ceremony_type, set())
+        _guru_rashi_win = _planet_rashis_day.get("guru", -1)
         entry = {
             "from":            from_str,
             "to":              to_str,
@@ -379,9 +390,13 @@ def _find_good_windows(
             "choghadiya_te":   best_cho_te,
             "choghadiya_rank": best_cho_rank,
             "vara_shanti":     (
-                sun_idx in _BAD_VAARAS.get(ceremony_type, set())
-                and is_night_seg
-                and best_cho_rank == 6
+                _vara_bad_win and is_night_seg and (
+                    best_cho_rank == 6
+                    or (
+                        _guru_rashi_win >= 0
+                        and _guru_aspects_lagna(_guru_rashi_win, win_lagna_idx)
+                    )
+                )
             ),
             "lagna_quality":   lq,
         }
@@ -672,6 +687,12 @@ def check_muhurta_day(
             choghadiya_te_at_time   = slot["quality_te"]
             break
 
+    # Planet positions for the day — used for vara mitigation (Guru aspect) and lagna quality
+    try:
+        _planet_rashis_day = compute_planet_rashis(check_jd)
+    except Exception:
+        _planet_rashis_day = {}
+
     vara_bad = sun_idx in _BAD_VAARAS.get(ceremony_type, set())
 
     overall_good = is_auspicious(
@@ -682,6 +703,7 @@ def check_muhurta_day(
         is_uttarayanam=is_uttarayanam,
         is_night=is_night,
         choghadiya_rank=choghadiya_rank_at_time,
+        planet_rashis=_planet_rashis_day,
     )
 
     # Find all good windows (day + night, full Vedic day) — computed early so
@@ -708,7 +730,7 @@ def check_muhurta_day(
     night_good_windows = [w for w in all_windows if     _is_after_sunset(w["from"])]
 
     # vara_shanti_required: True if vara is bad but mitigated on this Vedic day
-    # via night Amrita Choghadiya (at least one night window with vara_shanti=True)
+    # via Amrita Choghadiya or Guru aspect on lagna
     vara_shanti_required = vara_bad and any(w.get("vara_shanti") for w in all_windows)
 
     # When no specific time was requested, re-anchor evaluation context to the
@@ -734,6 +756,7 @@ def check_muhurta_day(
             is_uttarayanam=is_uttarayanam,
             is_night=is_night,
             choghadiya_rank=choghadiya_rank_at_time,
+            planet_rashis=_planet_rashis_day,
         )
 
     cer_te        = _CEREMONY_TE.get(ceremony_type, ceremony_type)
@@ -837,15 +860,13 @@ def check_muhurta_day(
     else:
         _gf("పంచక దోషం ఉంది — పంచక శాంతి చేయించుకోవాలి ⚠")
 
-    # 8. Lagna Graha Quality — compute at check time (or best window lagna)
+    # 8. Lagna Graha Quality — use already-computed planet positions
     try:
-        _lq_rashis = compute_planet_rashis(check_jd)
         _lq_lons: "dict[str, float] | None" = compute_planet_longitudes(check_jd)
     except Exception:
-        _lq_rashis = {}
         _lq_lons = None
     lagna_quality = check_lagna_graha_quality(
-        lagna_idx, _lq_rashis, ceremony_type, planet_longitudes=_lq_lons
+        lagna_idx, _planet_rashis_day, ceremony_type, planet_longitudes=_lq_lons
     )
     for msg in lagna_quality["hard_blocks_te"]:
         _bf(msg)

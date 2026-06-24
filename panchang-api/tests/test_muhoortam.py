@@ -82,7 +82,7 @@ for mod in list(sys.modules):
     if "muhurta_rules" in mod:
         del sys.modules[mod]
 
-from compute.muhurta_rules import is_auspicious, _tara_ok, _panchaka_ok, _rashi_shuddhi_ok
+from compute.muhurta_rules import is_auspicious, _tara_ok, _panchaka_ok, _rashi_shuddhi_ok, _guru_aspects_lagna
 
 
 def test_tara_ok_good():
@@ -231,6 +231,45 @@ def test_is_auspicious_rashi_check_skipped_when_no_rashi_in_chart():
     # Chart has no janma_rashi_idx → rashi shuddhi check is skipped for that person
     birth_charts = [{"janma_nakshatra_idx": 0}]
     assert is_auspicious(3, 0, 4, 3, birth_charts, "vivaha", day_rashi_idx=6) is True
+
+
+def test_vara_dosha_rejected_without_mitigation():
+    """Saturday vivaha at night without Amrita Choghadiya or Guru aspect is rejected."""
+    birth_charts = [{"janma_nakshatra_idx": 0}]
+    # sun_idx=6 (Saturday), vivaha, night, Char choghadiya (rank=3), no planet_rashis
+    assert is_auspicious(3, 0, 6, 7, birth_charts, "vivaha",
+                         is_night=True, choghadiya_rank=3) is False
+
+
+def test_vara_dosha_mitigated_by_amrita_choghadiya():
+    """Saturday vivaha at night with Amrita Choghadiya (rank=6) is allowed."""
+    birth_charts = [{"janma_nakshatra_idx": 0}]
+    assert is_auspicious(3, 0, 6, 7, birth_charts, "vivaha",
+                         is_night=True, choghadiya_rank=6) is True
+
+
+def test_vara_dosha_mitigated_by_guru_aspect_on_lagna():
+    """Saturday vivaha at night with Guru aspecting lagna is allowed (Char Choghadiya)."""
+    birth_charts = [{"janma_nakshatra_idx": 0}]
+    # Guru in Meena (11): 5th=3(Karka), 7th=5(Kanya), 9th=7(Vrischika)
+    # Vrischika lagna (idx=7) → Guru's 9th aspect → mitigated
+    planet_rashis = {"guru": 11, "chandra": 2, "kuja": 6, "shani": 0,
+                     "rahu": 3, "ketu": 9, "shukra": 2}
+    assert is_auspicious(14, 4, 6, 7, birth_charts, "vivaha",
+                         is_night=True, choghadiya_rank=3,
+                         planet_rashis=planet_rashis) is True
+
+
+def test_vara_dosha_not_mitigated_when_guru_not_aspecting():
+    """Saturday night but Guru does NOT aspect this lagna → still rejected."""
+    birth_charts = [{"janma_nakshatra_idx": 0}]
+    # Guru in Meena (11): aspects Karka(3), Kanya(5), Vrischika(7)
+    # Tula lagna (idx=6) → NOT aspected by Guru in Meena
+    planet_rashis = {"guru": 11, "chandra": 2, "kuja": 6, "shani": 0,
+                     "rahu": 3, "ketu": 9, "shukra": 2}
+    assert is_auspicious(14, 4, 6, 6, birth_charts, "vivaha",
+                         is_night=True, choghadiya_rank=3,
+                         planet_rashis=planet_rashis) is False
 
 
 # ── Muhurta finder tests ──────────────────────────────────────────────────────

@@ -456,6 +456,7 @@ def is_auspicious(
     is_uttarayanam: bool | None = None,
     is_night: bool = False,
     choghadiya_rank: int = -1,
+    planet_rashis: "dict | None" = None,
 ) -> bool:
     """Return True if the given panchang state is auspicious for the ceremony.
 
@@ -474,9 +475,17 @@ def is_auspicious(
         if not is_uttarayanam:
             return False
     if sun_idx in _BAD_VAARAS.get(ceremony_type, set()):
-        # Telugu Sampradaya: Amrita Choghadiya at night mitigates vara dosha
+        # Telugu Sampradaya: vara dosha is mitigated at night by either
+        #   (a) Amrita Choghadiya — per Muhurta Chintamani, or
+        #   (b) Guru (Jupiter) aspecting the lagna — per Jyotish Shastra
         if is_night and choghadiya_rank == 6:
-            pass  # soft warning — handled by caller
+            pass  # Amrita Choghadiya mitigation
+        elif is_night and planet_rashis is not None and lagna_idx >= 0:
+            guru_rashi = planet_rashis.get("guru", -1)
+            if guru_rashi >= 0 and _guru_aspects_lagna(guru_rashi, lagna_idx):
+                pass  # Guru-aspect mitigation
+            else:
+                return False
         else:
             return False
     if ceremony_type == CEREMONY_PRAYANAM:
