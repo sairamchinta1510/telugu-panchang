@@ -4,6 +4,7 @@ import calendar
 from typing import Callable
 
 from .astro import (
+    compute_planet_longitudes,
     compute_planet_rashis,
     find_next_index_change,
     get_sunrise_sunset,
@@ -135,6 +136,7 @@ def compute_day_cache_data(
         "nak_transitions": nak_transitions,
         "tithi_transitions": tithi_transitions,
         "planet_rashis": compute_planet_rashis(rise_jd),
+        "planet_longitudes": compute_planet_longitudes(rise_jd),
         "dur_muhurtam": pan["dur_muhurtam"],
         "varjyam": pan["varjyam"],
         "rahu_kalam": kalams["rahu_kalam"],

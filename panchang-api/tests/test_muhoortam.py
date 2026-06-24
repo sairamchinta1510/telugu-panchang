@@ -300,6 +300,10 @@ def _load_finder(days_auspicious: set):
         "ravi": 0, "chandra": 1, "kuja": 2, "budha": 3,
         "guru": 4, "shukra": 5, "shani": 6, "rahu": 7, "ketu": 1
     }
+    fake_astro.compute_planet_longitudes  = lambda jd: {
+        "ravi": 0.0, "chandra": 30.0, "kuja": 60.0, "budha": 90.0,
+        "guru": 120.0, "shukra": 150.0, "shani": 180.0, "rahu": 210.0, "ketu": 30.0
+    }
     sys.modules["compute.astro"] = fake_astro
 
     fake_pan_mod = types.ModuleType("compute.panchang")
@@ -760,8 +764,8 @@ def test_check_muhurta_day_bad_day_has_good_windows():
 
 
 def test_find_good_windows_skip_planet_rashis_omits_key():
-    """_find_good_windows(skip_planet_rashis=True) must not call compute_planet_rashis
-    and must not include planet_rashis key in returned window dicts."""
+    """_find_good_windows(skip_planet_rashis=True) must not include planet_rashis
+    key in returned window dicts (planet_rashis may still be fetched for lagna quality)."""
     mf = _load_finder({1})  # day 1 = Rohini nakshatra = vivaha-good
     import compute.muhurta_finder as _mf
     from unittest.mock import MagicMock
@@ -776,7 +780,7 @@ def test_find_good_windows_skip_planet_rashis_omits_key():
         "vivaha", birth_charts, "Jyeshtha", False, 4, 3,
         skip_planet_rashis=True,
     )
-    mock_pr.assert_not_called()
+    # planet_rashis key must be absent from window output regardless
     for w in windows:
         assert "planet_rashis" not in w, "planet_rashis must be absent when skip_planet_rashis=True"
 
@@ -816,3 +820,151 @@ def test_find_muhurtas_result_has_date_raw():
         assert 1 <= day_n <= 31
         assert 1 <= month_n <= 12
         assert year_n >= 2000
+
+
+# ── Lagna Graha Quality tests ─────────────────────────────────────────────────
+
+from compute.muhurta_rules import (
+    check_lagna_graha_quality, _guru_aspects_lagna, _is_combust,
+)
+
+
+def test_guru_aspects_lagna_5th():
+    # Guru in Mesha (0), 5th from it = Simha (4) → aspects Simha lagna
+    assert _guru_aspects_lagna(0, 4) is True
+
+
+def test_guru_aspects_lagna_7th():
+    # Guru in Mesha (0), 7th from it = Tula (6) → aspects Tula lagna
+    assert _guru_aspects_lagna(0, 6) is True
+
+
+def test_guru_aspects_lagna_9th():
+    # Guru in Mesha (0), 9th from it = Dhanus (8) → aspects Dhanus lagna
+    assert _guru_aspects_lagna(0, 8) is True
+
+
+def test_guru_does_not_aspect_other_houses():
+    # Guru in Mesha (0), 3rd from it = Mithuna (2) → no aspect
+    assert _guru_aspects_lagna(0, 2) is False
+    # 2nd = Vrishabha (1) → no aspect
+    assert _guru_aspects_lagna(0, 1) is False
+
+
+def test_is_combust_venus_within_orb():
+    # Sun at 0°, Venus at 8° → within 10° orb → combust
+    assert _is_combust("shukra", 8.0, 0.0) is True
+
+
+def test_is_combust_venus_outside_orb():
+    # Sun at 0°, Venus at 15° → outside 10° orb → not combust
+    assert _is_combust("shukra", 15.0, 0.0) is False
+
+
+def test_is_combust_handles_wrap():
+    # Sun at 355°, Venus at 3° → diff = 8° → combust
+    assert _is_combust("shukra", 3.0, 355.0) is True
+
+
+def test_lagna_quality_neutral_no_data():
+    """Empty planet_rashis returns neutral score, not blocked."""
+    result = check_lagna_graha_quality(0, {}, "vivaha")
+    assert result["score"] == 50
+    assert result["blocked"] is False
+
+
+def test_lagna_quality_guru_aspect_adds_score():
+    """Guru aspecting lagna raises score above baseline."""
+    # Guru in Mesha (0), lagna = Simha (4) — 5th aspect
+    rashis = {"guru": 0, "chandra": 2, "kuja": 9, "shani": 9, "rahu": 9, "ketu": 3, "shukra": 2}
+    result = check_lagna_graha_quality(4, rashis, "vivaha")
+    assert result["blocked"] is False
+    assert result["score"] > 50
+    assert any("గురువు" in b and "వీక్షిస్తున్నాడు" in b for b in result["benefits_te"])
+
+
+def test_lagna_quality_malefic_in_lagna_blocks_vivaha():
+    """Mars in lagna triggers hard block for Vivaha."""
+    # lagna = Mesha (0), kuja (Mars) also in Mesha (0)
+    rashis = {"guru": 5, "chandra": 2, "kuja": 0, "shani": 9, "rahu": 3, "ketu": 9, "shukra": 2}
+    result = check_lagna_graha_quality(0, rashis, "vivaha")
+    assert result["blocked"] is True
+    assert any("కుజుడు" in msg or "లగ్నంలో" in msg for msg in result["hard_blocks_te"])
+
+
+def test_lagna_quality_malefic_in_7th_blocks_vivaha():
+    """Saturn in 7th from lagna triggers hard block for Vivaha."""
+    # lagna = Mesha (0), 7th = Tula (6), shani in Tula (6)
+    rashis = {"guru": 5, "chandra": 2, "kuja": 9, "shani": 6, "rahu": 3, "ketu": 9, "shukra": 2}
+    result = check_lagna_graha_quality(0, rashis, "vivaha")
+    assert result["blocked"] is True
+    assert any("సప్తమ" in msg for msg in result["hard_blocks_te"])
+
+
+def test_lagna_quality_malefic_in_lagna_only_warns_for_anna_prasana():
+    """Mars in lagna is only a warning (not hard block) for Anna Prasana."""
+    rashis = {"guru": 5, "chandra": 2, "kuja": 0, "shani": 9, "rahu": 3, "ketu": 9, "shukra": 2}
+    result = check_lagna_graha_quality(0, rashis, "anna_prasana")
+    assert result["blocked"] is False
+    assert any("లగ్నంలో" in msg for msg in result["warnings_te"])
+
+
+def test_lagna_quality_shukra_combust_blocks_vivaha():
+    """Venus combust (within 10° of Sun) blocks Vivaha."""
+    rashis = {"guru": 5, "chandra": 2, "kuja": 9, "shani": 9, "rahu": 3, "ketu": 9, "shukra": 2}
+    lons = {"ravi": 60.0, "shukra": 65.0}  # 5° apart → combust
+    result = check_lagna_graha_quality(4, rashis, "vivaha", planet_longitudes=lons)
+    assert result["blocked"] is True
+    assert any("అస్తంగతం" in msg for msg in result["hard_blocks_te"])
+
+
+def test_lagna_quality_moon_in_8th_warns():
+    """Moon in 8th from lagna produces a warning but not a hard block."""
+    # lagna = Mesha (0), 8th = Vrischika (7), Moon in Vrischika
+    rashis = {"guru": 5, "chandra": 7, "kuja": 9, "shani": 9, "rahu": 3, "ketu": 9, "shukra": 2}
+    result = check_lagna_graha_quality(0, rashis, "vivaha")
+    assert result["blocked"] is False
+    assert any("8వ స్థానంలో" in msg or "అష్టమ" in msg or "8వ" in msg
+               for msg in result["warnings_te"])
+
+
+def test_lagna_quality_clean_lagna_7th_raises_score():
+    """No malefics in lagna or 7th should push score well above baseline."""
+    # No malefics near lagna (2) or 7th (8)
+    rashis = {"guru": 10, "chandra": 4, "kuja": 5, "shani": 0, "rahu": 1, "ketu": 7, "shukra": 3}
+    result = check_lagna_graha_quality(2, rashis, "vivaha")
+    assert result["blocked"] is False
+    # Clean lagna + clean 7th → score should exceed baseline
+    assert result["score"] >= 65
+
+
+def test_good_windows_include_lagna_quality():
+    """Windows from _find_good_windows should include a lagna_quality dict."""
+    mf = _load_finder({1})
+    import compute.muhurta_finder as _mf
+    birth_charts = [{"janma_nakshatra_idx": 0}]
+    windows = _mf._find_good_windows(
+        1.0, 1.5, 17.38, 78.49, "Asia/Kolkata",
+        "vivaha", birth_charts, "Jyeshtha", False, 4, 3,
+    )
+    for w in windows:
+        assert "lagna_quality" in w
+        lq = w["lagna_quality"]
+        assert "score" in lq
+        assert "blocked" in lq
+        assert "hard_blocks_te" in lq
+        assert "warnings_te" in lq
+        assert "benefits_te" in lq
+
+
+def test_check_muhurta_day_factors_are_dicts():
+    """good_factors and bad_factors must be lists of dicts with 'te' key."""
+    mf = _load_finder({15})
+    result = mf.check_muhurta_day(2026, 7, 15, 17.38, 78.49, "Asia/Kolkata", "vivaha",
+                                   [{"janma_nakshatra_idx": 0}])
+    for f in result["good_factors"]:
+        assert isinstance(f, dict), f"Expected dict, got {type(f)}: {f!r}"
+        assert "te" in f, f"Factor missing 'te' key: {f!r}"
+    for f in result["bad_factors"]:
+        assert isinstance(f, dict), f"Expected dict, got {type(f)}: {f!r}"
+        assert "te" in f, f"Factor missing 'te' key: {f!r}"

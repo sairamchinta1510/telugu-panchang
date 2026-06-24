@@ -121,6 +121,33 @@ def find_next_index_change(jd_start: float, index_fn, current_idx: int,
     return None
 
 
+def compute_planet_longitudes(jd: float) -> dict[str, float]:
+    """Return exact sidereal longitude in degrees [0, 360) for all 9 Jyotish grahas.
+
+    Use this when exact degrees are needed (e.g. Venus combustion check).
+    For rashi-level checks use compute_planet_rashis() which is faster.
+    """
+    _init_swe()
+    flags = swe.FLG_SWIEPH | swe.FLG_SIDEREAL
+    bodies = {
+        "ravi":    swe.SUN,
+        "chandra": swe.MOON,
+        "kuja":    swe.MARS,
+        "budha":   swe.MERCURY,
+        "guru":    swe.JUPITER,
+        "shukra":  swe.VENUS,
+        "shani":   swe.SATURN,
+    }
+    lons: dict[str, float] = {}
+    for name, pid in bodies.items():
+        xx, _ = swe.calc_ut(jd, pid, flags)
+        lons[name] = xx[0] % 360
+    xx, _ = swe.calc_ut(jd, swe.TRUE_NODE, flags)
+    lons["rahu"] = xx[0] % 360
+    lons["ketu"] = (lons["rahu"] + 180) % 360
+    return lons
+
+
 def compute_planet_rashis(jd: float) -> dict[str, int]:
     """Compute sidereal rashi index (0=Mesha … 11=Meena) for all 9 Jyotish grahas at jd.
 

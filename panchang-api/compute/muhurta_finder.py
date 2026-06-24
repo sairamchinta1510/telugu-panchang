@@ -14,6 +14,7 @@ try:
         local_date_to_jd, get_sunrise_sunset,
         jd_to_local_datetime, moon_longitude, moon_sun_elongation,
         find_next_index_change, compute_planet_rashis, sun_longitude,
+        compute_planet_longitudes,
     )
 except ImportError:
     from .astro import (
@@ -24,6 +25,9 @@ except ImportError:
 
     def sun_longitude(jd: float) -> float:
         return 0.0
+
+    def compute_planet_longitudes(jd: float) -> dict:
+        return {}
 from .panchang import compute_panchang, NAKSHATRA_TE, TITHI_TE
 try:
     from .panchang import YOGA_TE
@@ -41,6 +45,7 @@ from .muhurta_rules import (
     _RASHI_SHUDDHI_FORBIDDEN, _SUDHI_NAME_TE,
     get_anandadi_yoga, _ANANDADI_YOGA_TE,
     get_amritadi_yoga,
+    check_lagna_graha_quality,
 )
 
 _MONTH_TE = [
@@ -109,6 +114,10 @@ def _find_good_windows_from_cache(
     nak_trans = day_cache.get("nak_transitions", [])
     tithi_trans = day_cache.get("tithi_transitions", [])
 
+    # Planet positions are fixed for the day — retrieve once from cache
+    planet_rashis_day = day_cache.get("planet_rashis", {})
+    planet_lons_day: "dict[str, float] | None" = day_cache.get("planet_longitudes") or None
+
     segments = _segments_from_cache(day_cache, rise_jd, end_jd)
     good_windows: list[dict] = []
 
@@ -146,58 +155,76 @@ def _find_good_windows_from_cache(
             choghadiya_rank=best_cho_rank_seg,
         )
 
-        if good:
-            from_str = jd_to_local_datetime(seg_start, tz_name).strftime("%H:%M")
-            to_str = jd_to_local_datetime(seg_end, tz_name).strftime("%H:%M")
-            h_from, m_from = map(int, from_str.split(":"))
-            h_to, m_to = map(int, to_str.split(":"))
-            total_from = h_from * 60 + m_from
-            total_to = h_to * 60 + m_to
-            if total_to <= total_from:
-                total_to += 24 * 60
+        if not good:
+            continue
 
-            best_cho_rank = -1
-            best_cho_te = ""
-            best_time_str = from_str
-            for slot in cho_slots:
-                overlap_start = max(slot["from_jd"], seg_start)
-                overlap_end = min(slot["to_jd"], seg_end)
-                if overlap_end - overlap_start < EPSILON:
-                    continue
-                if slot["quality_rank"] > best_cho_rank:
-                    best_cho_rank = slot["quality_rank"]
-                    best_cho_te = slot["quality_te"]
-                    best_time_str = jd_to_local_datetime(
-                        max(slot["from_jd"], seg_start), tz_name
-                    ).strftime("%H:%M")
+        # Lagna graha quality check — hard blocks eliminate the window
+        lq = check_lagna_graha_quality(
+            win_lagna_idx, planet_rashis_day, ceremony_type,
+            planet_longitudes=planet_lons_day,
+        )
+        if lq["blocked"]:
+            continue
 
-            vara_shanti = (
-                sun_idx in _BAD_VAARAS.get(ceremony_type, set())
-                and is_night_seg
-                and best_cho_rank == 6
-            )
+        from_str = jd_to_local_datetime(seg_start, tz_name).strftime("%H:%M")
+        to_str = jd_to_local_datetime(seg_end, tz_name).strftime("%H:%M")
+        h_from, m_from = map(int, from_str.split(":"))
+        h_to, m_to = map(int, to_str.split(":"))
+        total_from = h_from * 60 + m_from
+        total_to = h_to * 60 + m_to
+        if total_to <= total_from:
+            total_to += 24 * 60
 
-            entry = {
-                "from": from_str,
-                "to": to_str,
-                "duration_mins": total_to - total_from,
-                "nakshatra_te": NAKSHATRA_TE[naks_idx],
-                "tithi_te": TITHI_TE[tithi_idx],
-                "lagna_te": RASHI_TE[win_lagna_idx],
-                "nak_idx": naks_idx,
-                "tithi_idx": tithi_idx,
-                "sun_idx": sun_idx,
-                "lagna_idx": win_lagna_idx,
-                "best_time": best_time_str,
-                "choghadiya_te": best_cho_te,
-                "choghadiya_rank": best_cho_rank,
-                "vara_shanti": vara_shanti,
-            }
-            if not skip_planet_rashis:
-                entry["planet_rashis"] = day_cache.get("planet_rashis", {})
-            good_windows.append(entry)
+        best_cho_rank = -1
+        best_cho_te = ""
+        best_time_str = from_str
+        for slot in cho_slots:
+            overlap_start = max(slot["from_jd"], seg_start)
+            overlap_end = min(slot["to_jd"], seg_end)
+            if overlap_end - overlap_start < EPSILON:
+                continue
+            if slot["quality_rank"] > best_cho_rank:
+                best_cho_rank = slot["quality_rank"]
+                best_cho_te = slot["quality_te"]
+                best_time_str = jd_to_local_datetime(
+                    max(slot["from_jd"], seg_start), tz_name
+                ).strftime("%H:%M")
 
-    good_windows.sort(key=lambda w: (w["choghadiya_rank"], w["duration_mins"]), reverse=True)
+        vara_shanti = (
+            sun_idx in _BAD_VAARAS.get(ceremony_type, set())
+            and is_night_seg
+            and best_cho_rank == 6
+        )
+
+        entry = {
+            "from": from_str,
+            "to": to_str,
+            "duration_mins": total_to - total_from,
+            "nakshatra_te": NAKSHATRA_TE[naks_idx],
+            "tithi_te": TITHI_TE[tithi_idx],
+            "lagna_te": RASHI_TE[win_lagna_idx],
+            "nak_idx": naks_idx,
+            "tithi_idx": tithi_idx,
+            "sun_idx": sun_idx,
+            "lagna_idx": win_lagna_idx,
+            "best_time": best_time_str,
+            "choghadiya_te": best_cho_te,
+            "choghadiya_rank": best_cho_rank,
+            "vara_shanti": vara_shanti,
+            "lagna_quality": lq,
+        }
+        if not skip_planet_rashis:
+            entry["planet_rashis"] = planet_rashis_day
+        good_windows.append(entry)
+
+    # Sort: lagna quality score + choghadiya rank combined, then duration
+    good_windows.sort(
+        key=lambda w: (
+            w.get("lagna_quality", {}).get("score", 50) + w["choghadiya_rank"] * 10,
+            w["duration_mins"],
+        ),
+        reverse=True,
+    )
     return good_windows
 
 
@@ -221,12 +248,13 @@ def _find_good_windows(
     Tithi, nakshatra, AND lagna change during the day; each segment between
     transitions is evaluated independently with the actual lagna at that time.
     Within each good segment the best Choghadiya slot is identified to give
-    the exact recommended start time.
+    the exact recommended start time.  Lagna graha quality (Guru aspect, clean 7th,
+    etc.) is applied as a further filter and ranking criterion.
 
-    Returns list of dicts sorted best-first (highest Choghadiya rank, then longest).
+    Returns list of dicts sorted best-first (lagna quality + Choghadiya rank, then longest).
     Each dict: {from, to, duration_mins, nakshatra_te, tithi_te, lagna_te,
                 nak_idx, tithi_idx, sun_idx, best_time, choghadiya_te,
-                choghadiya_rank, vara_shanti}
+                choghadiya_rank, vara_shanti, lagna_quality}
     """
     def _ti(j): return int(moon_sun_elongation(j) / 12) % 30
     def _ni(j): return int(moon_longitude(j) / (360.0 / 27)) % 27
@@ -245,6 +273,14 @@ def _find_good_windows(
 
     # Pre-compute Choghadiya slots for the full day/night
     cho_slots = compute_choghadiya_slots(rise_jd, set_jd, end_jd, sun_idx)
+
+    # Planet positions barely change within a day — compute once at sunrise
+    try:
+        _planet_rashis_day = compute_planet_rashis(rise_jd)
+        _planet_lons_day: "dict[str, float] | None" = compute_planet_longitudes(rise_jd)
+    except Exception:
+        _planet_rashis_day = {}
+        _planet_lons_day = None
 
     good_windows: list[dict] = []
     jd = rise_jd
@@ -286,62 +322,85 @@ def _find_good_windows(
             choghadiya_rank=best_cho_rank_seg,
         )
 
-        if good:
-            from_str = jd_to_local_datetime(jd,            tz_name).strftime("%H:%M")
-            to_str   = jd_to_local_datetime(window_end_jd, tz_name).strftime("%H:%M")
-            h_from, m_from = map(int, from_str.split(":"))
-            h_to,   m_to   = map(int, to_str.split(":"))
-            total_from = h_from * 60 + m_from
-            total_to   = h_to   * 60 + m_to
-            if total_to <= total_from:
-                total_to += 24 * 60
+        if not good:
+            jd = max(window_end_jd, jd + EPSILON) + EPSILON
+            if jd >= end_jd:
+                break
+            continue
 
-            # Find best Choghadiya slot overlapping this window
-            best_cho_rank = -1
-            best_cho_te   = ""
-            best_time_str = from_str
-            for slot in cho_slots:
-                overlap_start = max(slot["from_jd"], jd)
-                overlap_end   = min(slot["to_jd"],   window_end_jd)
-                if overlap_end - overlap_start < EPSILON:
-                    continue
-                if slot["quality_rank"] > best_cho_rank:
-                    best_cho_rank = slot["quality_rank"]
-                    best_cho_te   = slot["quality_te"]
-                    best_time_str = jd_to_local_datetime(
-                        max(slot["from_jd"], jd), tz_name
-                    ).strftime("%H:%M")
+        # Lagna graha quality check — hard blocks eliminate the window
+        lq = check_lagna_graha_quality(
+            win_lagna_idx, _planet_rashis_day, ceremony_type,
+            planet_longitudes=_planet_lons_day,
+        )
+        if lq["blocked"]:
+            jd = max(window_end_jd, jd + EPSILON) + EPSILON
+            if jd >= end_jd:
+                break
+            continue
 
-            entry = {
-                "from":            from_str,
-                "to":              to_str,
-                "duration_mins":   total_to - total_from,
-                "nakshatra_te":    NAKSHATRA_TE[naks_idx],
-                "tithi_te":        TITHI_TE[tithi_idx],
-                "lagna_te":        RASHI_TE[win_lagna_idx],
-                "nak_idx":         naks_idx,
-                "tithi_idx":       tithi_idx,
-                "sun_idx":         sun_idx,
-                "lagna_idx":       win_lagna_idx,
-                "best_time":       best_time_str,
-                "choghadiya_te":   best_cho_te,
-                "choghadiya_rank": best_cho_rank,
-                "vara_shanti":     (
-                    sun_idx in _BAD_VAARAS.get(ceremony_type, set())
-                    and is_night_seg
-                    and best_cho_rank == 6
-                ),
-            }
-            if not skip_planet_rashis:
-                entry["planet_rashis"] = compute_planet_rashis(jd)
-            good_windows.append(entry)
+        from_str = jd_to_local_datetime(jd,            tz_name).strftime("%H:%M")
+        to_str   = jd_to_local_datetime(window_end_jd, tz_name).strftime("%H:%M")
+        h_from, m_from = map(int, from_str.split(":"))
+        h_to,   m_to   = map(int, to_str.split(":"))
+        total_from = h_from * 60 + m_from
+        total_to   = h_to   * 60 + m_to
+        if total_to <= total_from:
+            total_to += 24 * 60
+
+        # Find best Choghadiya slot overlapping this window
+        best_cho_rank = -1
+        best_cho_te   = ""
+        best_time_str = from_str
+        for slot in cho_slots:
+            overlap_start = max(slot["from_jd"], jd)
+            overlap_end   = min(slot["to_jd"],   window_end_jd)
+            if overlap_end - overlap_start < EPSILON:
+                continue
+            if slot["quality_rank"] > best_cho_rank:
+                best_cho_rank = slot["quality_rank"]
+                best_cho_te   = slot["quality_te"]
+                best_time_str = jd_to_local_datetime(
+                    max(slot["from_jd"], jd), tz_name
+                ).strftime("%H:%M")
+
+        entry = {
+            "from":            from_str,
+            "to":              to_str,
+            "duration_mins":   total_to - total_from,
+            "nakshatra_te":    NAKSHATRA_TE[naks_idx],
+            "tithi_te":        TITHI_TE[tithi_idx],
+            "lagna_te":        RASHI_TE[win_lagna_idx],
+            "nak_idx":         naks_idx,
+            "tithi_idx":       tithi_idx,
+            "sun_idx":         sun_idx,
+            "lagna_idx":       win_lagna_idx,
+            "best_time":       best_time_str,
+            "choghadiya_te":   best_cho_te,
+            "choghadiya_rank": best_cho_rank,
+            "vara_shanti":     (
+                sun_idx in _BAD_VAARAS.get(ceremony_type, set())
+                and is_night_seg
+                and best_cho_rank == 6
+            ),
+            "lagna_quality":   lq,
+        }
+        if not skip_planet_rashis:
+            entry["planet_rashis"] = _planet_rashis_day
+        good_windows.append(entry)
 
         jd = max(window_end_jd, jd + EPSILON) + EPSILON
         if jd >= end_jd:
             break
 
-    # Sort: best Choghadiya first, then longest window
-    good_windows.sort(key=lambda w: (w["choghadiya_rank"], w["duration_mins"]), reverse=True)
+    # Sort: lagna quality score + choghadiya rank combined, then duration
+    good_windows.sort(
+        key=lambda w: (
+            w.get("lagna_quality", {}).get("score", 50) + w["choghadiya_rank"] * 10,
+            w["duration_mins"],
+        ),
+        reverse=True,
+    )
     return good_windows
 
 
@@ -678,80 +737,84 @@ def check_muhurta_day(
         )
 
     cer_te        = _CEREMONY_TE.get(ceremony_type, ceremony_type)
-    good_factors: list[str] = []
-    bad_factors:  list[str] = []
+    good_factors: list[dict] = []
+    bad_factors:  list[dict] = []
+
+    def _gf(text: str) -> None:
+        good_factors.append({"te": text})
+
+    def _bf(text: str) -> None:
+        bad_factors.append({"te": text})
 
     # 0. Ayanam
     if ceremony_type in ("upanayanam",):
         ayanam_name = pan["ayanam"]["te"]
         if is_uttarayanam:
-            good_factors.append(f"అయనం: {ayanam_name} — {cer_te}కు శుభ అయనం ✓")
+            _gf(f"అయనం: {ayanam_name} — {cer_te}కు శుభ అయనం ✓")
         else:
-            bad_factors.append(f"అయనం: {ayanam_name} — {cer_te}కు కేవలం ఉత్తరాయణంలో మాత్రమే చేయాలి")
+            _bf(f"అయనం: {ayanam_name} — {cer_te}కు కేవలం ఉత్తరాయణంలో మాత్రమే చేయాలి")
 
     # 1. Masa Shuddhi
     if masam_name and not _masam_ok(masam_name, is_adhika, ceremony_type):
         label = "అధిక మాసం" if is_adhika else pan["masam"]["te"] + " మాసం"
-        bad_factors.append(f"{label} — {cer_te}కు నిషిద్ధ మాసం (చాతుర్మాస్య నియమం)")
+        _bf(f"{label} — {cer_te}కు నిషిద్ధ మాసం (చాతుర్మాస్య నియమం)")
     else:
-        good_factors.append(f"మాసం: {pan['masam']['te']} — {cer_te}కు అనుకూలం")
+        _gf(f"మాసం: {pan['masam']['te']} — {cer_te}కు అనుకూలం")
 
     # 2. Vaara Shuddhi
     vaara_te = pan["vaaram"]["te"]
     if vara_bad:
         if vara_shanti_required:
-            bad_factors.append(
-                f"వారం: {vaara_te} — రాత్రి అమృత చోఘడియాలో శాంతి పూజతో నివర్తించవచ్చు ⚠"
-            )
+            _bf(f"వారం: {vaara_te} — రాత్రి అమృత చోఘడియాలో శాంతి పూజతో నివర్తించవచ్చు ⚠")
         else:
-            bad_factors.append(f"వారం: {vaara_te} — {cer_te}కు నిషిద్ధ వారం (సూర్య/మంగళ/శని దోషం)")
+            _bf(f"వారం: {vaara_te} — {cer_te}కు నిషిద్ధ వారం (సూర్య/మంగళ/శని దోషం)")
     else:
-        good_factors.append(f"వారం: {vaara_te} — {cer_te}కు అనుకూల వారం ✓")
+        _gf(f"వారం: {vaara_te} — {cer_te}కు అనుకూల వారం ✓")
 
     # 2c. Anandadi Yoga (Prayanam only)
     if ceremony_type == "prayanam":
         anandadi_name, anandadi_tier = get_anandadi_yoga(naks_idx, sun_idx)
         yoga_te = _ANANDADI_YOGA_TE.get(anandadi_name, anandadi_name)
         if anandadi_tier == "avoid":
-            bad_factors.append(f"ఆనందాది యోగం: {yoga_te} — రాక్షస యోగం, ప్రయాణానికి నిషేధించబడింది")
+            _bf(f"ఆనందాది యోగం: {yoga_te} — రాక్షస యోగం, ప్రయాణానికి నిషేధించబడింది")
         elif anandadi_tier == "restrict_24min":
-            bad_factors.append(f"ఆనందాది యోగం: {yoga_te} — మొదటి 24 నిమిషాలు నివారించాలి")
+            _bf(f"ఆనందాది యోగం: {yoga_te} — మొదటి 24 నిమిషాలు నివారించాలి")
         else:
-            good_factors.append(f"ఆనందాది యోగం: {yoga_te} — శుభ యోగం ✓")
+            _gf(f"ఆనందాది యోగం: {yoga_te} — శుభ యోగం ✓")
 
     # 2d. Amritadi Yoga (Prayanam only)
     if ceremony_type == "prayanam":
         am_en, am_te, am_tier = get_amritadi_yoga(naks_idx, sun_idx)
         if am_tier == "avoid":
-            bad_factors.append(f"అమృతాది యోగం: {am_te} — ప్రయాణానికి అశుభ యోగం")
+            _bf(f"అమృతాది యోగం: {am_te} — ప్రయాణానికి అశుభ యోగం")
         else:
-            good_factors.append(f"అమృతాది యోగం: {am_te} — శుభ యోగం ✓")
+            _gf(f"అమృతాది యోగం: {am_te} — శుభ యోగం ✓")
 
     # 3. Nakshatra — evaluated at requested time
     if ceremony_type == "prayanam":
         if naks_idx in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
-            good_factors.append(f"నక్షత్రం: {NAKSHATRA_TE[naks_idx]} — శ్లోకంలో శుభ నక్షత్రం ✓")
+            _gf(f"నక్షత్రం: {NAKSHATRA_TE[naks_idx]} — శ్లోకంలో శుభ నక్షత్రం ✓")
         else:
-            good_factors.append(f"నక్షత్రం: {NAKSHATRA_TE[naks_idx]} — అమృతాది యోగం శుభంగా ఉన్నందున శ్లోక నక్షత్రం ద్వితీయం")
+            _gf(f"నక్షత్రం: {NAKSHATRA_TE[naks_idx]} — అమృతాది యోగం శుభంగా ఉన్నందున శ్లోక నక్షత్రం ద్వితీయం")
     else:
         if naks_idx in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
-            good_factors.append(f"నక్షత్రం: {NAKSHATRA_TE[naks_idx]} — {cer_te}కు శుభమైన నక్షత్రం ✓")
+            _gf(f"నక్షత్రం: {NAKSHATRA_TE[naks_idx]} — {cer_te}కు శుభమైన నక్షత్రం ✓")
         else:
-            bad_factors.append(f"నక్షత్రం: {NAKSHATRA_TE[naks_idx]} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు")
+            _bf(f"నక్షత్రం: {NAKSHATRA_TE[naks_idx]} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు")
 
     # 4. Tithi — evaluated at requested time
     if tithi_idx in _BAD_TITHIS.get(ceremony_type, set()):
-        bad_factors.append(f"తిథి: {TITHI_TE[tithi_idx]} — నివారించాల్సిన తిథి (రిక్త/దోష తిథి)")
+        _bf(f"తిథి: {TITHI_TE[tithi_idx]} — నివారించాల్సిన తిథి (రిక్త/దోష తిథి)")
     else:
-        good_factors.append(f"తిథి: {TITHI_TE[tithi_idx]} — శుభ తిథి ✓")
+        _gf(f"తిథి: {TITHI_TE[tithi_idx]} — శుభ తిథి ✓")
 
     # 5. Tara Balam
     for i, chart in enumerate(birth_charts):
         name = chart.get("name") or f"వ్యక్తి {i + 1}"
         if _tara_ok(chart["janma_nakshatra_idx"], naks_idx):
-            good_factors.append(f"{name}: తార బలం అనుకూలం ✓")
+            _gf(f"{name}: తార బలం అనుకూలం ✓")
         else:
-            bad_factors.append(
+            _bf(
                 f"{name}: తార బలం అననుకూలం — జన్మ నక్షత్రానికి "
                 f"వ్యతిరేక తార (1, 3, 5 లేదా 7వ తార)"
             )
@@ -763,25 +826,40 @@ def check_muhurta_day(
             jrashi = chart.get("janma_rashi_idx", -1)
             if jrashi >= 0:
                 if _rashi_shuddhi_ok(day_rashi_idx, jrashi, ceremony_type):
-                    good_factors.append(f"{name}: రాశి శుద్ధి అనుకూలం ✓")
+                    _gf(f"{name}: రాశి శుద్ధి అనుకూలం ✓")
                 else:
                     pos = (day_rashi_idx - jrashi) % 12 + 1
-                    bad_factors.append(
-                        f"{name}: రాశి శుద్ధి అననుకూలం — చంద్రుడు {pos}వ స్థానంలో ఉన్నాడు"
-                    )
+                    _bf(f"{name}: రాశి శుద్ధి అననుకూలం — చంద్రుడు {pos}వ స్థానంలో ఉన్నాడు")
 
     # 7. Panchaka Dosha
     if _panchaka_ok(naks_idx, sun_idx, tithi_idx, lagna_idx):
-        good_factors.append("పంచక దోషం లేదు ✓")
+        _gf("పంచక దోషం లేదు ✓")
     else:
-        good_factors.append("పంచక దోషం ఉంది — పంచక శాంతి చేయించుకోవాలి ⚠")
+        _gf("పంచక దోషం ఉంది — పంచక శాంతి చేయించుకోవాలి ⚠")
+
+    # 8. Lagna Graha Quality — compute at check time (or best window lagna)
+    try:
+        _lq_rashis = compute_planet_rashis(check_jd)
+        _lq_lons: "dict[str, float] | None" = compute_planet_longitudes(check_jd)
+    except Exception:
+        _lq_rashis = {}
+        _lq_lons = None
+    lagna_quality = check_lagna_graha_quality(
+        lagna_idx, _lq_rashis, ceremony_type, planet_longitudes=_lq_lons
+    )
+    for msg in lagna_quality["hard_blocks_te"]:
+        _bf(msg)
+    for msg in lagna_quality["warnings_te"]:
+        _bf(msg)
+    for msg in lagna_quality["benefits_te"]:
+        _gf(msg)
 
     if not overall_good and good_windows:
         windows_str = ", ".join(f"{w['from']}–{w['to']}" for w in good_windows)
-        good_factors.append(f"పగటిపూట శుభ ముహూర్త సమయాలు: {windows_str} ✓")
+        _gf(f"పగటిపూట శుభ ముహూర్త సమయాలు: {windows_str} ✓")
     if night_good_windows:
         nw_str = ", ".join(f"{w['from']}–{w['to']}" for w in night_good_windows)
-        good_factors.append(f"రాత్రి శుభ ముహూర్త సమయాలు: {nw_str} ✓")
+        _gf(f"రాత్రి శుభ ముహూర్త సమయాలు: {nw_str} ✓")
 
     # Time analysis
     def _in_window(w: dict, mins: float) -> bool:
