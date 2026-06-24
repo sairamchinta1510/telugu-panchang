@@ -878,7 +878,7 @@ def check_lagna_graha_quality(
             score -= 10
 
     return {
-        "score":          max(0, min(100, score)),
+        "score":          max(0, min(150, score)),
         "blocked":        bool(hard_blocks),
         "hard_blocks_te": hard_blocks,
         "warnings_te":    warnings,

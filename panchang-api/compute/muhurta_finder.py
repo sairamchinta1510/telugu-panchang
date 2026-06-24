@@ -788,7 +788,7 @@ def check_muhurta_day(
     vaara_te = pan["vaaram"]["te"]
     if vara_bad:
         if vara_shanti_required:
-            _bf(f"వారం: {vaara_te} — రాత్రి అమృత చోఘడియాలో శాంతి పూజతో నివర్తించవచ్చు ⚠")
+            _bf(f"వారం: {vaara_te} — గురు దృష్టి లేదా అమృత చోఘడియాతో రాత్రి వేళ శాంతి పూజతో నివర్తించవచ్చు ⚠")
         else:
             _bf(f"వారం: {vaara_te} — {cer_te}కు నిషిద్ధ వారం (సూర్య/మంగళ/శని దోషం)")
     else:
