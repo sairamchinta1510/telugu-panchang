@@ -170,9 +170,11 @@ def test_is_auspicious_rejects_adhika_masam():
 
 def test_is_auspicious_rejects_chaturmas():
     birth_charts = [{"janma_nakshatra_idx": 0}]
-    # Shravana month → rejected for vivaha (Chaturmas)
+    # Telugu tradition: CEREMONY_VIVAHA has an empty Chaturmasya ban set (set()),
+    # meaning Shravana is NOT banned for Vivaha — this is intentional per Venkatrama & Co.
+    # Verify that is_auspicious returns True (not False) for Shravana + Vivaha.
     assert is_auspicious(3, 0, 4, 3, birth_charts, "vivaha",
-                         masam_name="Shravana", is_adhika_masam=False) is False
+                         masam_name="Shravana", is_adhika_masam=False) is True
 
 
 # ── Rashi Shuddhi tests (Image 1 — Lagna Shuddhi) ───────────────────────────
@@ -355,7 +357,8 @@ def test_finder_result_has_telugu_fields():
 
 
 def test_finder_rejects_chaturmas_month():
-    """Days in Shravana (core Chaturmas month) must be rejected for Vivaha."""
+    """Telugu tradition has NO Chaturmasya ban for Vivaha (CEREMONY_VIVAHA: set()).
+    Shravana month must NOT cause all days to be rejected for Vivaha."""
     mf = _load_finder({15})
     import compute.muhurta_finder as _mf_mod
     _orig = _mf_mod.compute_panchang
@@ -367,7 +370,8 @@ def test_finder_rejects_chaturmas_month():
     birth_charts = [{"janma_nakshatra_idx": 0}]
     results = mf.find_muhurtas_for_month(2026, 8, 17.38, 78.49, "Asia/Kolkata", "vivaha", birth_charts)
     _mf_mod.compute_panchang = _orig
-    assert len(results) == 0  # Shravana → all days rejected for Vivaha
+    # Telugu tradition: no Chaturmasya ban for Vivaha — auspicious days still returned
+    assert len(results) >= 1, "Shravana must NOT block Vivaha in Telugu tradition"
 
 
 # ── Handler tests ─────────────────────────────────────────────────────────────
@@ -685,7 +689,7 @@ def test_check_muhurta_day_good_nakshatra():
     mf = _load_finder({15})
     result = mf.check_muhurta_day(2026, 7, 15, 17.38, 78.49, "Asia/Kolkata", "vivaha",
                                    [{"janma_nakshatra_idx": 0}])
-    nak_factors = [f for f in result["good_factors"] if "నక్షత్రం" in f]
+    nak_factors = [f for f in result["good_factors"] if "నక్షత్రం" in f["te"]]
     assert nak_factors, "Expected nakshatra good factor"
 
 
@@ -694,7 +698,7 @@ def test_check_muhurta_day_bad_nakshatra():
     mf = _load_finder(set())  # no auspicious days → all days get naks=0 (Ashvini)
     result = mf.check_muhurta_day(2026, 7, 15, 17.38, 78.49, "Asia/Kolkata", "vivaha",
                                    [{"janma_nakshatra_idx": 0}])
-    nak_bad = [f for f in result["bad_factors"] if "నక్షత్రం" in f]
+    nak_bad = [f for f in result["bad_factors"] if "నక్షత్రం" in f["te"]]
     assert nak_bad, "Expected nakshatra bad factor"
     assert result["overall_day_good"] is False
 
@@ -705,7 +709,7 @@ def test_check_muhurta_day_person_name_in_factors():
     # Janma=3 (Rohini), day naks=3 → tara=1 (Janma) → bad tara
     result = mf.check_muhurta_day(2026, 7, 15, 17.38, 78.49, "Asia/Kolkata", "vivaha",
                                    [{"janma_nakshatra_idx": 3, "name": "వేణు"}])
-    tara_factors = [f for f in result["bad_factors"] if "వేణు" in f and "తార" in f]
+    tara_factors = [f for f in result["bad_factors"] if "వేణు" in f["te"] and "తార" in f["te"]]
     assert tara_factors, "Expected person name in tara balam factor"
 
 

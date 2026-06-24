@@ -78,6 +78,16 @@ def get_sunrise_sunset(jd: float, lat: float, lon: float) -> tuple[float, float]
     return tret_rise[0], tret_set[0]
 
 
+def local_datetime_to_jd(year: int, month: int, day: int,
+                         hour: int, minute: int, tz_name: str) -> float:
+    """Return Julian Day for a specific local date and time."""
+    tz = pytz.timezone(tz_name)
+    local_dt = tz.localize(datetime(year, month, day, hour, minute, 0))
+    utc_dt = local_dt.astimezone(pytz.utc)
+    hour_ut = utc_dt.hour + utc_dt.minute / 60.0 + utc_dt.second / 3600.0
+    return swe.julday(utc_dt.year, utc_dt.month, utc_dt.day, hour_ut, swe.GREG_CAL)
+
+
 def jd_to_local_datetime(jd: float, tz_name: str) -> datetime:
     """Convert Julian Day to local datetime."""
     unix_time = (jd - 2440587.5) * 86400

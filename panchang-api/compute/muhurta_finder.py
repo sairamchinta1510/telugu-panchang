@@ -12,7 +12,7 @@ import datetime as _dt
 
 try:
     from .astro import (
-        local_date_to_jd, get_sunrise_sunset,
+        local_date_to_jd, local_datetime_to_jd, get_sunrise_sunset,
         jd_to_local_datetime, moon_longitude, moon_sun_elongation,
         find_next_index_change, compute_planet_rashis, sun_longitude,
     )
@@ -25,6 +25,16 @@ except ImportError:
 
     def sun_longitude(jd: float) -> float:
         return 0.0
+
+    def local_datetime_to_jd(year: int, month: int, day: int,   # type: ignore[misc]
+                              hour: int, minute: int, tz_name: str) -> float:
+        """Pure-Python fallback (no swisseph) used when astro is mocked in tests."""
+        import pytz
+        from datetime import datetime as _datetime
+        tz = pytz.timezone(tz_name)
+        local_dt = tz.localize(_datetime(year, month, day, hour, minute, 0))
+        utc_dt = local_dt.astimezone(pytz.utc)
+        return utc_dt.timestamp() / 86400.0 + 2440587.5
 from .panchang import compute_panchang, NAKSHATRA_TE, TITHI_TE
 try:
     from .panchang import YOGA_TE
@@ -485,6 +495,30 @@ def check_muhurta_day(
     is_adhika  = pan["masam"]["adhika"]
     is_uttarayanam = sun_longitude(rise_jd) < 180
 
+    # When a specific time is requested, recompute all astro values at that
+    # exact moment so that nakshatra/tithi/yoga/lagna reflect the actual sky
+    # at the ceremony time (not at sunrise, which may differ after transitions).
+    check_jd: float | None = None
+    if check_hour >= 0:
+        check_jd      = local_datetime_to_jd(year, month, day, check_hour, check_minute, tz_name)
+        moon_lon      = moon_longitude(check_jd)
+        elong         = moon_sun_elongation(check_jd)
+        naks_idx      = int(moon_lon / (360.0 / 27)) % 27
+        tithi_idx     = int(elong / 12) % 30
+        day_rashi_idx = int(moon_lon / 30) % 12
+        lagna_idx     = compute_lagna(check_jd, lat, lon)
+
+    # Yoga at the evaluation time (sunrise when no time given, check time otherwise)
+    _eval_jd = check_jd if check_jd is not None else rise_jd
+    _sun_lon_eval = sun_longitude(_eval_jd)
+    _moon_lon_eval = moon_longitude(_eval_jd) if check_jd is not None else moon_lon
+    yoga_idx  = int((_sun_lon_eval + _moon_lon_eval) / (360.0 / 27)) % 27
+    yoga_te   = YOGA_TE[yoga_idx] if yoga_idx < len(YOGA_TE) else pan["yoga"]["te"]
+
+    # Display names: use check-time values when a time is given
+    nakshatra_te_display = NAKSHATRA_TE[naks_idx]
+    tithi_te_display     = TITHI_TE[tithi_idx]
+
     rise_mins = dt_rise.hour * 60 + dt_rise.minute + dt_rise.second / 60
     set_mins  = dt_set.hour  * 60 + dt_set.minute  + dt_set.second  / 60
     kalams    = compute_kalams(rise_mins, set_mins, sun_idx)
@@ -595,13 +629,13 @@ def check_muhurta_day(
     )
     if naks_idx in _GOOD_NAKSHATRAS.get(ceremony_type, set()):
         good_factors.append(_good(
-            f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు శుభమైన నక్షత్రం ✓",
+            f"నక్షత్రం: {nakshatra_te_display} — {cer_te}కు శుభమైన నక్షత్రం ✓",
             "Nakshatra Shuddhi",
             _naks_src,
         ))
     else:
         bad_factors.append(_bad(
-            f"నక్షత్రం: {pan['nakshatra']['te']} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు",
+            f"నక్షత్రం: {nakshatra_te_display} — {cer_te}కు అనుకూలమైన నక్షత్రం కాదు",
             "Nakshatra Shuddhi",
             _naks_src,
         ))
@@ -616,13 +650,13 @@ def check_muhurta_day(
     )
     if tithi_idx in _BAD_TITHIS.get(ceremony_type, set()):
         bad_factors.append(_bad(
-            f"తిథి: {pan['tithi']['te']} — నివారించాల్సిన తిథి (రిక్త/దోష తిథి)",
+            f"తిథి: {tithi_te_display} — నివారించాల్సిన తిథి (రిక్త/దోష తిథి)",
             "Tithi Shuddhi",
             _tithi_src,
         ))
     else:
         good_factors.append(_good(
-            f"తిథి: {pan['tithi']['te']} — శుభ తిథి ✓",
+            f"తిథి: {tithi_te_display} — శుభ తిథి ✓",
             "Tithi Shuddhi",
             _tithi_src,
         ))
@@ -800,9 +834,9 @@ def check_muhurta_day(
         "date_te":              f"{day} {_MONTH_TE[month - 1]} {year}",
         "vaaram_te":            pan["vaaram"]["te"],
         "gregorian_vaaram_te":  _VAARAM_TE[(_dt.date(year, month, day).weekday() + 1) % 7],
-        "tithi_te":         pan["tithi"]["te"],
-        "nakshatra_te":     pan["nakshatra"]["te"],
-        "yoga_te":          pan["yoga"]["te"],
+        "tithi_te":         tithi_te_display,
+        "nakshatra_te":     nakshatra_te_display,
+        "yoga_te":          yoga_te,
         "masam_te":         pan["masam"]["te"],
         "sudhi_name_te":    _SUDHI_NAME_TE.get(ceremony_type, ""),
         "sunrise":          dt_rise.strftime("%H:%M"),
