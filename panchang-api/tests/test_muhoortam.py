@@ -1028,3 +1028,64 @@ def test_check_muhurta_day_factors_are_dicts():
     for f in result["bad_factors"]:
         assert isinstance(f, dict), f"Expected dict, got {type(f)}: {f!r}"
         assert "te" in f, f"Factor missing 'te' key: {f!r}"
+
+
+# ── Guru Asta (Jupiter combust) tests ────────────────────────────────────────
+
+def test_lagna_quality_guru_combust_blocks_vivaha():
+    """Jupiter within 11° of Sun should hard-block vivaha."""
+    from compute.muhurta_rules import check_lagna_graha_quality
+    result = check_lagna_graha_quality(
+        lagna_idx=1,
+        planet_rashis={"guru": 1, "shukra": 3},
+        ceremony_type="vivaha",
+        planet_longitudes={
+            "ravi":   30.0,
+            "guru":   38.0,   # 8° from Sun — within 11° orb → combust
+            "shukra": 90.0,   # not combust
+        },
+    )
+    assert result["blocked"] is True, "Vivaha should be blocked when Jupiter is combust"
+    en_labels = [c.get("en", "") for c in result["score_components"]]
+    assert any("Jupiter combust" in label for label in en_labels), (
+        "Expected 'Jupiter combust' in English score component labels"
+    )
+
+
+def test_lagna_quality_guru_combust_only_warns_for_pooja():
+    """Jupiter combust should NOT block pooja — only a soft warning."""
+    from compute.muhurta_rules import check_lagna_graha_quality
+    result = check_lagna_graha_quality(
+        lagna_idx=1,
+        planet_rashis={"guru": 1, "shukra": 3},
+        ceremony_type="pooja",
+        planet_longitudes={
+            "ravi":   30.0,
+            "guru":   38.0,   # combust
+            "shukra": 90.0,
+        },
+    )
+    assert result["blocked"] is False, "Pooja should not be blocked by Jupiter combust"
+
+
+def test_all_score_components_have_en_key():
+    """Every component in score_components must have an 'en' key (may be empty string)."""
+    from compute.muhurta_rules import check_lagna_graha_quality
+    result = check_lagna_graha_quality(
+        lagna_idx=0,           # Mesha lagna
+        planet_rashis={
+            "guru":    4,      # Simha, house=5 → trikona
+            "shukra":  2,      # Mithuna, house=3 — neutral
+            "chandra": 5,      # Kanya, house=6 → moon_in_6_8 warning
+            "kuja":    0,      # Mesha = lagna → malefic in lagna
+            "shani":   6,      # Tula, house=7 → malefic in 7th
+        },
+        ceremony_type="vivaha",
+        planet_longitudes={
+            "ravi":   0.0,
+            "guru":  120.0,    # 120° from Sun — not combust
+            "shukra": 60.0,    # 60° from Sun — not combust
+        },
+    )
+    for comp in result["score_components"]:
+        assert "en" in comp, f"score_component missing 'en' key: {comp}"
