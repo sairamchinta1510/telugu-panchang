@@ -194,21 +194,23 @@ body {
 /* ── Day timeline bar ── */
 .day-timeline {
   position: relative;
-  background: #f0ece4;
+  background: var(--bg);
   border-radius: 6px;
   height: 22px;
   margin: 8px 0 10px;
   overflow: hidden;
+  border: 1px solid var(--border);
 }
 .day-timeline .tl-label {
   position: absolute;
   top: 0; bottom: 0;
   display: flex;
   align-items: center;
-  font-size: 8px;
-  color: #999;
+  font-size: 9px;
+  color: var(--text-3);
   padding: 0 4px;
   pointer-events: none;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 .day-timeline .tl-label.right { right: 0; }
 .day-timeline .tl-window {
@@ -216,7 +218,7 @@ body {
   top: 2px; bottom: 2px;
   border-radius: 4px;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: opacity var(--transition);
 }
 .day-timeline .tl-window:hover { opacity: 0.75; }
 .day-timeline .tl-window span {
@@ -230,18 +232,18 @@ body {
   line-height: 18px;
 }
 
-/* ── Window mini-cards (range results) ── */
+/* Win-cards (muhurtam windows) */
 .win-card {
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 8px 12px;
-  margin-bottom: 6px;
-  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: var(--surface);
 }
 .win-card.best {
-  border-color: #66BB6A;
+  border-color: var(--indigo-light);
   border-width: 1.5px;
-  background: #f9fbe7;
+  background: var(--indigo-xl);
 }
 .win-card-header {
   display: flex;
@@ -251,42 +253,46 @@ body {
 .win-card-time {
   font-weight: 800;
   font-size: 1rem;
-  color: #1B5E20;
+  color: var(--indigo-dark);
+  font-family: 'Inter', system-ui, sans-serif;
 }
-.win-card.best .win-card-time { font-size: 1.1rem; }
+.win-card.best .win-card-time { font-size: 1.05rem; }
 .win-card-score {
-  font-size: 0.72rem;
+  font-size: 11px;
   font-weight: 700;
   color: #fff;
-  background: #2E7D32;
+  background: var(--indigo);
   border-radius: 10px;
-  padding: 2px 8px;
+  padding: 2px 9px;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 .win-card-meta {
-  font-size: 0.72rem;
-  color: #388E3C;
+  font-size: 11px;
+  color: var(--indigo);
   margin-top: 3px;
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
 }
 .win-card-sub {
-  font-size: 0.68rem;
-  color: #888;
-  margin-top: 1px;
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 2px;
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
 }
 .score-details-table {
   width: 100%;
-  font-size: 0.68rem;
+  font-size: 11px;
   border-collapse: collapse;
-  margin-top: 5px;
+  margin-top: 6px;
 }
-.score-details-table tr td { padding: 2px 4px; }
-.score-details-table tr:nth-child(even) { background: #f5f5f5; }
+.score-details-table tr td { padding: 3px 6px; }
+.score-details-table tr:nth-child(even) { background: var(--bg); }
 .score-details-table .total-row {
   font-weight: 800;
-  background: #e3f2fd !important;
+  background: var(--indigo-xl) !important;
 }
-.score-details-table .pos { color: #2E7D32; text-align: right; }
-.score-details-table .neg { color: #C62828; text-align: right; }
-.score-details-table .neu { color: #555; text-align: right; }
+.score-details-table .pos { color: var(--success); text-align: right; font-weight: 600; }
+.score-details-table .neg { color: #DC2626; text-align: right; font-weight: 600; }
+.score-details-table .neu { color: var(--text-2); text-align: right; }
 
 /* ════════════════════════════════
    STEP PROGRESS BAR
@@ -723,7 +729,7 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
 /* ════════════════════════════════
    PROGRESS / LOADING
 ════════════════════════════════ */
-.loading-wrap { text-align: center; padding: 32px 20px; }
+.loading-wrap { text-align: center; padding: 24px 0; }
 /* ── Nava Graha orbital animation ── */
 .nava-graha-orrery {
   position: relative;
@@ -774,14 +780,14 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
 .g-ketu    { --dur:28s;   --pcol:#78909C; --pglow:rgba(120,144,156,0.4); width:176px; height:176px; animation-direction:reverse; animation-delay:-14s }
 @keyframes orbit { from{transform:translate(-50%,-50%) rotate(0deg)} to{transform:translate(-50%,-50%) rotate(360deg)} }
 @keyframes solarpulse { 0%,100%{box-shadow:0 0 18px 6px rgba(255,160,0,0.55)} 50%{box-shadow:0 0 30px 14px rgba(255,160,0,0.8)} }
-.progress-track { background: #EDE0D4; border-radius: 20px; height: 8px; overflow: hidden; margin: 16px 0 8px; }
+.progress-track { background: var(--border); border-radius: 20px; height: 6px; overflow: hidden; margin: 0 0 8px; }
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--saffron-dark), var(--saffron-light));
+  background: linear-gradient(90deg, var(--indigo-dark), var(--indigo));
   border-radius: 20px; transition: width 0.5s ease;
 }
-.progress-label { font-size: 0.88rem; color: var(--brown-mid); font-weight: 600; }
-.progress-sub { font-size: 0.76rem; color: #BCAAA4; margin-top: 4px; }
+.progress-label { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px; font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif; }
+.progress-sub { font-size: 12px; color: var(--text-3); font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif; }
 
 /* ════════════════════════════════
    RESULTS
@@ -792,86 +798,110 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
 }
 .results-hero .ceremony-tag {
   display: inline-block;
-  background: linear-gradient(135deg, var(--saffron-dark), var(--saffron));
-  color: var(--white);
+  background: var(--indigo-xl);
+  color: var(--indigo);
   padding: 5px 16px;
   border-radius: 20px;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 700;
   margin-bottom: 8px;
+  border: 1px solid var(--indigo-light);
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
 }
 .results-hero h2 {
-  font-family: 'Noto Serif Telugu', serif;
-  font-size: 1.2rem;
-  color: var(--maroon);
+  font-family: 'Noto Sans Telugu', 'Inter', system-ui, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
 }
 .results-hero .count {
-  font-size: 0.84rem;
-  color: var(--brown-mid);
+  font-size: 13px;
+  color: var(--text-2);
   margin-top: 4px;
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
 }
 .kalam-banner {
-  background: linear-gradient(135deg, #FFF8E1, #FFF3CD);
-  border: 1px solid #FFD54F;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
   border-radius: var(--radius-sm);
   padding: 12px 14px;
-  font-size: 0.78rem;
-  color: #5D4037;
+  font-size: 0.8rem;
+  color: #78350F;
   line-height: 1.6;
   margin-bottom: 14px;
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
 }
 
 /* Result Cards */
 .result-card {
-  background: var(--white);
+  background: var(--surface);
   border-radius: var(--radius);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--indigo);
   box-shadow: var(--shadow);
   margin-bottom: 12px;
   overflow: hidden;
-  border: 1px solid rgba(196,154,108,0.15);
-  transition: transform var(--transition), box-shadow var(--transition);
+  cursor: pointer;
+  transition: box-shadow var(--transition), transform var(--transition);
 }
+.result-card:hover { box-shadow: var(--shadow-lg); }
 .result-card:active { transform: scale(0.99); }
 .result-card-header {
-  background: linear-gradient(135deg, var(--maroon) 0%, var(--saffron-dark) 100%);
-  padding: 12px 16px;
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 12px;
 }
-.result-date { color: var(--white); }
-.result-date .day { font-size: 1.1rem; font-weight: 700; font-family: 'Noto Serif Telugu', serif; }
-.result-date .vaaram { font-size: 0.76rem; opacity: 0.8; margin-top: 1px; }
+.result-date { flex: 1; }
+.result-date .day {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
+  margin-bottom: 2px;
+}
+.result-date .vaaram {
+  font-size: 12px;
+  color: var(--indigo);
+  font-weight: 600;
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
+}
 .result-badge {
-  background: rgba(255,255,255,0.2);
-  border-radius: 8px;
-  padding: 4px 10px;
-  font-size: 0.72rem;
-  color: var(--white);
-  text-align: right;
+  background: var(--indigo-xl);
+  color: var(--indigo);
+  border: 1px solid var(--indigo-light);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  flex-shrink: 0;
+  font-family: 'Noto Sans Telugu', 'Inter', system-ui, sans-serif;
 }
-.result-body { padding: 14px 16px; }
+.result-body { padding: 0 16px 14px; }
 .result-row {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 10px;
   flex-wrap: wrap;
 }
 .result-chip {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: var(--cream2);
-  border: 1px solid #E8D5C4;
+  gap: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 5px 11px;
-  font-size: 0.78rem;
-  color: var(--brown);
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--text-2);
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
 }
-.result-chip .chip-label { color: var(--brown-mid); font-size: 0.7rem; }
+.result-chip .chip-label { color: var(--text-3); font-size: 10px; }
 .result-kalam {
-  background: #FFF8E1;
-  border-radius: 8px;
+  background: var(--amber-light);
+  border-radius: var(--radius-sm);
   padding: 8px 12px;
   margin-bottom: 10px;
 }
@@ -879,31 +909,29 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.76rem;
-  color: #BF360C;
+  font-size: 11px;
+  color: #92400E;
   padding: 2px 0;
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
 }
 .btn-details {
   width: 100%;
-  padding: 11px;
-  background: var(--cream2);
-  border: 1.5px solid #E8D5C4;
-  border-radius: 10px;
-  color: var(--saffron-dark);
-  font-family: inherit;
-  font-size: 0.88rem;
-  font-weight: 700;
+  padding: 10px;
+  background: var(--indigo-xl);
+  border: 1.5px solid var(--indigo-light);
+  border-radius: var(--radius-sm);
+  color: var(--indigo);
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all var(--transition);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
 }
-.btn-details:active {
-  background: var(--gold-light);
-  border-color: var(--saffron);
-}
+.btn-details:hover { background: var(--indigo-light); }
 
 /* ════════════════════════════════
    MODAL (bottom sheet)
