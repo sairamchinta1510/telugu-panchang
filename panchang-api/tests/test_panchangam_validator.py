@@ -9,15 +9,19 @@ import pytest
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _make_prokerala_html(tithi: str, nakshatra: str, sunrise: str) -> str:
-    """Build minimal Prokerala-like HTML with panchang elements in a table."""
+    """Build minimal Prokerala-like HTML matching the real div class structure."""
     return f"""
     <html><body>
-    <table>
-      <tr><td>Tithi</td><td>{tithi}</td></tr>
-      <tr><td>Nakshatra</td><td>{nakshatra}</td></tr>
-      <tr><td>Sunrise</td><td>{sunrise}</td></tr>
-      <tr><td>Yoga</td><td>Vriddhi</td></tr>
-    </table>
+    <div class="panchang-box-data-block panchang-data-tithi ">
+      <span class="d-block b">Tithi</span>
+      <div>{tithi} - Jun 25 08:09 PM</div>
+    </div>
+    <div class="panchang-box-data-block panchang-data-nakshatra ">
+      <span class="d-block b">Nakshatra</span>
+      <div>{nakshatra} - Jun 25 04:29 PM</div>
+    </div>
+    <span class="d-block t-sm">Sunrise</span>
+    <span>{sunrise}</span>
     </body></html>
     """
 

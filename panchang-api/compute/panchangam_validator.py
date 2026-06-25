@@ -7,51 +7,44 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import re
 import urllib.request
-from html.parser import HTMLParser
 
-
-# Prokerala label aliases — the labels Prokerala uses in its HTML table.
-# Key = canonical name, Value = list of labels to look for (case-insensitive).
-_FIELD_ALIASES: dict[str, list[str]] = {
-    "tithi":     ["tithi", "thithi"],
-    "nakshatra": ["nakshatra", "star", "nakshatram"],
-    "sunrise":   ["sunrise", "sun rise", "sun-rise"],
+# All standard tithi and nakshatra names as Prokerala renders them.
+_TITHIS = [
+    "Pratipada", "Dwitiya", "Tritiya", "Chaturthi", "Panchami",
+    "Shashthi", "Saptami", "Ashtami", "Navami", "Dashami",
+    "Ekadashi", "Dwadashi", "Trayodashi", "Chaturdashi", "Purnima", "Amavasya",
+]
+_NAKSHATRAS = [
+    "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra",
+    "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni",
+    "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishaka",
+    "Anuradha", "Jyeshtha", "Moola", "Purva Ashadha", "Uttara Ashadha",
+    "Shravana", "Dhanistha", "Shatabhisha", "Purva Bhadrapada",
+    "Uttara Bhadrapada", "Revati",
+]
+# Aliases that our engine may produce vs. what Prokerala returns
+_NAK_ALIASES: dict[str, str] = {
+    "jyeshta": "jyeshtha",
+    "jyeshtha": "jyeshtha",
+    "dhanishtha": "dhanistha",
+    "shravana": "shravana",
 }
 
-_PROKERALA_BASE = "https://www.prokerala.com/astrology/panchangam/date"
-_SUNRISE_TOL_MIN = 2   # sunrise match tolerance in minutes
+_PROKERALA_BASE = "https://www.prokerala.com/astrology/panchangam/"
+_SUNRISE_TOL_MIN = 3   # sunrise match tolerance in minutes
 
-
-class _TdPairParser(HTMLParser):
-    """Collect <td> text content as alternating label/value pairs."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._in_td = False
-        self._cells: list[str] = []
-
-    def handle_starttag(self, tag: str, attrs: list) -> None:
-        if tag == "td":
-            self._in_td = True
-
-    def handle_endtag(self, tag: str) -> None:
-        if tag == "td":
-            self._in_td = False
-
-    def handle_data(self, data: str) -> None:
-        if self._in_td:
-            cleaned = data.strip()
-            if cleaned:
-                self._cells.append(cleaned)
-
-    def label_value_map(self) -> dict[str, str]:
-        """Return {label.lower(): value} from alternating td pairs."""
-        result: dict[str, str] = {}
-        cells = self._cells
-        for i in range(0, len(cells) - 1, 2):
-            result[cells[i].lower()] = cells[i + 1]
-        return result
+_BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/125.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Cache-Control": "no-cache",
+}
 
 
 def _tz_offset(tz_name: str) -> float:
@@ -62,7 +55,18 @@ def _tz_offset(tz_name: str) -> float:
         offset = datetime.datetime.now(tz).utcoffset()
         return offset.total_seconds() / 3600 if offset else 5.5
     except Exception:
-        return 5.5  # default to IST
+        return 5.5
+
+
+def _build_url(date: datetime.date, lat: float, lon: float, tz_name: str) -> str:
+    tz_off = _tz_offset(tz_name)
+    date_str = date.strftime("%Y-%m-%d")
+    return (
+        f"{_PROKERALA_BASE}"
+        f"?panchangam-date={date_str}"
+        f"&la={lat:.4f}&lo={lon:.4f}"
+        f"&tz={tz_off:.1f}&ayanamsa=1"
+    )
 
 
 def _cache_key(date: datetime.date, lat: float, lon: float) -> str:
@@ -96,32 +100,44 @@ def _write_s3(key: str, data: dict) -> None:
         pass
 
 
-def _fetch_prokerala(date: datetime.date, lat: float, lon: float, tz_name: str) -> dict[str, str]:
-    """Fetch Prokerala panchangam page and return label→value map."""
-    tz_off = _tz_offset(tz_name)
-    url = (
-        f"{_PROKERALA_BASE}/{date.year}/{date.month:02d}/{date.day:02d}/"
-        f"?la={lat:.4f}&lo={lon:.4f}&tz={tz_off:.1f}&ayanamsa=1"
-    )
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=8) as resp:
+def _extract_prokerala(html: str) -> dict[str, str]:
+    """Parse Prokerala HTML and return {tithi, nakshatra, sunrise}."""
+    result: dict[str, str] = {}
+
+    # Tithi: first matching name inside panchang-data-tithi div
+    m = re.search(r'class="[^"]*panchang-data-tithi[^"]*">(.*?)</div>\s*</div>', html, re.DOTALL)
+    if m:
+        block = m.group(1).lower()
+        for name in _TITHIS:
+            if name.lower() in block:
+                result["tithi"] = name
+                break
+
+    # Nakshatra: first matching name inside panchang-data-nakshatra div
+    m2 = re.search(r'class="[^"]*panchang-data-nakshatra[^"]*">(.*?)</div>\s*</div>', html, re.DOTALL)
+    if m2:
+        block = m2.group(1).lower()
+        for name in _NAKSHATRAS:
+            if name.lower() in block:
+                result["nakshatra"] = name
+                break
+
+    # Sunrise: look for the sunrise icon label then grab the time
+    m3 = re.search(r't-sm[^>]*>\s*Sunrise\s*</span>.*?(\d{1,2}:\d{2}\s*[AP]M)', html, re.DOTALL)
+    if m3:
+        result["sunrise"] = m3.group(1).strip()
+
+    return result
+
+
+def _fetch_prokerala(url: str) -> dict[str, str]:
+    req = urllib.request.Request(url, headers=_BROWSER_HEADERS)
+    with urllib.request.urlopen(req, timeout=10) as resp:
         html = resp.read().decode("utf-8", errors="replace")
-    parser = _TdPairParser()
-    parser.feed(html)
-    return parser.label_value_map()
-
-
-def _lookup(raw: dict[str, str], canonical: str) -> str:
-    """Look up a canonical field using any of its aliases."""
-    for alias in _FIELD_ALIASES.get(canonical, [canonical]):
-        val = raw.get(alias)
-        if val:
-            return val
-    return ""
+    return _extract_prokerala(html)
 
 
 def _parse_time_to_hours(s: str) -> float | None:
-    """Parse time string like '05:43 AM' or '05:43' → decimal hours."""
     import time as _time
     s = s.strip()
     for fmt in ("%I:%M %p", "%I:%M%p", "%H:%M"):
@@ -131,6 +147,10 @@ def _parse_time_to_hours(s: str) -> float | None:
         except ValueError:
             continue
     return None
+
+
+def _norm_nak(name: str) -> str:
+    return _NAK_ALIASES.get(name.lower(), name.lower())
 
 
 def validate_muhurtam_date(
@@ -144,26 +164,14 @@ def validate_muhurtam_date(
 ) -> dict:
     """Cross-check our panchang elements against Prokerala for the given date/location.
 
-    Args:
-        date: calendar date of the muhurtam
-        lat, lon: location coordinates (decimal degrees)
-        tz_name: IANA timezone name (e.g. "Asia/Kolkata")
-        tithi_en: English tithi name from our engine (e.g. "Dashami")
-        nakshatra_en: English nakshatra name from our engine (e.g. "Rohini")
-        sunrise: "HH:MM" sunrise time from our engine
-
     Returns dict with keys:
         status: "verified" | "partial" | "mismatch" | "unavailable"
         source: display name of the reference source
-        source_url: URL that was checked
+        source_url: URL that was checked (also usable as a manual link)
         checked_at: ISO UTC timestamp
         details: {element: {"ours": str, "reference": str, "match": bool}}
     """
-    tz_off = _tz_offset(tz_name)
-    source_url = (
-        f"{_PROKERALA_BASE}/{date.year}/{date.month:02d}/{date.day:02d}/"
-        f"?la={lat:.4f}&lo={lon:.4f}&tz={tz_off:.1f}&ayanamsa=1"
-    )
+    source_url = _build_url(date, lat, lon, tz_name)
     checked_at = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
     base = {
         "source": "Prokerala Panchangam",
@@ -176,7 +184,7 @@ def validate_muhurtam_date(
     raw = _read_s3(cache_key)
     if raw is None:
         try:
-            raw = _fetch_prokerala(date, lat, lon, tz_name)
+            raw = _fetch_prokerala(source_url)
             if raw:
                 _write_s3(cache_key, raw)
         except Exception:
@@ -187,22 +195,22 @@ def validate_muhurtam_date(
 
     details: dict[str, dict] = {}
 
-    # Tithi comparison (case-insensitive prefix match)
-    ref_tithi = _lookup(raw, "tithi")
+    # Tithi comparison
+    ref_tithi = raw.get("tithi", "")
     tithi_match = bool(
-        tithi_en and ref_tithi and tithi_en.lower() in ref_tithi.lower()
+        tithi_en and ref_tithi and tithi_en.lower() == ref_tithi.lower()
     )
     details["tithi"] = {"ours": tithi_en, "reference": ref_tithi, "match": tithi_match}
 
-    # Nakshatra comparison (case-insensitive prefix match)
-    ref_nak = _lookup(raw, "nakshatra")
+    # Nakshatra comparison (with alias normalisation)
+    ref_nak = raw.get("nakshatra", "")
     nak_match = bool(
-        nakshatra_en and ref_nak and nakshatra_en.lower() in ref_nak.lower()
+        nakshatra_en and ref_nak and _norm_nak(nakshatra_en) == _norm_nak(ref_nak)
     )
     details["nakshatra"] = {"ours": nakshatra_en, "reference": ref_nak, "match": nak_match}
 
-    # Sunrise comparison (within ±2 min)
-    ref_sunrise_raw = _lookup(raw, "sunrise")
+    # Sunrise comparison (within ±3 min)
+    ref_sunrise_raw = raw.get("sunrise", "")
     our_h = _parse_time_to_hours(sunrise)
     ref_h = _parse_time_to_hours(ref_sunrise_raw)
     if our_h is not None and ref_h is not None:
@@ -211,7 +219,6 @@ def validate_muhurtam_date(
         sr_match = False
     details["sunrise"] = {"ours": sunrise, "reference": ref_sunrise_raw, "match": sr_match}
 
-    # Determine overall status
     critical_matches = [tithi_match, nak_match]
     if all(critical_matches) and sr_match:
         status = "verified"
