@@ -293,40 +293,60 @@ body {
 ════════════════════════════════ */
 .step-bar {
   display: flex;
+  align-items: flex-start;
+  padding: 16px 20px 0;
+  max-width: 680px;
+  margin: 0 auto;
+  background: var(--bg);
+}
+.step-item {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 16px 24px 4px;
-  gap: 0;
+  gap: 5px;
 }
 .step-dot {
   width: 32px; height: 32px;
   border-radius: 50%;
-  border: 2px solid #D7CCC8;
-  background: var(--white);
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.75rem; font-weight: 700; color: #BCAAA4;
-  transition: var(--transition);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--border);
+  color: var(--text-3);
+  transition: all var(--transition);
+  font-family: 'Inter', system-ui, sans-serif;
   flex-shrink: 0;
 }
 .step-dot.active {
-  background: var(--saffron);
-  border-color: var(--saffron);
-  color: var(--white);
-  box-shadow: 0 0 0 4px rgba(193,68,14,0.2);
+  background: var(--indigo);
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--indigo-xl);
 }
 .step-dot.done {
-  background: #4CAF50;
-  border-color: #4CAF50;
-  color: var(--white);
+  background: var(--indigo);
+  color: #fff;
+}
+.step-dot.done::before { content: "✓"; font-size: 14px; }
+.step-dot.done { font-size: 0; }
+.step-label {
+  font-size: 10px;
+  color: var(--text-3);
+  font-weight: 500;
+  white-space: nowrap;
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
+}
+.step-item:has(.step-dot.active) .step-label {
+  color: var(--indigo);
+  font-weight: 700;
 }
 .step-line {
   flex: 1;
   height: 2px;
-  background: #D7CCC8;
+  background: var(--border);
+  margin: 15px 4px 0;
   transition: background var(--transition);
-  max-width: 60px;
 }
-.step-line.done { background: #4CAF50; }
+.step-line.done { background: var(--indigo); }
 
 /* ════════════════════════════════
    PANELS
@@ -937,11 +957,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 <!-- ══ STEP PROGRESS ══ -->
 <div class="step-bar">
-  <div class="step-dot active" id="sd1">1</div>
+  <div class="step-item">
+    <div class="step-dot active" id="sd1">1</div>
+    <div class="step-label" data-te="వేడుక" data-en="Ceremony">వేడుక</div>
+  </div>
   <div class="step-line" id="sl1"></div>
-  <div class="step-dot" id="sd2">2</div>
+  <div class="step-item">
+    <div class="step-dot" id="sd2">2</div>
+    <div class="step-label" data-te="వివరాలు" data-en="Details">వివరాలు</div>
+  </div>
   <div class="step-line" id="sl2"></div>
-  <div class="step-dot" id="sd3">3</div>
+  <div class="step-item">
+    <div class="step-dot" id="sd3">3</div>
+    <div class="step-label" data-te="ఫలితాలు" data-en="Results">ఫలితాలు</div>
+  </div>
 </div>
 
 <div id="errorToast" class="error-toast"></div>
