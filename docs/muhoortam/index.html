@@ -124,13 +124,16 @@ body {
   gap: 2px;
   align-items: center;
 }
-#breadcrumb a {
+#breadcrumb a, #breadcrumb .bc-link {
   color: var(--saffron-dark);
   text-decoration: none;
   font-weight: 600;
+  background: none; border: none; padding: 0; cursor: pointer;
+  font-size: inherit; font-family: inherit;
 }
-#breadcrumb a:hover { text-decoration: underline; }
-#breadcrumb .sep { color: var(--brown-light); margin: 0 4px; }
+#breadcrumb a:hover, #breadcrumb .bc-link:hover { text-decoration: underline; }
+#breadcrumb .sep, #breadcrumb .bc-sep { color: var(--brown-light); margin: 0 4px; }
+#breadcrumb .bc-current { color: var(--brown-mid); font-weight: 600; }
 
 /* ── Day timeline bar ── */
 .day-timeline {
@@ -1294,6 +1297,20 @@ function renderWindowChecks(w, birthCharts) {
 
 let selectedCeremony = null, allResults = [], personCount = 0;
 let _lastCheckData = null;
+let _navStack = []; // { label_te, label_en, action } — last entry is current page
+
+function renderBreadcrumb() {
+  const nav = document.getElementById('breadcrumb');
+  if (!nav) return;
+  if (_navStack.length <= 1) { nav.innerHTML = ''; nav.style.display = 'none'; return; }
+  nav.style.display = '';
+  nav.innerHTML = _navStack.map((crumb, idx) => {
+    const label = t(crumb.label_te, crumb.label_en);
+    const isLast = idx === _navStack.length - 1;
+    if (isLast) return `<span class="bc-current">${label}</span>`;
+    return `<button class="bc-link" onclick="(${crumb.action.toString()})()">${label}</button><span class="bc-sep">›</span>`;
+  }).join('');
+}
 let dateMode = "range"; // "range" | "single"
 
 function setDateMode(mode) {
@@ -1466,6 +1483,7 @@ function setStep(n) {
   document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
   document.getElementById("panel"+n).classList.add("active");
   window.scrollTo({ top: 0, behavior: "smooth" });
+  if (n === 1) { _navStack = []; renderBreadcrumb(); }
 }
 
 function showLoading(on) {
@@ -2093,6 +2111,18 @@ function showResults() {
   for (let i = 0; i < end; i++) container.appendChild(_renderResultCard(allResults[i], i));
   _resultsShown = end;
   _updateLoadMoreBtn();
+  // Breadcrumb: Home › Search › Results
+  const fromVal = document.getElementById("rangeFrom").value;
+  const toVal   = document.getElementById("rangeTo").value;
+  const rangeLabel = fromVal && toVal
+    ? `${fromVal.split('-').slice(1).reverse().join('/')} – ${toVal.split('-').slice(1).reverse().join('/')}`
+    : t('ఫలితాలు','Results');
+  _navStack = [
+    { label_te: '🏠 హోమ్',        label_en: '🏠 Home',        action: function(){ resetWizard(); } },
+    { label_te: 'ముహూర్తం వెతుకు', label_en: 'Search Muhurtam', action: function(){ setStep(1); _navStack=[]; renderBreadcrumb(); } },
+    { label_te: rangeLabel,        label_en: rangeLabel,        action: null }
+  ];
+  renderBreadcrumb();
   setStep(3);
 }
 
@@ -2289,11 +2319,23 @@ function showCheckResult(data) {
   list.appendChild(card);
 
   document.getElementById("resultsActions").style.display = "";
+  // Breadcrumb: Home › Check Muhurtam › date
+  const checkDateLabel = t(data.date_te || '', tDate(data.date_te, data.date_raw) || data.date_te || '');
+  _navStack = [
+    { label_te: '🏠 హోమ్',        label_en: '🏠 Home',        action: function(){ resetWizard(); } },
+    { label_te: 'ముహూర్తం తనిఖీ', label_en: 'Check Muhurtam', action: function(){ setStep(2); _navStack=[]; renderBreadcrumb(); } },
+    { label_te: checkDateLabel,    label_en: checkDateLabel,    action: null }
+  ];
+  renderBreadcrumb();
 }
-
-// ── Detail sheet ──────────────────────────────────────────────────────────────
 function showDetail(i) {
   const r = allResults[i];
+  // Push date crumb (replacing any previous detail crumb)
+  if (_navStack.length >= 3) _navStack = _navStack.slice(0, 3);
+  else if (_navStack.length === 0) _navStack = [{ label_te:'🏠 హోమ్', label_en:'🏠 Home', action:function(){ resetWizard(); } }];
+  const detailLabel = t(r.date_te || '', tDate(r.date_te, r.date_raw) || r.date_te || '');
+  _navStack.push({ label_te: detailLabel, label_en: detailLabel, action: null });
+  renderBreadcrumb();
   const cName = CEREMONY_NAMES[selectedCeremony]||selectedCeremony;
   document.getElementById("sheetTitle").textContent = `${r.date_te} · ${r.vaaram_te}${(r.gregorian_vaaram_te && r.gregorian_vaaram_te !== r.vaaram_te) ? ' (పంచాంగం)' : ''}`;
   document.getElementById("sheetDate").textContent  = `${cName} ముహూర్తం వివరాలు`;
@@ -2435,6 +2477,8 @@ async function _loadHoroscopeForDetail(r) {
 function closeSheet() {
   document.getElementById("overlay").classList.remove("open");
   document.body.style.overflow = "";
+  // Pop the detail date crumb (keep Home + Search/Check + Results crumbs)
+  if (_navStack.length > 3) { _navStack = _navStack.slice(0, 3); renderBreadcrumb(); }
 }
 function closeOverlay(e) { if(e.target===document.getElementById("overlay")) closeSheet(); }
 
@@ -2444,6 +2488,7 @@ function resetWizard() {
   selectedCeremony = null;
   allResults = [];
   _lastCheckData = null;
+  _navStack = [];
   personCount = 0;
   dateMode = "range";
   savedProfileCharts = {};
