@@ -558,24 +558,130 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
    PERSON BLOCK
 ════════════════════════════════ */
 .person-block {
-  background: var(--cream2);
-  border: 1.5px solid #E8D5C4;
-  border-radius: var(--radius-sm);
-  padding: 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
   margin-bottom: 12px;
-  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
 }
 .person-block h3 {
-  font-size: 0.85rem; font-weight: 700; color: var(--saffron-dark);
-  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--indigo-dark);
+  padding: 12px 16px;
+  background: var(--indigo-xl);
+  border-bottom: 1px solid var(--indigo-light);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
+}
+.person-block-body {
+  padding: 14px 16px;
 }
 .person-remove {
-  position: absolute; top: 10px; right: 10px;
-  background: #FBE9E7; border: none; border-radius: 50%;
-  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: #BF360C; font-size: 0.9rem;
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color var(--transition);
 }
+.person-remove:hover { color: #DC2626; background: #FEF2F2; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Profile chips */
+#profileChips {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+.profile-chip-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.profile-chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.profile-chip {
+  background: var(--indigo-xl);
+  border: 1.5px solid var(--indigo-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  flex-shrink: 0;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.profile-chip-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--indigo-dark);
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
+}
+.profile-chip-nak {
+  font-size: 11px;
+  color: var(--text-2);
+  font-family: 'Noto Sans Telugu', system-ui, sans-serif;
+}
+.profile-chip-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.profile-chip-add {
+  flex: 1;
+  background: var(--indigo);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 0;
+  font-size: 11px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+}
+.profile-chip-del {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.save-profile-btn {
+  margin-top: 8px;
+  background: var(--indigo-xl);
+  border: 1px solid var(--indigo-light);
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--indigo);
+  cursor: pointer;
+  font-weight: 600;
+}
+.save-profile-btn:hover { background: var(--indigo-light); }
 
 /* ════════════════════════════════
    BUTTONS
@@ -1149,7 +1255,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   <div class="section-title" data-te="వ్యక్తుల వివరాలు" data-en="Person Details">వ్యక్తుల వివరాలు</div>
 
   <!-- Saved profiles chips (hidden until profiles exist) -->
-  <div id="profileChips" style="display:none;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:12px;border:1px solid rgba(196,154,108,0.2)"></div>
+  <div id="profileChips" style="display:none"></div>
 
   <div id="personList"></div>
   <button class="btn-add" id="addPersonBtn" data-te="＋ మరో వ్యక్తిని జోడించండి (గరిష్టం 6)" data-en="＋ Add Another Person (max 6)" onclick="addPerson()">
@@ -1528,15 +1634,15 @@ function renderProfileChips() {
   if (!profiles.length) { container.style.display = "none"; return; }
   container.style.display = "";
   container.innerHTML = `
-    <div style="font-size:0.7rem;font-weight:700;color:var(--brown-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">💾 Saved Profiles — నొక్కి జోడించండి</div>
-    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:4px">
+    <div class="profile-chip-label">💾 Saved Profiles — నొక్కి జోడించండి</div>
+    <div class="profile-chip-row">
       ${profiles.map((p,i) => `
-        <div style="background:var(--gold-light);border:1.5px solid var(--gold);border-radius:12px;padding:10px 12px;flex-shrink:0;min-width:120px;display:flex;flex-direction:column;gap:4px">
-          <div style="font-weight:700;font-size:0.85rem;color:var(--maroon)">${p.name}</div>
-          ${p.birthChart ? `<div style="font-size:0.7rem;color:var(--brown-mid)">🌟 ${p.birthChart.janma_nakshatra_te}${p.birthChart.janma_nakshatra_padam ? " "+p.birthChart.janma_nakshatra_padam+"వ పాదం" : ""}</div>` : ""}
-          <div style="display:flex;gap:6px;margin-top:4px">
-            <button onclick="addFromProfile(${i})" style="flex:1;background:var(--saffron);color:white;border:none;border-radius:7px;padding:5px 0;font-size:0.75rem;font-family:inherit;font-weight:700;cursor:pointer">＋ Add</button>
-            <button onclick="deleteProfile('${p.name.replace(/'/g,"\\'")}') " style="background:transparent;border:1px solid #ddd;border-radius:7px;padding:5px 7px;font-size:0.75rem;font-family:inherit;color:var(--brown-light);cursor:pointer">✕</button>
+        <div class="profile-chip">
+          <div class="profile-chip-name">${p.name}</div>
+          ${p.birthChart ? `<div class="profile-chip-nak">🌟 ${p.birthChart.janma_nakshatra_te}${p.birthChart.janma_nakshatra_padam ? " "+p.birthChart.janma_nakshatra_padam+"వ పాదం" : ""}</div>` : ""}
+          <div class="profile-chip-actions">
+            <button class="profile-chip-add" onclick="addFromProfile(${i})">＋ Add</button>
+            <button class="profile-chip-del" onclick="deleteProfile('${p.name.replace(/'/g,"\\'")}')">✕</button>
           </div>
         </div>`).join("")}
     </div>`;
@@ -1744,8 +1850,8 @@ function addPerson() {
   const idx = personCount, div = document.createElement("div");
   div.className = "person-block"; div.id = "person"+idx;
   div.innerHTML = `
-    <h3>👤 వ్యక్తి ${idx}</h3>
-    <button class="person-remove" onclick="removePerson(${idx})">✕</button>
+    <h3>👤 వ్యక్తి ${idx}<button class="person-remove" onclick="removePerson(${idx})" title="తొలగించు">✕</button></h3>
+    <div class="person-block-body">
     <div class="field" style="margin-bottom:10px">
       <label>పేరు</label>
       <input type="text" id="pname${idx}" placeholder="వ్యక్తి పేరు నమోదు చేయండి"
@@ -1776,7 +1882,8 @@ function addPerson() {
         <div class="ac-list" id="acP${idx}"></div>
       </div>
     </div>
-    <button class="save-profile-btn" style="margin-top:8px;background:var(--gold-light);border:1px solid var(--gold);border-radius:8px;padding:6px 14px;font-size:0.75rem;font-family:inherit;color:var(--brown);cursor:pointer" onclick="savePersonProfile(${idx})">💾 Save Profile</button>`;
+    <button class="save-profile-btn" onclick="savePersonProfile(${idx})">💾 Save Profile</button>
+    </div>`;
   document.getElementById("personList").appendChild(div);
   _renumberPersonBlocks();
   document.getElementById("addPersonBtn").style.display = document.querySelectorAll(".person-block").length>=6?"none":"block";
