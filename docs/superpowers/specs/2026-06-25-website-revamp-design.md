@@ -197,6 +197,29 @@ The file will remain a single HTML file. No new assets, no build step.
 
 ---
 
+## 10b. Ceremony Icons (updated)
+
+| Ceremony | Icon | Reason |
+|---|---|---|
+| Vivaha | 🏵️ | Ceremonial garland rosette — represents the Jayamala (garland exchange), the defining moment of a Telugu Hindu wedding |
+| Garbhadanam | 🌱 | Seedling — new life beginning |
+| Namakaranam | 👶 | Baby — ceremony is for the newborn |
+| Anna Prasana | 🥄 | Spoon — baby being fed for the first time |
+| Chelamu | 💎 | Gem — represents the ear ornament |
+| Vidyarambham | 📚 | Books — beginning of learning |
+| Upanayanam | 🪡 | Thread spool — the sacred Yajnopavita thread |
+| Gruha Pravesam | 🔑 | Key — universal housewarming symbol |
+| Sankhu Stapana | 🐚 | Conch shell — "Sankhu" literally means conch |
+| Prayanam | 🧭 | Compass — any journey, traditional feel |
+| Kotta Battalu | 👘 | Traditional garment robe |
+| Yuddham | 🏆 | Trophy — modern competition/contest |
+| Oshadha Seva | 🌿 | Herb — Ayurvedic/traditional medicine |
+| Pooja | 🪔 | Diya lamp — perfect for Hindu worship |
+
+Category tab icons: 🏵️ Wedding · 🍼 Childhood · 🔑 Home · 🌟 Life · 🙏 Pooja
+
+---
+
 ## 11. Out of Scope
 
 - Backend changes (this is purely a frontend redesign)
