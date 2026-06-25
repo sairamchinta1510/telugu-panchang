@@ -1771,56 +1771,141 @@ function bestWindow(r) {
 
 // ── Results ───────────────────────────────────────────────────────────────────
 function _renderResultCard(r, i) {
-  const bw = r.good_windows && r.good_windows.length ? r.good_windows[0] : null;
-  const winHtml = bw
-    ? `<div style="background:linear-gradient(135deg,#E8F5E9,#F1F8E9);border:1.5px solid #66BB6A;border-radius:12px;padding:12px 14px;margin-bottom:10px">
-         <div style="font-size:0.65rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px">⭐ ఉత్తమ ముహూర్తం</div>
-         <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
-           <span style="font-size:1.3rem;font-weight:800;color:#1B5E20">${bw.best_time || bw.from}</span>
-           ${bw.choghadiya_te ? `<span style="font-size:0.75rem;background:#A5D6A7;color:#1B5E20;border-radius:10px;padding:2px 8px;font-weight:700">${bw.choghadiya_te} చోఘడియ</span>` : ''}
-           <span style="font-size:0.78rem;color:#388E3C;font-weight:600">(${bw.from}–${bw.to})</span>
-         </div>
-         <div style="font-size:0.72rem;color:#2E7D32;margin-top:4px">⭐ ${bw.nakshatra_te||''} · 📅 ${bw.tithi_te||''} · 🌅 ${bw.lagna_te||''} లగ్నం</div>
-       </div>`
-    : `<div style="background:#FFF3E0;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:0.78rem;color:#E65100">⚠️ ఈ రోజు పండితుల సలహా తీసుకోండి</div>`;
+  const windows = r.good_windows || [];
+  const best    = windows[0] || null;
+  const others  = windows.slice(1);
 
-  const card = document.createElement("div");
-  card.className = "result-card";
-  const _vaaramHtml = (r.gregorian_vaaram_te && r.gregorian_vaaram_te !== r.vaaram_te)
-    ? `<div class="vaaram">${r.gregorian_vaaram_te}
-         <span title="క్యాలెండర్ తేది ప్రకారం వారం. పంచాంగ వారం సూర్యోదయం ఆధారంగా మారవచ్చు." style="font-size:0.65rem;background:#FFF3E0;color:#E65100;border-radius:10px;padding:1px 6px;margin-left:4px;cursor:help">క్యాలెండర్</span></div>
-       <div style="font-size:0.72rem;color:#E65100;margin-top:2px">⚠️ పంచాంగ వారం: ${r.vaaram_te}</div>`
-    : `<div class="vaaram">${r.vaaram_te}</div>`;
+  // ── Zone A: Day timeline breadcrumb bar ──────────────────────────────────
+  const rise = r.sunrise, set = r.sunset;
+  let timelineHtml = '';
+  if (rise && set && windows.length) {
+    const riseM = toMins(rise), setM = toMins(set), span = setM - riseM;
+    const blocks = windows.map((w, wi) => {
+      const fromM  = toMins(w.from), toM = toMins(w.to);
+      const left   = Math.max(0, Math.min(100, ((fromM - riseM) / span) * 100));
+      const width  = Math.max(2, Math.min(100 - left, ((toM - fromM) / span) * 100));
+      const bg     = wi === 0 ? '#2E7D32' : '#81C784';
+      const label  = wi === 0 ? `⭐ ${w.from}` : w.from;
+      return `<div class="tl-window" style="left:${left.toFixed(1)}%;width:${width.toFixed(1)}%;background:${bg}"
+                   onclick="document.getElementById('win-${i}-${wi}').scrollIntoView({behavior:'smooth',block:'nearest'})"
+                   title="${w.from}–${w.to}">
+                <span>${label}</span>
+              </div>`;
+    }).join('');
+    timelineHtml = `
+      <div class="day-timeline">
+        <div class="tl-label">${rise}</div>
+        <div class="tl-label right">${set}</div>
+        ${blocks}
+      </div>`;
+  }
+
+  // ── Score breakdown HTML (reused by every window card) ────────────────────
+  function _scoreHtml(w) {
+    const lq         = w.lagna_quality || {};
+    const score      = lq.score || 0;
+    const components = lq.score_components || [];
+    if (!score) return '';
+    const barWidth = Math.round((score / 150) * 100);
+    const compsHtml = components.length ? `
+      <details>
+        <summary style="font-size:0.65rem;color:#2E7D32;cursor:pointer;font-weight:600;list-style:none;margin-top:4px">
+          ${t('స్కోర్ వివరాలు ▾','Score details ▾')}
+        </summary>
+        <table class="score-details-table">
+          ${components.map(c => `
+            <tr>
+              <td>${c.te}${c.en ? `<span style="color:#888;font-size:0.6rem;margin-left:4px">(${c.en})</span>` : ''}</td>
+              <td class="${c.delta > 0 ? 'pos' : c.delta < 0 ? 'neg' : 'neu'}">${c.delta > 0 ? '+' : ''}${c.delta}</td>
+            </tr>`).join('')}
+          <tr class="total-row">
+            <td>${t('మొత్తం','Total')} <span style="color:#888;font-size:0.6rem">(Total)</span></td>
+            <td class="pos">${score} / 150</td>
+          </tr>
+        </table>
+      </details>` : '';
+    return `
+      <div style="margin-top:5px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <div style="flex:1;background:#e0e0e0;border-radius:4px;height:6px">
+            <div style="width:${barWidth}%;background:#2E7D32;height:6px;border-radius:4px"></div>
+          </div>
+          <span style="font-size:0.7rem;font-weight:700;color:#2E7D32">${score}/150</span>
+        </div>
+        ${compsHtml}
+      </div>`;
+  }
+
+  // ── Zone B: Best window (hero) ────────────────────────────────────────────
+  let heroHtml = '';
+  if (best) {
+    heroHtml = `
+      <div id="win-${i}-0" class="win-card best">
+        <div class="win-card-header">
+          <div>
+            <span style="font-size:0.6rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.07em">⭐ ${t('ఉత్తమ ముహూర్తం','Best Window')}</span>
+            <div class="win-card-time">${best.best_time || best.from} <span style="font-size:0.72rem;font-weight:600;color:#388E3C">(${best.from}–${best.to})</span></div>
+          </div>
+          ${(best.lagna_quality && best.lagna_quality.score)
+            ? `<div class="win-card-score">${best.lagna_quality.score}/150</div>` : ''}
+        </div>
+        <div class="win-card-meta">
+          ${tLagna(best.lagna_te)} ${t('లగ్నం','Lagna')}${best.choghadiya_te ? ` · ${t(best.choghadiya_te, best.choghadiya_te)} ${t('చోఘడియ','Choghadiya')}` : ''}
+        </div>
+        <div class="win-card-sub">${tNakshatra(best.nakshatra_te)} · ${tTithi(best.tithi_te)}</div>
+        ${_scoreHtml(best)}
+      </div>`;
+  } else {
+    heroHtml = `<div style="background:#FFF3E0;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:0.78rem;color:#E65100">
+      ⚠️ ${t('ఈ రోజు పండితుల సలహా తీసుకోండి','Consult a scholar for this day')}
+    </div>`;
+  }
+
+  // ── Zone C: Other windows (compact mini-cards) ────────────────────────────
+  const othersHtml = others.map((w, wi) => `
+    <div id="win-${i}-${wi + 1}" class="win-card">
+      <div class="win-card-header">
+        <div>
+          <div class="win-card-time" style="font-size:0.9rem">${w.from}–${w.to}</div>
+          <div class="win-card-meta">${tLagna(w.lagna_te)} ${t('లగ్నం','Lagna')}${w.choghadiya_te ? ` · ${t(w.choghadiya_te, w.choghadiya_te)}` : ''}</div>
+        </div>
+        ${(w.lagna_quality && w.lagna_quality.score)
+          ? `<div class="win-card-score" style="background:#558B2F">${w.lagna_quality.score}/150</div>` : ''}
+      </div>
+      ${_scoreHtml(w)}
+    </div>`).join('');
+
+  // ── Vaaram display ────────────────────────────────────────────────────────
+  const vaaramDisplay = (r.gregorian_vaaram_te && r.gregorian_vaaram_te !== r.vaaram_te)
+    ? `${tVaaram(r.gregorian_vaaram_te)} <span style="font-size:0.65rem;background:#FFF3E0;color:#E65100;border-radius:10px;padding:1px 6px;margin-left:3px">${t('క్యాలెండర్','Cal')}</span>
+       <div style="font-size:0.7rem;color:#E65100;margin-top:2px">⚠️ ${t('పంచాంగ వారం','Panchang day')}: ${tVaaram(r.vaaram_te)}</div>`
+    : tVaaram(r.vaaram_te);
+
+  // ── Assemble card ─────────────────────────────────────────────────────────
+  const card = document.createElement('div');
+  card.className = 'result-card';
   card.innerHTML = `
     <div class="result-card-header">
       <div class="result-date">
-        <div class="day">${r.date_te}</div>
-        ${_vaaramHtml}
+        <div class="day">${tDate(r.date_te, r.date_raw)}</div>
+        <div class="vaaram">${vaaramDisplay}</div>
       </div>
-      <div class="result-badge">
-        ${r.nakshatra_te}<br>${r.tithi_te}
-      </div>
+      <div class="result-badge">${tNakshatra(r.nakshatra_te)}<br>${tTithi(r.tithi_te)}</div>
     </div>
     <div class="result-body">
-      ${winHtml}
+      ${timelineHtml}
+      ${heroHtml}
+      ${othersHtml}
       <div class="result-row">
         <div class="result-chip">✨ <span>${r.yoga_te}</span></div>
         <div class="result-chip">🌅 <span>${r.sunrise}</span></div>
         <div class="result-chip">🌇 <span>${r.sunset}</span></div>
       </div>
-      ${r.good_windows && r.good_windows.length ? `
-      <div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:8px;padding:6px 10px;margin-top:6px">
-        <div style="font-size:0.68rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px">⏰ శుభ ముహూర్తాలు</div>
-        ${r.good_windows.map((w,wi)=>`
-        <div style="display:flex;align-items:center;gap:6px;padding:3px 0;${wi<r.good_windows.length-1?'border-bottom:1px solid #C8E6C9':''}">
-          ${wi===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:3px;padding:1px 4px;font-weight:700">ఉత్తమం</span>':'<span style="font-size:0.65rem;color:#666;min-width:32px"></span>'}
-          <span style="font-size:0.8rem;font-weight:700;color:#1B5E20">${w.from}–${w.to}</span>
-          <span style="font-size:0.72rem;color:#388E3C">${w.nakshatra_te||''} · ${w.tithi_te||''} · ${w.lagna_te||''} లగ్నం</span>
-        </div>`).join('')}
-      </div>` : ""}
-      ${bw && bw.planet_rashis ? `<details style="margin-top:6px"><summary style="font-size:0.72rem;color:var(--brown-mid);cursor:pointer;padding:4px 0">🪐 గ్రహ స్థానాలు చూడండి</summary>${renderHoroscopeChart(bw.planet_rashis, bw.lagna_idx)}</details>` : ''}
+      ${best && best.planet_rashis
+        ? `<details style="margin-top:6px"><summary style="font-size:0.72rem;color:var(--brown-mid);cursor:pointer;padding:4px 0">🪐 ${t('గ్రహ స్థానాలు చూడండి','View planetary positions')}</summary>${renderHoroscopeChart(best.planet_rashis, best.lagna_idx)}</details>`
+        : ''}
       <button class="btn-details" onclick="showDetail(${i})">
-        🔍 ముహూర్తం వివరాలు చూడండి
+        🔍 ${t('ముహూర్తం వివరాలు చూడండి','View muhurtam details')}
       </button>
     </div>`;
   return card;
