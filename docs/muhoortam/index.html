@@ -1095,7 +1095,7 @@ const _MASAM_TE_LIST = [
 function teToEn(teTerm, teList, enList) {
   if (!teTerm) return teTerm;
   // Strip trailing suffixes like " నక్షత్రం", " తిథి", " లగ్నం", " మాసం"
-  const clean = teTerm.replace(/\s*(నక్షత్రం|తిథి|లగ్నం|మాసం|వారం)\s*$/, '').trim();
+  const clean = teTerm.replace(/\s*(నక్షత్రం|తిథి|లగ్నం|మాసం)\s*$/, '').trim();
   const idx = teList.indexOf(clean);
   return idx >= 0 ? enList[idx] : teTerm;
 }
@@ -1116,15 +1116,16 @@ function tDate(date_te, date_raw) {
 
 // ── Re-render current results after lang toggle ───────────────────────────────
 function _rerenderCurrentResults() {
-  // If range results are showing, re-render all cards
+  if (_lastCheckData && dateMode === 'single') {
+    showCheckResult(_lastCheckData);
+    return;
+  }
   const container = document.getElementById('cardsContainer');
   if (container && allResults.length) {
     container.innerHTML = '';
     const end = Math.min(_resultsShown, allResults.length);
     for (let i = 0; i < end; i++) container.appendChild(_renderResultCard(allResults[i], i));
   }
-  // If check result is showing, re-render it
-  if (_lastCheckData) showCheckResult(_lastCheckData);
 }
 
 const API_BASE = "https://h3dp7amvn9.execute-api.ap-south-1.amazonaws.com";
@@ -2292,6 +2293,7 @@ function resetWizard() {
   showError("");
   selectedCeremony = null;
   allResults = [];
+  _lastCheckData = null;
   personCount = 0;
   dateMode = "range";
   savedProfileCharts = {};
