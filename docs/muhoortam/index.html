@@ -1064,19 +1064,39 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   filter: invert(23%) sepia(94%) saturate(600%) hue-rotate(222deg);
 }
-.validation-badge {
-  display: inline-flex;
+.validation-strip {
+  display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.62rem;
+  gap: 6px;
+  padding: 5px 10px;
+  margin: 4px 0 2px;
+  border-radius: 8px;
+  font-size: 0.7rem;
   font-weight: 600;
-  border-radius: 10px;
-  padding: 2px 8px;
-  margin-top: 3px;
+  border: 1.5px solid transparent;
 }
-.validation-badge.verified  { background: var(--success-bg); color: var(--success); }
-.validation-badge.partial   { background: var(--success-bg); color: var(--success); }
-.validation-badge.mismatch  { background: var(--amber-light); color: #92400E; }
+.validation-strip.verified, .validation-strip.partial {
+  background: #F0FDF4; border-color: #86EFAC; color: #15803D;
+}
+.validation-strip.unavailable {
+  background: #F8FAFC; border-color: #CBD5E1; color: #64748B;
+}
+.validation-strip .vs-tick {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; flex-shrink: 0;
+}
+.validation-strip.verified  .vs-tick,
+.validation-strip.partial   .vs-tick { background: #22C55E; color: #fff; }
+.validation-strip.unavailable .vs-tick { background: #94A3B8; color: #fff; }
+.validation-strip .vs-label { flex: 1; }
+.validation-strip .vs-source {
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em;
+  padding: 1px 7px; border-radius: 20px;
+}
+.validation-strip.verified  .vs-source,
+.validation-strip.partial   .vs-source { background: #BBF7D0; color: #14532D; }
+.validation-strip.unavailable .vs-source { background: #E2E8F0; color: #475569; }
 </style>
 </head>
 <body>
@@ -2239,12 +2259,23 @@ function _renderResultCard(r, i) {
   function _validationBadgeHtml(validation) {
     if (!validation) return '';
     const st = validation.status;
+    const src = validation.source || 'Prokerala Panchangam';
     if (st === 'verified' || st === 'partial') {
-      const src = validation.source || 'Prokerala Panchangam';
-      return `<span class="validation-badge ${st}">✓ ${t('పరీక్షించబడింది','Verified')} · ${src}</span>`;
+      const label = st === 'verified'
+        ? t('పంచాంగంతో ధృవీకరించబడింది', 'Panchangam Verified')
+        : t('తిథి & నక్షత్రం సరిపోయాయి', 'Tithi & Nakshatra match');
+      return `<div class="validation-strip ${st}">
+        <span class="vs-tick">✓</span>
+        <span class="vs-label">${label}</span>
+        <span class="vs-source">${src}</span>
+      </div>`;
     }
-    if (st === 'mismatch') {
-      return `<span class="validation-badge mismatch">⚠ ${t('స్థానిక పంచాంగంతో తనిఖీ చేయండి','Verify with local pandit')}</span>`;
+    if (st === 'unavailable') {
+      return `<div class="validation-strip unavailable">
+        <span class="vs-tick">~</span>
+        <span class="vs-label">${t('ధృవీకరించబడలేదు', 'Not verified')}</span>
+        <span class="vs-source">${src}</span>
+      </div>`;
     }
     return '';
   }
