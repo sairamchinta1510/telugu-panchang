@@ -177,6 +177,9 @@ def _handle_find(body: dict) -> dict:
     # Cross-validate each result date against Prokerala Panchangam.
     # Runs only for the final result set (not every day in the scan range).
     # Failures are silently caught — validation never blocks the response.
+    # Results with status="mismatch" (tithi or nakshatra differ) are excluded —
+    # they were computed on incorrect panchang data.
+    validated_results = []
     for r in results:
         try:
             day_str, month_str, year_str = r["date_raw"].split("/")
@@ -194,6 +197,12 @@ def _handle_find(body: dict) -> dict:
             )
         except Exception:
             r["validation"] = {"status": "unavailable", "source": "Prokerala Panchangam"}
+
+        # Exclude results where panchang elements confirmed to be wrong
+        if r["validation"]["status"] != "mismatch":
+            validated_results.append(r)
+
+    results = validated_results
 
     if month_cache is None:
         def _populate_cache() -> None:
