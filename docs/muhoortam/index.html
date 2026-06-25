@@ -354,92 +354,93 @@ body {
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .panel { display: none; }
 .panel.active { display: block; animation: fadeIn 0.25s ease; }
+.panel-inner {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+}
 
 /* ════════════════════════════════
    SECTION TITLE
 ════════════════════════════════ */
 .section-title {
-  font-family: 'Noto Serif Telugu', serif;
-  font-size: 1rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: var(--maroon);
-  margin: 4px 0 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.section-title::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, var(--brown-light), transparent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-3);
+  margin: 16px 0 10px;
 }
 
 /* ════════════════════════════════
    CARDS
 ════════════════════════════════ */
 .card {
-  background: var(--white);
+  background: var(--surface);
   border-radius: var(--radius);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow);
-  padding: 18px;
+  padding: 20px;
   margin-bottom: 14px;
-  border: 1px solid rgba(196,154,108,0.2);
 }
 
 /* ════════════════════════════════
    CEREMONY CATEGORY TABS + GRID
 ════════════════════════════════ */
-.cer-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 10px; scrollbar-width: none; }
-.cer-tabs::-webkit-scrollbar { display: none; }
+.cer-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
 .cer-tab {
-  flex-shrink: 0;
-  border: 1.5px solid #E8D5C4;
+  padding: 6px 13px;
   border-radius: 20px;
-  background: var(--cream2);
-  padding: 6px 14px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--brown-mid);
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  transition: all var(--transition);
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
   white-space: nowrap;
 }
 .cer-tab.active {
-  border-color: var(--saffron);
-  background: linear-gradient(135deg, var(--saffron-dark), var(--saffron));
-  color: white;
-  box-shadow: 0 2px 10px rgba(193,68,14,0.3);
+  background: var(--indigo);
+  border-color: var(--indigo);
+  color: #fff;
 }
-.ceremony-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+.cer-tab:hover:not(.active) {
+  border-color: var(--indigo-light);
+  background: var(--indigo-xl);
+  color: var(--indigo);
+}
+.ceremony-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 4px; }
+@media (max-width: 400px) { .ceremony-grid { grid-template-columns: repeat(2, 1fr); } }
 .ceremony-card {
-  border: 2px solid #E8D5C4;
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--cream2);
-  padding: 14px 8px 10px;
+  padding: 14px 10px;
   cursor: pointer;
   text-align: center;
-  transition: var(--transition);
-  user-select: none;
+  background: var(--surface);
+  transition: all var(--transition);
   display: none;
 }
 .ceremony-card.cer-visible { display: block; }
+.ceremony-card:hover { border-color: var(--indigo-light); background: var(--indigo-xl); }
 .ceremony-card:active { transform: scale(0.97); }
 .ceremony-card.selected {
-  border-color: var(--saffron);
-  background: linear-gradient(135deg, var(--saffron-dark), var(--saffron));
-  box-shadow: 0 4px 16px rgba(193,68,14,0.35);
+  border-color: var(--indigo);
+  background: var(--indigo-xl);
+  box-shadow: 0 0 0 2px var(--indigo-light);
 }
-.ceremony-card .cer-icon { font-size: 1.6rem; margin-bottom: 5px; display: block; }
-.ceremony-card .cer-name { font-size: 0.82rem; font-weight: 700; color: var(--brown); line-height: 1.3; }
-.ceremony-card .cer-name-en { font-size: 0.67rem; color: var(--brown-mid); margin-top: 2px; }
-.ceremony-card.selected .cer-name { color: var(--white); }
-.ceremony-card.selected .cer-name-en { color: rgba(255,255,255,0.8); }
-/* ── Language EN: swap ceremony card name prominence ── */
-body.lang-en .ceremony-card .cer-name    { font-size: 0.67rem; font-weight: 600; color: var(--brown-mid); }
-body.lang-en .ceremony-card .cer-name-en { font-size: 0.82rem; font-weight: 700; color: var(--brown); margin-top: 0; }
-body.lang-en .ceremony-card.selected .cer-name    { color: rgba(255,255,255,0.75); }
-body.lang-en .ceremony-card.selected .cer-name-en { color: var(--white); }
+.ceremony-card .cer-icon { font-size: 1.7rem; margin-bottom: 6px; display: block; }
+.ceremony-card .cer-name { font-size: 0.78rem; font-weight: 700; color: var(--text); line-height: 1.3; font-family: 'Noto Sans Telugu', system-ui, sans-serif; }
+.ceremony-card .cer-name-en { font-size: 0.65rem; color: var(--text-2); margin-top: 2px; font-family: 'Inter', system-ui, sans-serif; }
+.ceremony-card.selected .cer-name { color: var(--indigo); }
+.ceremony-card.selected .cer-name-en { color: var(--indigo); opacity: 0.8; }
+body.lang-en .ceremony-card .cer-name    { font-size: 0.65rem; font-weight: 600; color: var(--text-2); }
+body.lang-en .ceremony-card .cer-name-en { font-size: 0.78rem; font-weight: 700; color: var(--text); margin-top: 0; }
+body.lang-en .ceremony-card.selected .cer-name    { color: var(--indigo); opacity: 0.8; }
+body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
 
 /* ════════════════════════════════
    HOROSCOPE CHART (South Indian)
@@ -481,34 +482,45 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--white); }
 ════════════════════════════════ */
 .field { margin-bottom: 14px; }
 .field label {
-  display: block; font-size: 0.78rem; font-weight: 700;
-  color: var(--brown-mid); margin-bottom: 6px; letter-spacing: 0.02em;
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-2);
+  margin-bottom: 6px;
+  font-family: 'Inter', system-ui, sans-serif;
 }
-.field input, .field select {
+.field input[type="text"],
+.field input[type="date"],
+.field input[type="number"],
+.field select {
   width: 100%;
-  padding: 13px 14px;
-  border: 1.5px solid #E8D5C4;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: 16px;
-  font-family: inherit;
-  background: var(--cream2);
-  color: var(--brown);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
   outline: none;
   transition: border-color var(--transition), box-shadow var(--transition);
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
   -webkit-appearance: none;
+  appearance: none;
 }
-.field input:focus, .field select:focus {
-  border-color: var(--saffron);
-  box-shadow: 0 0 0 3px rgba(193,68,14,0.15);
-  background: var(--white);
+.field input:focus,
+.field select:focus {
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 3px var(--indigo-xl);
 }
+.field input::placeholder { color: var(--text-3); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .input-icon-wrap { position: relative; }
 .input-icon-wrap .icon {
-  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
-  font-size: 1rem; pointer-events: none;
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; pointer-events: none;
 }
-.input-icon-wrap input { padding-left: 38px; }
+.input-icon-wrap input { padding-left: 36px; }
 
 /* ════════════════════════════════
    AUTOCOMPLETE
@@ -516,29 +528,31 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--white); }
 .ac-wrap { position: relative; }
 .ac-list {
   position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-  background: var(--white); border: 1.5px solid #E8D5C4;
+  background: var(--surface); border: 1.5px solid var(--border);
   border-radius: var(--radius-sm); z-index: 1000;
   max-height: 220px; overflow-y: auto;
   box-shadow: var(--shadow-lg); display: none;
 }
 .ac-item {
-  padding: 13px 14px; font-size: 0.86rem; cursor: pointer;
-  border-bottom: 1px solid #F5EDE4; line-height: 1.4; color: var(--brown);
+  padding: 11px 14px; font-size: 13px; cursor: pointer;
+  border-bottom: 1px solid var(--border); line-height: 1.4; color: var(--text);
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
 }
 .ac-item:last-child { border-bottom: none; }
-.ac-item:active, .ac-item.hover { background: var(--cream2); }
-.ac-empty { padding: 12px 14px; font-size: 0.84rem; color: #BCAAA4; text-align: center; }
+.ac-item:hover, .ac-item.hover { background: var(--indigo-xl); }
+.ac-empty { padding: 12px 14px; font-size: 13px; color: var(--text-3); text-align: center; }
 
 /* ════════════════════════════════
    DATE RANGE
 ════════════════════════════════ */
 .date-range { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .date-tab {
-  flex: 1; padding: 9px 4px; border: none; background: transparent; border-radius: 8px;
-  font-family: inherit; font-size: 0.8rem; font-weight: 600; color: var(--brown-mid); cursor: pointer;
-  transition: var(--transition);
+  flex: 1; padding: 8px 6px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
+  font-size: 12px; font-weight: 600; color: var(--text-2); cursor: pointer;
+  transition: all var(--transition);
 }
-.date-tab.active { background: var(--saffron); color: white; box-shadow: 0 2px 8px rgba(193,68,14,0.3); }
+.date-tab.active { background: var(--indigo); border-color: var(--indigo); color: #fff; }
 
 /* ════════════════════════════════
    PERSON BLOCK
@@ -567,34 +581,36 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--white); }
    BUTTONS
 ════════════════════════════════ */
 .btn-add {
-  width: 100%; padding: 13px;
-  border: 2px dashed #E8D5C4; border-radius: var(--radius-sm);
-  background: none; color: var(--brown-mid); cursor: pointer;
-  font-size: 0.88rem; font-family: inherit; margin-bottom: 14px;
-  transition: var(--transition);
+  display: block; width: 100%; padding: 12px;
+  background: var(--indigo-xl); color: var(--indigo);
+  border: 1.5px dashed var(--indigo-light); border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; cursor: pointer; text-align: center;
+  margin-bottom: 12px; transition: all var(--transition);
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
 }
-.btn-add:active { border-color: var(--saffron); color: var(--saffron); }
+.btn-add:hover { background: var(--indigo-light); }
 
 .btn-primary {
-  width: 100%; padding: 15px;
-  background: linear-gradient(135deg, var(--saffron-dark), var(--saffron));
-  color: var(--white); border: none; border-radius: var(--radius-sm);
-  font-size: 1rem; font-family: inherit; cursor: pointer; font-weight: 700;
-  box-shadow: 0 4px 16px rgba(193,68,14,0.4);
-  transition: var(--transition);
-  letter-spacing: 0.02em;
+  display: block; width: 100%; padding: 12px 24px;
+  background: var(--indigo); color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 700; cursor: pointer; text-align: center;
+  transition: background var(--transition); margin-top: 8px;
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
 }
-.btn-primary:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(193,68,14,0.3); }
-.btn-primary:disabled { background: #D7CCC8; box-shadow: none; cursor: not-allowed; }
+.btn-primary:hover { background: var(--indigo-dark); }
+.btn-primary:active { transform: scale(0.99); }
+.btn-primary:disabled { background: var(--border); cursor: not-allowed; }
 
 .btn-outline {
-  padding: 12px 22px;
-  background: var(--white); color: var(--brown-mid);
-  border: 1.5px solid #E8D5C4; border-radius: var(--radius-sm);
-  cursor: pointer; font-size: 0.9rem; font-family: inherit;
-  transition: var(--transition);
+  display: inline-block; padding: 10px 18px;
+  background: transparent; color: var(--indigo);
+  border: 1.5px solid var(--indigo-light); border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all var(--transition);
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
 }
-.btn-outline:active { background: var(--cream2); }
+.btn-outline:hover { background: var(--indigo-xl); border-color: var(--indigo); }
 
 .actions-row { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
 
@@ -979,6 +995,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
      PANEL 1 — Event Details
 ══════════════════════════════════════════════════ -->
 <div id="panel1" class="panel active">
+<div class="panel-inner">
   <div class="section-title" data-te="వేడుక వివరాలు" data-en="Ceremony Details">వేడుక వివరాలు</div>
 
   <div class="card">
@@ -1122,11 +1139,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   <button class="btn-primary" data-te="తదుపరి దశ → వ్యక్తుల వివరాలు" data-en="Next → Person Details" onclick="goPanel2()">తదుపరి దశ → వ్యక్తుల వివరాలు</button>
 </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════
      PANEL 2 — People
 ══════════════════════════════════════════════════ -->
 <div id="panel2" class="panel">
+<div class="panel-inner">
   <div class="section-title" data-te="వ్యక్తుల వివరాలు" data-en="Person Details">వ్యక్తుల వివరాలు</div>
 
   <!-- Saved profiles chips (hidden until profiles exist) -->
@@ -1141,11 +1160,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <button id="findBtn" class="btn-primary" style="flex:1" onclick="startCompute()">ముహూర్తాలు వెతకండి 🔍</button>
   </div>
 </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════
      PANEL 3 — Results (loading + results)
 ══════════════════════════════════════════════════ -->
 <div id="panel3" class="panel">
+<div class="panel-inner">
   <!-- Loading area -->
   <div id="loadingArea" style="display:none;padding:20px 0;margin-bottom:14px">
     <div class="loading-wrap">
@@ -1188,6 +1209,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <button class="btn-outline" onclick="setStep(2);showError('')">← వ్యక్తులు మార్చండి</button>
     <button class="btn-outline" onclick="resetWizard()">↺ కొత్తగా</button>
   </div>
+</div>
 </div>
 
 <!-- ══════════════════════════════════════════════════
