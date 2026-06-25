@@ -1778,12 +1778,16 @@ function _renderResultCard(r, i) {
   // ── Zone A: Day timeline breadcrumb bar ──────────────────────────────────
   const rise = r.sunrise, set = r.sunset;
   let timelineHtml = '';
-  if (rise && set && windows.length) {
-    const riseM = toMins(rise), setM = toMins(set), span = setM - riseM;
+  if (windows.length) {
+    // Use window-aware bounds so no window is ever clamped off the bar
+    const allMins = windows.flatMap(w => [toMins(w.from), toMins(w.to)]);
+    const riseM = Math.min(toMins(rise || '06:00'), ...allMins);
+    const setM  = Math.max(toMins(set  || '18:00'), ...allMins);
+    const span  = setM - riseM || 1;
     const blocks = windows.map((w, wi) => {
       const fromM  = toMins(w.from), toM = toMins(w.to);
-      const left   = Math.max(0, Math.min(100, ((fromM - riseM) / span) * 100));
-      const width  = Math.max(2, Math.min(100 - left, ((toM - fromM) / span) * 100));
+      const left   = ((fromM - riseM) / span) * 100;
+      const width  = Math.max(2, ((toM - fromM) / span) * 100);
       const bg     = wi === 0 ? '#2E7D32' : '#81C784';
       const label  = wi === 0 ? `⭐ ${w.from}` : w.from;
       return `<div class="tl-window" style="left:${left.toFixed(1)}%;width:${width.toFixed(1)}%;background:${bg}"
@@ -1815,7 +1819,10 @@ function _renderResultCard(r, i) {
         <table class="score-details-table">
           ${components.map(c => `
             <tr>
-              <td>${c.te}${c.en ? `<span style="color:#888;font-size:0.6rem;margin-left:4px">(${c.en})</span>` : ''}</td>
+              <td>${t(
+                `${c.te}${c.en ? `<span style="color:#888;font-size:0.6rem;margin-left:4px">(${c.en})</span>` : ''}`,
+                c.en || c.te
+              )}</td>
               <td class="${c.delta > 0 ? 'pos' : c.delta < 0 ? 'neg' : 'neu'}">${c.delta > 0 ? '+' : ''}${c.delta}</td>
             </tr>`).join('')}
           <tr class="total-row">
