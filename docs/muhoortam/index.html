@@ -1064,39 +1064,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   filter: invert(23%) sepia(94%) saturate(600%) hue-rotate(222deg);
 }
-.validation-strip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  margin: 4px 0 2px;
-  border-radius: 8px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  border: 1.5px solid transparent;
-}
-.validation-strip.verified, .validation-strip.partial {
-  background: #F0FDF4; border-color: #86EFAC; color: #15803D;
-}
-.validation-strip.unavailable {
-  background: #F8FAFC; border-color: #CBD5E1; color: #64748B;
-}
-.validation-strip .vs-tick {
-  width: 18px; height: 18px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.7rem; flex-shrink: 0;
-}
-.validation-strip.verified  .vs-tick,
-.validation-strip.partial   .vs-tick { background: #22C55E; color: #fff; }
-.validation-strip.unavailable .vs-tick { background: #94A3B8; color: #fff; }
-.validation-strip .vs-label { flex: 1; }
-.validation-strip .vs-source {
-  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em;
-  padding: 1px 7px; border-radius: 20px;
-}
-.validation-strip.verified  .vs-source,
-.validation-strip.partial   .vs-source { background: #BBF7D0; color: #14532D; }
-.validation-strip.unavailable .vs-source { background: #E2E8F0; color: #475569; }
 </style>
 </head>
 <body>
@@ -2256,29 +2223,7 @@ function _renderResultCard(r, i) {
       </div>`;
   }
 
-  function _validationBadgeHtml(validation) {
-    if (!validation) return '';
-    const st = validation.status;
-    const src = validation.source || 'Prokerala Panchangam';
-    if (st === 'verified' || st === 'partial') {
-      const label = st === 'verified'
-        ? t('పంచాంగంతో ధృవీకరించబడింది', 'Panchangam Verified')
-        : t('తిథి & నక్షత్రం సరిపోయాయి', 'Tithi & Nakshatra match');
-      return `<div class="validation-strip ${st}">
-        <span class="vs-tick">✓</span>
-        <span class="vs-label">${label}</span>
-        <span class="vs-source">${src}</span>
-      </div>`;
-    }
-    if (st === 'unavailable') {
-      return `<div class="validation-strip unavailable">
-        <span class="vs-tick">~</span>
-        <span class="vs-label">${t('ధృవీకరించబడలేదు', 'Not verified')}</span>
-        <span class="vs-source">${src}</span>
-      </div>`;
-    }
-    return '';
-  }
+  function _validationBadgeHtml(_validation) { return ''; }
 
   // ── Zone B: Best window (hero) ────────────────────────────────────────────
   let heroHtml = '';
@@ -2812,58 +2757,7 @@ function showDetail(i) {
         ${r.gulika_kalam?`<div class="kalam-row"><span class="kalam-name">⚠️ గులిక కాలం</span><span class="kalam-time">${r.gulika_kalam.start} – ${r.gulika_kalam.end}</span></div>`:""}
       </div>
     </div>
-    ${(() => {
-      const val = r.validation;
-      // Build Prokerala URL — prefer source_url from validation, else build from date+place
-      const [dd, mm, yyyy] = (r.date_raw || '').split('/');
-      const prokeralaUrl = (val && val.source_url)
-        ? val.source_url
-        : (dd && mm && yyyy)
-          ? `https://www.prokerala.com/astrology/panchangam/?panchangam-date=${yyyy}-${mm}-${dd}&ayanamsa=1`
-          : 'https://www.prokerala.com/astrology/telugu-panchangam/';
-      const prokeralaLink = `<a href="${prokeralaUrl}" target="_blank" rel="noopener" style="color:var(--indigo);text-decoration:underline">${t('Prokerala తెలుగు పంచాంగం','Prokerala Telugu Panchangam')}</a>`;
-
-      if (!val || val.status === 'unavailable') {
-        return `
-          <div class="detail-section">
-            <div class="detail-section-title">🔍 ${t('పంచాంగ పరీక్ష','Panchangam Cross-Check')}</div>
-            <div style="font-size:0.78rem;color:var(--text-2);line-height:1.5">
-              ${t('ఈ తేదీ పంచాంగాన్ని ఆన్‌లైన్‌లో పరీక్షించండి:','Verify this date\'s panchang online:')}
-              <div style="margin-top:6px">${prokeralaLink}</div>
-            </div>
-          </div>`;
-      }
-
-      const details = val.details || {};
-      const rows = Object.entries(details).map(([key, d]) => `
-        <tr>
-          <td style="text-transform:capitalize">${key}</td>
-          <td>${d.ours || '—'}</td>
-          <td>${d.reference || '—'}</td>
-          <td style="color:${d.match?'var(--success)':'#DC2626'};font-weight:700">${d.match ? '✓' : '✗'}</td>
-        </tr>`).join('');
-      const statusBadge = val.status === 'verified'
-        ? `<span style="background:var(--success-bg);color:var(--success);border-radius:8px;padding:2px 8px;font-size:0.65rem;font-weight:700">✓ ${t('పరీక్షించబడింది','Verified')}</span>`
-        : val.status === 'partial'
-        ? `<span style="background:var(--amber-light);color:#92400E;border-radius:8px;padding:2px 8px;font-size:0.65rem;font-weight:700">~ ${t('పాక్షికంగా','Partial match')}</span>`
-        : `<span style="background:#FEF2F2;color:#DC2626;border-radius:8px;padding:2px 8px;font-size:0.65rem;font-weight:700">⚠ ${t('వ్యత్యాసం','Mismatch')}</span>`;
-      return `
-        <div class="detail-section">
-          <div class="detail-section-title" style="display:flex;align-items:center;gap:8px">
-            🔍 ${t('పంచాంగ పరీక్ష','Panchangam Cross-Check')} ${statusBadge}
-          </div>
-          <div style="font-size:0.7rem;color:var(--text-3);margin-bottom:6px">${prokeralaLink}</div>
-          <table class="score-details-table">
-            <tr style="font-size:0.6rem;color:var(--text-3)">
-              <th>${t('అంశం','Element')}</th>
-              <th>${t('మన విలువ','Ours')}</th>
-              <th>${t('మూలం','Reference')}</th>
-              <th>${t('సరిపోలిక','Match')}</th>
-            </tr>
-            ${rows}
-          </table>
-        </div>`;
-    })()}`;
+    `;
 
   document.getElementById("overlay").classList.add("open");
   document.body.style.overflow = "hidden";
