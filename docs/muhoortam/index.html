@@ -599,7 +599,7 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
   line-height: 1;
   transition: color var(--transition);
 }
-.person-remove:hover { color: #DC2626; background: #FEF2F2; }
+.person-remove:hover, .person-remove:focus-visible { color: #DC2626; background: #FEF2F2; outline: none; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 /* Profile chips */
@@ -687,7 +687,9 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
   cursor: pointer;
   font-weight: 600;
 }
-.save-profile-btn:hover { background: var(--indigo-light); }
+.save-profile-btn:hover, .save-profile-btn:focus-visible { background: var(--indigo-light); outline: 2px solid var(--indigo); outline-offset: 2px; }
+.profile-chip-add:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.profile-chip-del:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
 
 /* ════════════════════════════════
    BUTTONS
@@ -1669,8 +1671,8 @@ function renderProfileChips() {
           <div class="profile-chip-name">${p.name}</div>
           ${p.birthChart ? `<div class="profile-chip-nak">🌟 ${p.birthChart.janma_nakshatra_te}${p.birthChart.janma_nakshatra_padam ? " "+p.birthChart.janma_nakshatra_padam+"వ పాదం" : ""}</div>` : ""}
           <div class="profile-chip-actions">
-            <button class="profile-chip-add" onclick="addFromProfile(${i})">＋ Add</button>
-            <button class="profile-chip-del" onclick="deleteProfile('${p.name.replace(/'/g,"\\'")}')">✕</button>
+            <button type="button" class="profile-chip-add" onclick="addFromProfile(${i})">＋ Add</button>
+            <button type="button" class="profile-chip-del" onclick="deleteProfile('${p.name.replace(/'/g,"\\'")}')">✕</button>
           </div>
         </div>`).join("")}
     </div>`;
@@ -1910,7 +1912,7 @@ function addPerson() {
         <div class="ac-list" id="acP${idx}"></div>
       </div>
     </div>
-    <button class="save-profile-btn" onclick="savePersonProfile(${idx})">💾 Save Profile</button>
+    <button type="button" class="save-profile-btn" onclick="savePersonProfile(${idx})">💾 Save Profile</button>
     </div>`;
   document.getElementById("personList").appendChild(div);
   _renumberPersonBlocks();
