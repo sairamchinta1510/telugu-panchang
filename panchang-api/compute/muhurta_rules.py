@@ -599,6 +599,18 @@ _GRAHA_SHORT_TE: dict[str, str] = {
     "ketu":    "కేతువు",
 }
 
+_GRAHA_SHORT_EN: dict[str, str] = {
+    "ravi":    "Sun",
+    "chandra": "Moon",
+    "kuja":    "Mars",
+    "budha":   "Mercury",
+    "guru":    "Jupiter",
+    "shukra":  "Venus",
+    "shani":   "Saturn",
+    "rahu":    "Rahu",
+    "ketu":    "Ketu",
+}
+
 # Natural malefics (papa grahas)
 _PAPA_GRAHAS: frozenset[str] = frozenset({"kuja", "shani", "rahu", "ketu"})
 
@@ -618,6 +630,12 @@ _HOUSE_ORD_TE: dict[int, str] = {
     1: "1వ", 2: "2వ", 3: "3వ", 4: "4వ",
     5: "5వ", 6: "6వ", 7: "7వ", 8: "8వ",
     9: "9వ", 10: "10వ", 11: "11వ", 12: "12వ",
+}
+
+_HOUSE_ORD_EN: dict[int, str] = {
+    1: "1st", 2: "2nd",  3: "3rd",  4: "4th",
+    5: "5th", 6: "6th",  7: "7th",  8: "8th",
+    9: "9th", 10: "10th", 11: "11th", 12: "12th",
 }
 
 
@@ -664,14 +682,16 @@ _LAGNA_RULES: dict[str, dict[str, str]] = {
         "malefic_in_lagna":       "hard",
         "malefic_in_7th":         "hard",
         "shukra_combust":         "hard",
+        "guru_combust":           "hard",
         "guru_aspect_lagna":      "benefit",
         "moon_in_6_8":            "warn",
         "shukra_in_dusthana":     "warn",
         "guru_in_kendra_trikona": "benefit",
-        "sthira_lagna":           "benefit",  # fixed sign preferred for permanence
+        "sthira_lagna":           "benefit",
     },
     CEREMONY_GRUHA_PRAVESAM: {
         "malefic_in_lagna":       "hard",
+        "guru_combust":           "hard",
         "guru_aspect_lagna":      "benefit",
         "moon_in_6_8":            "warn",
         "guru_in_kendra_trikona": "benefit",
@@ -679,6 +699,7 @@ _LAGNA_RULES: dict[str, dict[str, str]] = {
     },
     CEREMONY_UPANAYANAM: {
         "malefic_in_lagna":       "hard",
+        "guru_combust":           "hard",
         "guru_aspect_lagna":      "benefit",
         "guru_in_kendra_trikona": "benefit",
         "sthira_lagna":           "benefit",
@@ -686,34 +707,41 @@ _LAGNA_RULES: dict[str, dict[str, str]] = {
     CEREMONY_GARBHADANAM: {
         "malefic_in_lagna":       "hard",
         "shukra_combust":         "hard",
+        "guru_combust":           "warn",
         "guru_aspect_lagna":      "benefit",
         "guru_in_kendra_trikona": "benefit",
         "sthira_lagna":           "benefit",
     },
     CEREMONY_SANKHU_STAPANA: {
         "malefic_in_lagna":       "hard",
+        "guru_combust":           "warn",
         "guru_aspect_lagna":      "benefit",
         "guru_in_kendra_trikona": "benefit",
         "sthira_lagna":           "benefit",
     },
     CEREMONY_ANNA_PRASANA: {
         "malefic_in_lagna":       "warn",
+        "guru_combust":           "warn",
         "guru_aspect_lagna":      "benefit",
     },
     CEREMONY_NAMAKARANAM: {
         "malefic_in_lagna":       "warn",
+        "guru_combust":           "warn",
         "guru_aspect_lagna":      "benefit",
     },
     CEREMONY_CHELAMU: {
         "malefic_in_lagna":       "warn",
+        "guru_combust":           "warn",
         "guru_aspect_lagna":      "benefit",
     },
     CEREMONY_VIDYARAMBHAM: {
         "malefic_in_lagna":       "warn",
+        "guru_combust":           "warn",
         "guru_aspect_lagna":      "benefit",
     },
     CEREMONY_KOTTA_BATTALU: {
         "malefic_in_lagna":       "warn",
+        "guru_combust":           "warn",
         "guru_aspect_lagna":      "benefit",
     },
 }
@@ -767,48 +795,54 @@ def check_lagna_graha_quality(
     hard_blocks: list[str] = []
     warnings: list[str] = []
     benefits: list[str] = []
-    score_components: list[dict] = [{"te": "ప్రాథమిక బేస్ స్కోర్", "delta": 50}]
+    score_components: list[dict] = [{"te": "ప్రాథమిక బేస్ స్కోర్", "delta": 50, "en": "Base score"}]
     score = 50  # neutral baseline
 
-    def _add(delta: int, te: str) -> None:
-        score_components.append({"te": te, "delta": delta})
+    def _add(delta: int, te: str, en: str = "") -> None:
+        score_components.append({"te": te, "delta": delta, "en": en})
 
     # 1. Malefics in lagna ────────────────────────────────────────────────────
     if _rule("malefic_in_lagna") != "none":
         malefics_here = sorted(p for p in _PAPA_GRAHAS if planet_rashis.get(p, -1) == lagna_idx)
         if malefics_here:
-            names = ", ".join(_GRAHA_SHORT_TE.get(p, p) for p in malefics_here)
-            msg = f"లగ్నంలో పాప గ్రహం ({names}) — లగ్న బలం తగ్గింది"
+            names_te = ", ".join(_GRAHA_SHORT_TE.get(p, p) for p in malefics_here)
+            names_en = ", ".join(_GRAHA_SHORT_EN.get(p, p) for p in malefics_here)
+            msg_te = f"లగ్నంలో పాప గ్రహం ({names_te}) — లగ్న బలం తగ్గింది"
+            msg_en = f"Malefic in Lagna ({names_en}) — Lagna strength reduced"
             if _rule("malefic_in_lagna") == "hard":
-                hard_blocks.append(msg)
+                hard_blocks.append(msg_te)
                 score -= 30
-                _add(-30, msg)
+                _add(-30, msg_te, msg_en)
             else:
-                warnings.append(msg)
+                warnings.append(msg_te)
                 score -= 15
-                _add(-15, msg)
+                _add(-15, msg_te, msg_en)
         else:
             score += 5  # clean lagna bonus
-            _add(+5, "లగ్నంలో పాప గ్రహం లేదు — లగ్న శుద్ధి ✓")
+            _add(+5, "లగ్నంలో పాప గ్రహం లేదు — లగ్న శుద్ధి ✓",
+                 "No malefics in Lagna — Lagna is pure ✓")
 
     # 2. Malefics in 7th from lagna (critical for Vivaha) ────────────────────
     if _rule("malefic_in_7th") != "none":
         seventh = (lagna_idx + 6) % 12
         malefics_7th = sorted(p for p in _PAPA_GRAHAS if planet_rashis.get(p, -1) == seventh)
         if malefics_7th:
-            names = ", ".join(_GRAHA_SHORT_TE.get(p, p) for p in malefics_7th)
-            msg = f"సప్తమ స్థానంలో పాప గ్రహం ({names}) — వివాహ స్థానంలో అశుభం"
+            names_te = ", ".join(_GRAHA_SHORT_TE.get(p, p) for p in malefics_7th)
+            names_en = ", ".join(_GRAHA_SHORT_EN.get(p, p) for p in malefics_7th)
+            msg_te = f"సప్తమ స్థానంలో పాప గ్రహం ({names_te}) — వివాహ స్థానంలో అశుభం"
+            msg_en = f"Malefic in 7th house ({names_en}) — Inauspicious for wedding"
             if _rule("malefic_in_7th") == "hard":
-                hard_blocks.append(msg)
+                hard_blocks.append(msg_te)
                 score -= 25
-                _add(-25, msg)
+                _add(-25, msg_te, msg_en)
             else:
-                warnings.append(msg)
+                warnings.append(msg_te)
                 score -= 12
-                _add(-12, msg)
+                _add(-12, msg_te, msg_en)
         else:
             score += 10  # clean 7th is especially auspicious for Vivaha
-            _add(+10, "సప్తమ స్థానంలో పాప గ్రహం లేదు — వివాహ స్థానం శుద్ధి ✓")
+            _add(+10, "సప్తమ స్థానంలో పాప గ్రహం లేదు — వివాహ స్థానం శుద్ధి ✓",
+                 "No malefics in 7th house — Wedding house is pure ✓")
 
     # 3. Shukra (Venus) combustion — requires exact longitudes ────────────────
     if _rule("shukra_combust") != "none" and planet_longitudes:
@@ -816,27 +850,54 @@ def check_lagna_graha_quality(
         shukra_lon = planet_longitudes.get("shukra")
         if sun_lon is not None and shukra_lon is not None:
             if _is_combust("shukra", shukra_lon, sun_lon):
-                msg = "శుక్రుడు అస్తంగతం (సూర్యుడికి సమీపంగా) — వివాహ కారకుడు నిర్బలం"
+                msg_te = "శుక్రుడు అస్తంగతం (సూర్యుడికి సమీపంగా) — వివాహ కారకుడు నిర్బలం"
+                msg_en = "Venus combust (near Sun) — Wedding significator is weakened"
                 if _rule("shukra_combust") == "hard":
-                    hard_blocks.append(msg)
+                    hard_blocks.append(msg_te)
                     score -= 20
-                    _add(-20, msg)
+                    _add(-20, msg_te, msg_en)
                 else:
-                    warnings.append(msg)
+                    warnings.append(msg_te)
                     score -= 10
-                    _add(-10, msg)
+                    _add(-10, msg_te, msg_en)
             else:
                 score += 5  # Venus visible and strong
-                _add(+5, "శుక్రుడు అస్తంగతం కాదు — వివాహ కారకుడు బలవంతుడు ✓")
+                _add(+5, "శుక్రుడు అస్తంగతం కాదు — వివాహ కారకుడు బలవంతుడు ✓",
+                     "Venus not combust — Wedding significator is strong ✓")
+
+    # 3.5. Guru (Jupiter) combustion — Guru Asta ──────────────────────────────
+    # When Jupiter is within 11° of the Sun, it is considered "asta" (combust/hidden).
+    # Per Telugu Sampradaya, this eliminates Jupiter's protective power for
+    # major life ceremonies. Source: Muhurta Chintamani §Guru-bala.
+    if _rule("guru_combust") != "none" and planet_longitudes:
+        sun_lon = planet_longitudes.get("ravi")
+        guru_lon = planet_longitudes.get("guru")
+        if sun_lon is not None and guru_lon is not None:
+            if _is_combust("guru", guru_lon, sun_lon):
+                msg_te = "గురువు అస్తంగతం (సూర్యుడికి సమీపంగా) — గురు శక్తి నిర్బలం"
+                msg_en = "Jupiter combust (Guru Asta) — Jupiter's benefic power is eliminated"
+                if _rule("guru_combust") == "hard":
+                    hard_blocks.append(msg_te)
+                    score -= 25
+                    _add(-25, msg_te, msg_en)
+                else:
+                    warnings.append(msg_te)
+                    score -= 10
+                    _add(-10, msg_te, msg_en)
+            else:
+                score += 5
+                _add(+5,
+                     "గురువు అస్తంగతం కాదు — గురు శక్తి పూర్తిగా ఉంది ✓",
+                     "Jupiter not combust — Jupiter's full benefic power active ✓")
 
     # 4. Guru (Jupiter) aspects lagna ─────────────────────────────────────────
     if _rule("guru_aspect_lagna") != "none":
         guru_rashi = planet_rashis.get("guru", -1)
         if guru_rashi >= 0 and _guru_aspects_lagna(guru_rashi, lagna_idx):
-            msg = "గురువు లగ్నాన్ని వీక్షిస్తున్నాడు — శుభ దృష్టి ✓"
-            benefits.append(msg)
+            msg_te = "గురువు లగ్నాన్ని వీక్షిస్తున్నాడు — శుభ దృష్టి ✓"
+            benefits.append(msg_te)
             score += 25
-            _add(+25, msg)
+            _add(+25, msg_te, "Jupiter aspects Lagna — Auspicious aspect ✓")
 
     # 5. Moon in 6th or 8th from lagna ────────────────────────────────────────
     if _rule("moon_in_6_8") != "none":
@@ -845,10 +906,12 @@ def check_lagna_graha_quality(
             moon_house = _house(chandra_rashi)
             if moon_house in (6, 8):
                 ord_te = _HOUSE_ORD_TE.get(moon_house, f"{moon_house}వ")
-                msg = f"చంద్రుడు లగ్నానికి {ord_te} స్థానంలో — అశుభ స్థానం ⚠"
-                warnings.append(msg)
+                ord_en = _HOUSE_ORD_EN.get(moon_house, f"{moon_house}th")
+                msg_te = f"చంద్రుడు లగ్నానికి {ord_te} స్థానంలో — అశుభ స్థానం ⚠"
+                msg_en = f"Moon in {ord_en} house from Lagna — Inauspicious placement ⚠"
+                warnings.append(msg_te)
                 score -= 8
-                _add(-8, msg)
+                _add(-8, msg_te, msg_en)
 
     # 6. Shukra in dusthana (6/8/12) or auspicious (2/5/11) from lagna ────────
     if _rule("shukra_in_dusthana") != "none":
@@ -857,16 +920,20 @@ def check_lagna_graha_quality(
             shukra_house = _house(shukra_rashi)
             if shukra_house in (6, 8, 12):
                 ord_te = _HOUSE_ORD_TE.get(shukra_house, f"{shukra_house}వ")
-                msg = f"శుక్రుడు లగ్నానికి {ord_te} స్థానంలో (దుస్థానం) — వివాహ కారకుడికి అశుభ ⚠"
-                warnings.append(msg)
+                ord_en = _HOUSE_ORD_EN.get(shukra_house, f"{shukra_house}th")
+                msg_te = f"శుక్రుడు లగ్నానికి {ord_te} స్థానంలో (దుస్థానం) — వివాహ కారకుడికి అశుభ ⚠"
+                msg_en = f"Venus in {ord_en} house (dusthana) — Inauspicious for Venus ⚠"
+                warnings.append(msg_te)
                 score -= 10
-                _add(-10, msg)
+                _add(-10, msg_te, msg_en)
             elif shukra_house in (2, 5, 11):
                 ord_te = _HOUSE_ORD_TE.get(shukra_house, f"{shukra_house}వ")
-                msg = f"శుక్రుడు లగ్నానికి {ord_te} స్థానంలో — వివాహ కారకుడికి శుభ స్థానం ✓"
-                benefits.append(msg)
+                ord_en = _HOUSE_ORD_EN.get(shukra_house, f"{shukra_house}th")
+                msg_te = f"శుక్రుడు లగ్నానికి {ord_te} స్థానంలో — వివాహ కారకుడికి శుభ స్థానం ✓"
+                msg_en = f"Venus in {ord_en} house — Auspicious placement for Venus ✓"
+                benefits.append(msg_te)
                 score += 8
-                _add(+8, msg)
+                _add(+8, msg_te, msg_en)
 
     # 7. Guru in kendra (1/4/7/10) or trikona (5/9) from lagna ───────────────
     if _rule("guru_in_kendra_trikona") != "none":
@@ -875,31 +942,35 @@ def check_lagna_graha_quality(
             guru_house = _house(guru_rashi)
             if guru_house in (1, 4, 7, 10):
                 ord_te = _HOUSE_ORD_TE.get(guru_house, f"{guru_house}వ")
-                msg = f"గురువు {ord_te} స్థానంలో (కేంద్రం) — శుభం ✓"
-                benefits.append(msg)
+                ord_en = _HOUSE_ORD_EN.get(guru_house, f"{guru_house}th")
+                msg_te = f"గురువు {ord_te} స్థానంలో (కేంద్రం) — శుభం ✓"
+                msg_en = f"Jupiter in {ord_en} house (kendra) — Auspicious ✓"
+                benefits.append(msg_te)
                 score += 10
-                _add(+10, msg)
+                _add(+10, msg_te, msg_en)
             elif guru_house in (5, 9):
                 ord_te = _HOUSE_ORD_TE.get(guru_house, f"{guru_house}వ")
-                msg = f"గురువు {ord_te} స్థానంలో (త్రికోణం) — శుభం ✓"
-                benefits.append(msg)
+                ord_en = _HOUSE_ORD_EN.get(guru_house, f"{guru_house}th")
+                msg_te = f"గురువు {ord_te} స్థానంలో (త్రికోణం) — శుభం ✓"
+                msg_en = f"Jupiter in {ord_en} house (trikona) — Auspicious ✓"
+                benefits.append(msg_te)
                 score += 8
-                _add(+8, msg)
+                _add(+8, msg_te, msg_en)
 
     # 8. Sthira (fixed) lagna — preferred for permanent ceremonies ────────────
     # Per Muhurta Chintamani: Sthira lagnas (Vrishabha, Simha, Vrischika, Kumbha)
     # give permanence and stability; ranked above dual and moveable signs.
     if _rule("sthira_lagna") != "none":
         if lagna_idx in _STHIRA_LAGNAS:
-            msg = "స్థిర లగ్నం — శాశ్వత శుభ కార్యాలకు ఉత్తమం ✓"
-            benefits.append(msg)
+            msg_te = "స్థిర లగ్నం — శాశ్వత శుభ కార్యాలకు ఉత్తమం ✓"
+            benefits.append(msg_te)
             score += 25
-            _add(+25, msg)
+            _add(+25, msg_te, "Fixed sign Lagna (Sthira) — Excellent for permanent ceremonies ✓")
         elif lagna_idx in _CHARA_LAGNAS:
-            msg = "చర లగ్నం — స్థిర లగ్నం ఉత్తమం; ఈ లగ్నం శాశ్వత కార్యాలకు తక్కువ అనువైనది ⚠"
-            warnings.append(msg)
+            msg_te = "చర లగ్నం — స్థిర లగ్నం ఉత్తమం; ఈ లగ్నం శాశ్వత కార్యాలకు తక్కువ అనువైనది ⚠"
+            warnings.append(msg_te)
             score -= 10
-            _add(-10, msg)
+            _add(-10, msg_te, "Moveable sign Lagna (Chara) — Fixed sign preferred for permanent ceremonies ⚠")
 
     return {
         "score":            max(0, min(150, score)),
