@@ -1161,7 +1161,7 @@ const _LAGNA_EN = [
 ];
 const _LAGNA_TE_LIST = [
   'మేషం','వృషభం','మిథునం','కర్కాటకం','సింహం','కన్య',
-  'తుల','వృశ్చికం','ధనుసు','మకరం','కుంభం','మీనం'
+  'తులం','వృశ్చికం','ధనుస్సు','మకరం','కుంభం','మీనం'
 ];
 const _MASAM_EN = [
   'Chaitra','Vaishakha','Jyeshtha','Ashadha','Shravana','Bhadrapada',
@@ -1186,6 +1186,12 @@ function tTithi(te)     { return t(te, teToEn(te, _TITHI_TE_LIST, _TITHI_EN)); }
 function tLagna(te)     { return t(te, teToEn(te, _LAGNA_TE_LIST, _LAGNA_EN)); }
 function tVaaram(te)    { return t(te, teToEn(te, _VAARAM_TE_LIST, _VAARAM_EN)); }
 function tMasam(te)     { return t(te, teToEn(te, _MASAM_TE_LIST, _MASAM_EN)); }
+const _CHO_TE_LIST = ['అమృత','చర','లాభ','శుభ','ఉద్వేగ','కాల','రోగ'];
+const _CHO_EN      = ['Amrita','Chara','Labha','Shubha','Udvega','Kala','Roga'];
+function tChoghadiya(te) {
+  if (!te) return te;
+  return t(te, teToEn(te, _CHO_TE_LIST, _CHO_EN));
+}
 function tDate(date_te, date_raw) {
   if (APP_LANG === 'te' || !date_raw) return date_te;
   // date_raw is "DD/MM/YYYY"
@@ -1953,7 +1959,7 @@ function _renderResultCard(r, i) {
             ? `<div class="win-card-score">${best.lagna_quality.score}/150</div>` : ''}
         </div>
         <div class="win-card-meta">
-          ${tLagna(best.lagna_te)} ${t('లగ్నం','Lagna')}${best.choghadiya_te ? ` · ${t(best.choghadiya_te, best.choghadiya_te)} ${t('చోఘడియ','Choghadiya')}` : ''}
+          ${tLagna(best.lagna_te)} ${t('లగ్నం','Lagna')}${best.choghadiya_te ? ` · ${tChoghadiya(best.choghadiya_te)} ${t('చోఘడియ','Choghadiya')}` : ''}
         </div>
         <div class="win-card-sub">${tNakshatra(best.nakshatra_te)} · ${tTithi(best.tithi_te)}</div>
         ${_scoreHtml(best)}
@@ -1970,7 +1976,7 @@ function _renderResultCard(r, i) {
       <div class="win-card-header">
         <div>
           <div class="win-card-time" style="font-size:0.9rem">${w.from}–${w.to}</div>
-          <div class="win-card-meta">${tLagna(w.lagna_te)} ${t('లగ్నం','Lagna')}${w.choghadiya_te ? ` · ${t(w.choghadiya_te, w.choghadiya_te)}` : ''}</div>
+          <div class="win-card-meta">${tLagna(w.lagna_te)} ${t('లగ్నం','Lagna')}${w.choghadiya_te ? ` · ${tChoghadiya(w.choghadiya_te)}` : ''}</div>
         </div>
         ${(w.lagna_quality && w.lagna_quality.score)
           ? `<div class="win-card-score" style="background:#558B2F">${w.lagna_quality.score}/150</div>` : ''}
@@ -2230,7 +2236,7 @@ function showCheckResult(data) {
       <div style="margin-top:14px;background:rgba(255,255,255,0.75);border:1.5px solid ${v.border};border-radius:12px;padding:10px 14px;display:inline-block;text-align:left">
         <div style="font-size:0.65rem;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">⏰ ${t('ఉత్తమ ముహూర్తం','Best Muhurtam')}</div>
         <div style="font-size:1.3rem;font-weight:800;color:${v.color}">${bestWindow.best_time || bestWindow.from}</div>
-        <div style="font-size:0.8rem;color:${v.color};margin-top:2px;font-weight:600">${bestWindow.choghadiya_te ? bestWindow.choghadiya_te + ' చోఘడియ' : ''} &nbsp;·&nbsp; ${bestWindow.from}–${bestWindow.to}</div>
+        <div style="font-size:0.8rem;color:${v.color};margin-top:2px;font-weight:600">${bestWindow.choghadiya_te ? tChoghadiya(bestWindow.choghadiya_te) + ' ' + t('చోఘడియ','Choghadiya') : ''} &nbsp;·&nbsp; ${bestWindow.from}–${bestWindow.to}</div>
         <div style="font-size:0.75rem;color:var(--brown-mid);margin-top:4px">
           ⭐ ${tNakshatra(bestWindow.nakshatra_te)} &nbsp;·&nbsp; 📅 ${tTithi(bestWindow.tithi_te)} &nbsp;·&nbsp; 🌅 ${tLagna(bestWindow.lagna_te)} ${t('లగ్నం','Lagna')}
         </div>
@@ -2293,7 +2299,7 @@ function showCheckResult(data) {
           <div>
             <div style="display:flex;align-items:baseline;gap:8px">
               <span style="font-size:1.05rem;font-weight:800;color:#1B5E20">${w.best_time||w.from}</span>
-              ${w.choghadiya_te?`<span style="font-size:0.72rem;background:#C8E6C9;color:#1B5E20;border-radius:10px;padding:1px 7px;font-weight:600">${w.choghadiya_te}</span>`:''}
+              ${w.choghadiya_te?`<span style="font-size:0.72rem;background:#C8E6C9;color:#1B5E20;border-radius:10px;padding:1px 7px;font-weight:600">${tChoghadiya(w.choghadiya_te)}</span>`:''}
               <span style="font-size:0.72rem;color:#666">(${w.from}–${w.to})</span>
               ${(w.lagna_quality&&w.lagna_quality.score)?`<span style="font-size:0.65rem;background:#E8F5E9;border:1px solid #A5D6A7;color:#2E7D32;border-radius:8px;padding:1px 6px;font-weight:700">⭐ ${w.lagna_quality.score}/150</span>`:''}
             </div>
@@ -2320,7 +2326,7 @@ function showCheckResult(data) {
           <div>
             <div style="display:flex;align-items:baseline;gap:8px">
               <span style="font-size:1.05rem;font-weight:800;color:#4A148C">${w.best_time||w.from}</span>
-              ${w.choghadiya_te?`<span style="font-size:0.72rem;background:#D1C4E9;color:#4A148C;border-radius:10px;padding:1px 7px;font-weight:600">${w.choghadiya_te}</span>`:''}
+              ${w.choghadiya_te?`<span style="font-size:0.72rem;background:#D1C4E9;color:#4A148C;border-radius:10px;padding:1px 7px;font-weight:600">${tChoghadiya(w.choghadiya_te)}</span>`:''}
               <span style="font-size:0.72rem;color:#666">(${w.from}–${w.to})</span>
               ${(w.lagna_quality&&w.lagna_quality.score)?`<span style="font-size:0.65rem;background:#EDE7F6;border:1px solid #CE93D8;color:#4A148C;border-radius:8px;padding:1px 6px;font-weight:700">⭐ ${w.lagna_quality.score}/150</span>`:''}
             </div>
