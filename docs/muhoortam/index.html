@@ -2106,7 +2106,7 @@ function showCheckResult(data) {
     const bcDiv = document.createElement("div");
     bcDiv.style.cssText = "background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px;border:1px solid rgba(196,154,108,0.2)";
     bcDiv.innerHTML = `
-      <div style="font-size:0.7rem;font-weight:700;color:var(--brown-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">వ్యక్తుల జన్మ వివరాలు</div>
+      <div style="font-size:0.7rem;font-weight:700;color:var(--brown-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">${t('వ్యక్తుల జన్మ వివరాలు','Birth Details')}</div>
       ${savedBirthCharts.map((bc,i)=>`
         <div style="display:flex;align-items:flex-start;gap:12px;padding:10px;background:var(--cream2);border-radius:10px;margin-bottom:8px">
           <div style="font-size:1.3rem;flex-shrink:0">👤</div>
@@ -2124,9 +2124,9 @@ function showCheckResult(data) {
 
   // Verdict card
   const verdictMap = {
-    good:  { icon:"✅", label:"శుభ ముహూర్తం",   bg:"linear-gradient(135deg,#E8F5E9,#F1F8E9)", border:"#4CAF50", color:"#2E7D32" },
-    mixed: { icon:"⚠️", label:"మిశ్రమ ముహూర్తం", bg:"linear-gradient(135deg,#FFF8E1,#FFF3E0)", border:"#FB8C00", color:"#E65100" },
-    bad:   { icon:"❌", label:"అశుభ ముహూర్తం",   bg:"linear-gradient(135deg,#FFEBEE,#FFF3E0)", border:"#E53935", color:"#C62828" },
+    good:  { icon:"✅", label:t("శుభ ముహూర్తం",  "Auspicious"),  bg:"linear-gradient(135deg,#E8F5E9,#F1F8E9)", border:"#4CAF50", color:"#2E7D32" },
+    mixed: { icon:"⚠️", label:t("మిశ్రమ ముహూర్తం","Mixed"),       bg:"linear-gradient(135deg,#FFF8E1,#FFF3E0)", border:"#FB8C00", color:"#E65100" },
+    bad:   { icon:"❌", label:t("అశుభ ముహూర్తం", "Inauspicious"), bg:"linear-gradient(135deg,#FFEBEE,#FFF3E0)", border:"#E53935", color:"#C62828" },
   };
   const v = verdictMap[data.verdict] || verdictMap.bad;
 
@@ -2136,7 +2136,7 @@ function showCheckResult(data) {
       <div style="font-size:2.8rem">${v.icon}</div>
       <div style="font-weight:800;font-size:1.15rem;color:${v.color};margin-top:6px">${v.label}</div>
       <div style="font-size:0.88rem;color:var(--brown-mid);margin-top:6px">
-        ${data.date_te} — ${data.vaaram_te}
+        ${t(data.date_te, tDate(data.date_te, data.date_raw))} — ${tVaaram(data.vaaram_te)}
         ${(data.gregorian_vaaram_te && data.gregorian_vaaram_te !== data.vaaram_te) ? `
         <div style="margin-top:4px;font-size:0.78rem;background:#FFF3E0;border:1px solid #FFCC80;border-radius:8px;padding:5px 10px;display:inline-block;text-align:left">
           ⚠️ <b>క్యాలెండర్ వారం:</b> ${data.gregorian_vaaram_te} &nbsp;|&nbsp; <b>పంచాంగ వారం (సూర్యోదయం):</b> ${data.vaaram_te}
@@ -2151,32 +2151,35 @@ function showCheckResult(data) {
       const scoreBar = total > 0 ? `
         <div style="margin-top:8px">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-            <span style="font-size:0.65rem;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.06em">లగ్న నాణ్యత స్కోర్</span>
+            <span style="font-size:0.65rem;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.06em">${t('లగ్న నాణ్యత స్కోర్','Lagna Quality Score')}</span>
             <span style="font-size:0.9rem;font-weight:800;color:${v.color}">${total}<span style="font-size:0.65rem;font-weight:600;opacity:0.7">/150</span></span>
           </div>
           <div style="background:rgba(0,0,0,0.08);border-radius:6px;height:6px;width:160px">
             <div style="background:${v.color};border-radius:6px;height:6px;width:${Math.round(total/150*160)}px"></div>
           </div>
           ${sc.length ? `<details style="margin-top:6px">
-            <summary style="font-size:0.65rem;color:${v.color};cursor:pointer;font-weight:600;list-style:none">స్కోర్ వివరాలు ▾</summary>
+            <summary style="font-size:0.65rem;color:${v.color};cursor:pointer;font-weight:600;list-style:none">${t('స్కోర్ వివరాలు ▾','Score details ▾')}</summary>
             <div style="margin-top:5px;font-size:0.7rem;line-height:1.7;background:rgba(255,255,255,0.6);border-radius:6px;padding:6px 8px">
               ${sc.map(c=>`<div style="display:flex;justify-content:space-between;gap:12px">
-                <span style="color:#333">${c.te}</span>
+                <span style="color:#333">${t(
+                  `${c.te}${c.en ? `<span style="color:#888;font-size:0.6rem;margin-left:4px">(${c.en})</span>` : ''}`,
+                  c.en || c.te
+                )}</span>
                 <span style="font-weight:700;color:${c.delta>0?'#2E7D32':c.delta<0?'#C62828':'#555'};white-space:nowrap">${c.delta>0?'+':''}${c.delta}</span>
               </div>`).join('')}
               <div style="border-top:1px solid rgba(0,0,0,0.12);margin-top:4px;padding-top:4px;display:flex;justify-content:space-between;font-weight:800">
-                <span>మొత్తం</span><span style="color:${v.color}">${total}</span>
+                <span>${t('మొత్తం','Total')}</span><span style="color:${v.color}">${total}</span>
               </div>
             </div>
           </details>` : ''}
         </div>` : '';
       return `
       <div style="margin-top:14px;background:rgba(255,255,255,0.75);border:1.5px solid ${v.border};border-radius:12px;padding:10px 14px;display:inline-block;text-align:left">
-        <div style="font-size:0.65rem;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">⏰ ఉత్తమ ముహూర్తం</div>
+        <div style="font-size:0.65rem;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">⏰ ${t('ఉత్తమ ముహూర్తం','Best Muhurtam')}</div>
         <div style="font-size:1.3rem;font-weight:800;color:${v.color}">${bestWindow.best_time || bestWindow.from}</div>
         <div style="font-size:0.8rem;color:${v.color};margin-top:2px;font-weight:600">${bestWindow.choghadiya_te ? bestWindow.choghadiya_te + ' చోఘడియ' : ''} &nbsp;·&nbsp; ${bestWindow.from}–${bestWindow.to}</div>
         <div style="font-size:0.75rem;color:var(--brown-mid);margin-top:4px">
-          ⭐ ${bestWindow.nakshatra_te} &nbsp;·&nbsp; 📅 ${bestWindow.tithi_te} &nbsp;·&nbsp; 🌅 ${bestWindow.lagna_te} లగ్నం
+          ⭐ ${tNakshatra(bestWindow.nakshatra_te)} &nbsp;·&nbsp; 📅 ${tTithi(bestWindow.tithi_te)} &nbsp;·&nbsp; 🌅 ${tLagna(bestWindow.lagna_te)} ${t('లగ్నం','Lagna')}
         </div>
         ${scoreBar}
       </div>`;
@@ -2185,7 +2188,7 @@ function showCheckResult(data) {
 
     ${data.good_factors.length ? `
     <div style="background:#E8F5E9;border-radius:12px;padding:14px;margin-bottom:10px">
-      <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">✅ అనుకూల అంశాలు</div>
+      <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">✅ ${t('అనుకూల అంశాలు','Favourable Factors')}</div>
       ${data.good_factors.map((f,fi)=>`
         <div style="padding:6px 0;border-bottom:1px solid rgba(0,100,0,0.08)">
           <div style="font-size:0.82rem;color:#1B5E20">${typeof f==='string'?f:f.te}</div>
@@ -2198,7 +2201,7 @@ function showCheckResult(data) {
 
     ${data.bad_factors.length ? `
     <div style="background:#FFEBEE;border-radius:12px;padding:14px;margin-bottom:10px">
-      <div style="font-size:0.7rem;font-weight:700;color:#C62828;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">❌ అననుకూల అంశాలు</div>
+      <div style="font-size:0.7rem;font-weight:700;color:#C62828;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">❌ ${t('అననుకూల అంశాలు','Unfavourable Factors')}</div>
       ${data.bad_factors.map((f,fi)=>{
         const fText = typeof f==='string'?f:f.te;
         const isWarning = fText.includes('⚠');
@@ -2215,7 +2218,7 @@ function showCheckResult(data) {
 
     ${data.time_issues.length ? `
     <div style="background:#FFF3E0;border-radius:12px;padding:14px;margin-bottom:10px">
-      <div style="font-size:0.7rem;font-weight:700;color:#E65100;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">⏰ సమయ విశ్లేషణ</div>
+      <div style="font-size:0.7rem;font-weight:700;color:#E65100;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">⏰ ${t('సమయ విశ్లేషణ','Timing Analysis')}</div>
       ${data.time_issues.map(f=>`
         <div style="padding:5px 0;border-bottom:1px solid rgba(200,80,0,0.08)">
           <div style="font-size:0.82rem;color:#BF360C">${typeof f==='string'?f:f.te}</div>
@@ -2228,12 +2231,12 @@ function showCheckResult(data) {
 
     ${data.good_windows && data.good_windows.length ? `
     <div style="background:#E8F5E9;border-radius:12px;padding:14px;margin-bottom:10px">
-      <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">☀️ పగటి శుభ ముహూర్త సమయాలు</div>
+      <div style="font-size:0.7rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">☀️ ${t('పగటి శుభ ముహూర్త సమయాలు','Daytime Auspicious Windows')}</div>
       ${data.sudhi_name_te ? `<div style="font-size:0.72rem;color:#1B5E20;background:#C8E6C9;border-radius:6px;padding:4px 8px;margin-bottom:10px">🔯 లగ్న సుద్ధి నియమం: ${data.sudhi_name_te}</div>` : ""}
       ${data.good_windows.map((w,i)=>`
       <div style="padding:8px 0;${i<data.good_windows.length-1?'border-bottom:1px solid #C8E6C9':''}">
         <div style="display:flex;align-items:center;gap:8px">
-          ${i===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:4px;padding:2px 6px;font-weight:700;white-space:nowrap">ఉత్తమం</span>':'<span style="font-size:0.65rem;background:#A5D6A7;color:#1B5E20;border-radius:4px;padding:2px 6px;font-weight:600;white-space:nowrap">${i+1}వ</span>'}
+          ${i===0?`<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:4px;padding:2px 6px;font-weight:700;white-space:nowrap">${t('ఉత్తమం','Best')}</span>`:'<span style="font-size:0.65rem;background:#A5D6A7;color:#1B5E20;border-radius:4px;padding:2px 6px;font-weight:600;white-space:nowrap">${i+1}వ</span>'}
           <div>
             <div style="display:flex;align-items:baseline;gap:8px">
               <span style="font-size:1.05rem;font-weight:800;color:#1B5E20">${w.best_time||w.from}</span>
@@ -2242,7 +2245,7 @@ function showCheckResult(data) {
               ${(w.lagna_quality&&w.lagna_quality.score)?`<span style="font-size:0.65rem;background:#E8F5E9;border:1px solid #A5D6A7;color:#2E7D32;border-radius:8px;padding:1px 6px;font-weight:700">⭐ ${w.lagna_quality.score}/150</span>`:''}
             </div>
             <div style="font-size:0.73rem;color:#388E3C;margin-top:2px">
-              ⭐ ${w.nakshatra_te||''} &nbsp;|&nbsp; 📅 ${w.tithi_te||''} &nbsp;|&nbsp; 🌅 ${w.lagna_te||''} లగ్నం
+              ⭐ ${tNakshatra(w.nakshatra_te||'')} &nbsp;|&nbsp; 📅 ${tTithi(w.tithi_te||'')} &nbsp;|&nbsp; 🌅 ${tLagna(w.lagna_te||'')} ${t('లగ్నం','Lagna')}
             </div>
           </div>
         </div>
@@ -2252,7 +2255,7 @@ function showCheckResult(data) {
 
     ${data.night_good_windows && data.night_good_windows.length ? `
     <div style="background:#EDE7F6;border-radius:12px;padding:14px;margin-bottom:10px">
-      <div style="font-size:0.7rem;font-weight:700;color:#4A148C;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">🌙 రాత్రి శుభ ముహూర్త సమయాలు</div>
+      <div style="font-size:0.7rem;font-weight:700;color:#4A148C;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">🌙 ${t('రాత్రి శుభ ముహూర్త సమయాలు','Night Auspicious Windows')}</div>
       ${data.sudhi_name_te ? `<div style="font-size:0.72rem;color:#4A148C;background:#D1C4E9;border-radius:6px;padding:4px 8px;margin-bottom:10px">🔯 లగ్న సుద్ధి నియమం: ${data.sudhi_name_te}</div>` : ""}
       <div style="font-size:0.72rem;background:#FFF8E1;border:1px solid #FFE082;border-radius:6px;padding:5px 8px;margin-bottom:10px;color:#E65100">
         ⚠️ శని/ఆది/మంగళ వారదోషం — శాంతి పూజ తప్పనిసరి
@@ -2260,7 +2263,7 @@ function showCheckResult(data) {
       ${data.night_good_windows.map((w,i)=>`
       <div style="padding:8px 0;${i<data.night_good_windows.length-1?'border-bottom:1px solid #D1C4E9':''}">
         <div style="display:flex;align-items:center;gap:8px">
-          ${i===0?'<span style="font-size:0.65rem;background:#6A1B9A;color:white;border-radius:4px;padding:2px 6px;font-weight:700;white-space:nowrap">ఉత్తమం</span>':'<span style="font-size:0.65rem;background:#CE93D8;color:#4A148C;border-radius:4px;padding:2px 6px;font-weight:600;white-space:nowrap">${i+1}వ</span>'}
+          ${i===0?`<span style="font-size:0.65rem;background:#6A1B9A;color:white;border-radius:4px;padding:2px 6px;font-weight:700;white-space:nowrap">${t('ఉత్తమం','Best')}</span>`:'<span style="font-size:0.65rem;background:#CE93D8;color:#4A148C;border-radius:4px;padding:2px 6px;font-weight:600;white-space:nowrap">${i+1}వ</span>'}
           <div>
             <div style="display:flex;align-items:baseline;gap:8px">
               <span style="font-size:1.05rem;font-weight:800;color:#4A148C">${w.best_time||w.from}</span>
@@ -2269,7 +2272,7 @@ function showCheckResult(data) {
               ${(w.lagna_quality&&w.lagna_quality.score)?`<span style="font-size:0.65rem;background:#EDE7F6;border:1px solid #CE93D8;color:#4A148C;border-radius:8px;padding:1px 6px;font-weight:700">⭐ ${w.lagna_quality.score}/150</span>`:''}
             </div>
             <div style="font-size:0.73rem;color:#6A1B9A;margin-top:2px">
-              ⭐ ${w.nakshatra_te||''} &nbsp;|&nbsp; 📅 ${w.tithi_te||''} &nbsp;|&nbsp; 🌅 ${w.lagna_te||''} లగ్నం
+              ⭐ ${tNakshatra(w.nakshatra_te||'')} &nbsp;|&nbsp; 📅 ${tTithi(w.tithi_te||'')} &nbsp;|&nbsp; 🌅 ${tLagna(w.lagna_te||'')} ${t('లగ్నం','Lagna')}
             </div>
           </div>
         </div>
@@ -2278,10 +2281,10 @@ function showCheckResult(data) {
     </div>` : ""}
 
     <div style="background:white;border-radius:12px;padding:14px;border:1px solid rgba(196,154,108,0.2)">
-      <div style="font-size:0.7rem;font-weight:700;color:var(--brown-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">⚠️ నివారించాల్సిన సమయాలు</div>
-      ${data.rahu_kalam?`<div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:5px 0;border-bottom:1px solid #f0e8d8"><span>🔴 రాహు కాలం</span><span style="font-weight:700">${data.rahu_kalam.start}–${data.rahu_kalam.end}</span></div>`:""}
-      ${data.yamaganda?`<div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:5px 0;border-bottom:1px solid #f0e8d8"><span>🔴 యమగండ కాలం</span><span style="font-weight:700">${data.yamaganda.start}–${data.yamaganda.end}</span></div>`:""}
-      ${data.gulika_kalam?`<div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:5px 0"><span>⚠️ గులిక కాలం</span><span style="font-weight:700">${data.gulika_kalam.start}–${data.gulika_kalam.end}</span></div>`:""}
+      <div style="font-size:0.7rem;font-weight:700;color:var(--brown-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">⚠️ ${t('నివారించాల్సిన సమయాలు','Timings to Avoid')}</div>
+      ${data.rahu_kalam?`<div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:5px 0;border-bottom:1px solid #f0e8d8"><span>${t('🔴 రాహు కాలం','🔴 Rahu Kalam')}</span><span style="font-weight:700">${data.rahu_kalam.start}–${data.rahu_kalam.end}</span></div>`:""}
+      ${data.yamaganda?`<div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:5px 0;border-bottom:1px solid #f0e8d8"><span>${t('🟡 యమగండం','🟡 Yamaganda')}</span><span style="font-weight:700">${data.yamaganda.start}–${data.yamaganda.end}</span></div>`:""}
+      ${data.gulika_kalam?`<div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:5px 0"><span>${t('🟤 గులిక కాలం','🟤 Gulika Kalam')}</span><span style="font-weight:700">${data.gulika_kalam.start}–${data.gulika_kalam.end}</span></div>`:""}
     </div>`;
   list.appendChild(card);
 
