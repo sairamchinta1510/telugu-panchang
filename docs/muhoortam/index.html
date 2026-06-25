@@ -79,6 +79,156 @@ body {
   letter-spacing: 0.05em;
 }
 
+/* ── Language toggle ── */
+.lang-toggle {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+  user-select: none;
+  z-index: 10;
+}
+.lang-toggle .track {
+  width: 36px; height: 18px;
+  background: rgba(255,255,255,0.25);
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 9px;
+  position: relative;
+  transition: background 0.2s;
+}
+.lang-toggle .thumb {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.lang-toggle.en .thumb { transform: translateX(18px); }
+.lang-toggle.en { color: rgba(255,255,255,1); }
+
+/* ── Breadcrumb bar ── */
+#breadcrumb {
+  display: none;
+  padding: 7px 16px;
+  font-size: 0.72rem;
+  color: var(--brown-mid);
+  background: var(--cream2);
+  border-bottom: 1px solid rgba(196,154,108,0.2);
+  flex-wrap: wrap;
+  gap: 2px;
+  align-items: center;
+}
+#breadcrumb a {
+  color: var(--saffron-dark);
+  text-decoration: none;
+  font-weight: 600;
+}
+#breadcrumb a:hover { text-decoration: underline; }
+#breadcrumb .sep { color: var(--brown-light); margin: 0 4px; }
+
+/* ── Day timeline bar ── */
+.day-timeline {
+  position: relative;
+  background: #f0ece4;
+  border-radius: 6px;
+  height: 22px;
+  margin: 8px 0 10px;
+  overflow: hidden;
+}
+.day-timeline .tl-label {
+  position: absolute;
+  top: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  font-size: 8px;
+  color: #999;
+  padding: 0 4px;
+  pointer-events: none;
+}
+.day-timeline .tl-label.right { right: 0; }
+.day-timeline .tl-window {
+  position: absolute;
+  top: 2px; bottom: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.day-timeline .tl-window:hover { opacity: 0.75; }
+.day-timeline .tl-window span {
+  font-size: 8px;
+  color: #fff;
+  font-weight: 700;
+  padding: 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  display: block;
+  line-height: 18px;
+}
+
+/* ── Window mini-cards (range results) ── */
+.win-card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  background: #fff;
+}
+.win-card.best {
+  border-color: #66BB6A;
+  border-width: 1.5px;
+  background: #f9fbe7;
+}
+.win-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.win-card-time {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #1B5E20;
+}
+.win-card.best .win-card-time { font-size: 1.1rem; }
+.win-card-score {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  background: #2E7D32;
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+.win-card-meta {
+  font-size: 0.72rem;
+  color: #388E3C;
+  margin-top: 3px;
+}
+.win-card-sub {
+  font-size: 0.68rem;
+  color: #888;
+  margin-top: 1px;
+}
+.score-details-table {
+  width: 100%;
+  font-size: 0.68rem;
+  border-collapse: collapse;
+  margin-top: 5px;
+}
+.score-details-table tr td { padding: 2px 4px; }
+.score-details-table tr:nth-child(even) { background: #f5f5f5; }
+.score-details-table .total-row {
+  font-weight: 800;
+  background: #e3f2fd !important;
+}
+.score-details-table .pos { color: #2E7D32; text-align: right; }
+.score-details-table .neg { color: #C62828; text-align: right; }
+.score-details-table .neu { color: #555; text-align: right; }
+
 /* ════════════════════════════════
    STEP PROGRESS BAR
 ════════════════════════════════ */
@@ -632,10 +782,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 <!-- ══ HEADER ══ -->
 <div class="header">
+  <button type="button" class="lang-toggle" id="langToggle" onclick="toggleLang()" title="Switch language / భాష మార్చండి" aria-label="Language toggle">
+    <span id="langLabel">తె</span>
+    <span class="track"><span class="thumb"></span></span>
+    <span>EN</span>
+  </button>
   <div class="header-om">🕉</div>
   <h1>శుభ ముహూర్తం</h1>
   <div class="sub">Muhoortam.Sanathanadharmas.com</div>
 </div>
+<nav id="breadcrumb" aria-label="breadcrumb"></nav>
 
 <!-- ══ STEP PROGRESS ══ -->
 <div class="step-bar">
@@ -871,6 +1027,106 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 </div>
 
 <script>
+// ── Language ──────────────────────────────────────────────────────────────────
+let APP_LANG = localStorage.getItem('muhoortam_lang') || 'te';
+
+function toggleLang() {
+  APP_LANG = APP_LANG === 'te' ? 'en' : 'te';
+  localStorage.setItem('muhoortam_lang', APP_LANG);
+  document.getElementById('langToggle').classList.toggle('en', APP_LANG === 'en');
+  document.getElementById('langLabel').textContent = APP_LANG === 'te' ? 'తె' : 'EN';
+  _rerenderCurrentResults();
+}
+
+/** Return te or en string based on APP_LANG. Falls back to te if en is absent. */
+function t(te, en) { return (APP_LANG === 'en' && en) ? en : te; }
+
+// English lookup tables (transliteration)
+const _VAARAM_EN   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const _VAARAM_TE_LIST = ['ఆదివారం','సోమవారం','మంగళవారం','బుధవారం','గురువారం','శుక్రవారం','శనివారం'];
+const _NAKSHATRA_EN = [
+  'Ashvini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu',
+  'Pushyami','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta',
+  'Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Moola','Purva Ashadha',
+  'Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadra',
+  'Uttara Bhadra','Revati'
+];
+const _NAKSHATRA_TE_LIST = [
+  'అశ్వని','భరణి','కృత్తిక','రోహిణి','మృగశిర','ఆర్ద్ర','పునర్వసు',
+  'పుష్యమి','ఆశ్లేష','మఘ','పూర్వఫల్గుణి','ఉత్తరఫల్గుణి','హస్త',
+  'చిత్ర','స్వాతి','విశాఖ','అనురాధ','జ్యేష్ఠ','మూల','పూర్వాషాఢ',
+  'ఉత్తరాషాఢ','శ్రవణం','ధనిష్ఠ','శతభిష','పూర్వభాద్ర',
+  'ఉత్తరభాద్ర','రేవతి'
+];
+const _TITHI_EN = [
+  'Pratipada','Dvitiya','Tritiya','Chaturthi','Panchami',
+  'Shashthi','Saptami','Ashtami','Navami','Dashami',
+  'Ekadashi','Dvadashi','Trayodashi','Chaturdashi','Pournami',
+  'Pratipada','Dvitiya','Tritiya','Chaturthi','Panchami',
+  'Shashthi','Saptami','Ashtami','Navami','Dashami',
+  'Ekadashi','Dvadashi','Trayodashi','Chaturdashi','Amavasya'
+];
+const _TITHI_TE_LIST = [
+  'పాడ్యమి','విదియ','తదియ','చవితి','పంచమి',
+  'షష్ఠి','సప్తమి','అష్టమి','నవమి','దశమి',
+  'ఏకాదశి','ద్వాదశి','త్రయోదశి','చతుర్దశి','పౌర్ణమి',
+  'పాడ్యమి','విదియ','తదియ','చవితి','పంచమి',
+  'షష్ఠి','సప్తమి','అష్టమి','నవమి','దశమి',
+  'ఏకాదశి','ద్వాదశి','త్రయోదశి','చతుర్దశి','అమావాస్య'
+];
+const _LAGNA_EN = [
+  'Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+  'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'
+];
+const _LAGNA_TE_LIST = [
+  'మేషం','వృషభం','మిథునం','కర్కాటకం','సింహం','కన్య',
+  'తుల','వృశ్చికం','ధనుసు','మకరం','కుంభం','మీనం'
+];
+const _MASAM_EN = [
+  'Chaitra','Vaishakha','Jyeshtha','Ashadha','Shravana','Bhadrapada',
+  'Ashvina','Kartika','Margashira','Pushya','Magha','Phalguna'
+];
+const _MASAM_TE_LIST = [
+  'చైత్ర','వైశాఖ','జ్యేష్ఠ','ఆషాఢ','శ్రావణ','భాద్రపద',
+  'ఆశ్వయుజ','కార్తీక','మార్గశిర','పుష్య','మాఘ','ఫాల్గుణ'
+];
+
+/** Translate a Telugu panchang term to English using lookup tables. */
+function teToEn(teTerm, teList, enList) {
+  if (!teTerm) return teTerm;
+  // Strip trailing suffixes like " నక్షత్రం", " తిథి", " లగ్నం", " మాసం"
+  const clean = teTerm.replace(/\s*(నక్షత్రం|తిథి|లగ్నం|మాసం|వారం)\s*$/, '').trim();
+  const idx = teList.indexOf(clean);
+  return idx >= 0 ? enList[idx] : teTerm;
+}
+
+function tNakshatra(te) { return t(te, teToEn(te, _NAKSHATRA_TE_LIST, _NAKSHATRA_EN)); }
+function tTithi(te)     { return t(te, teToEn(te, _TITHI_TE_LIST, _TITHI_EN)); }
+function tLagna(te)     { return t(te, teToEn(te, _LAGNA_TE_LIST, _LAGNA_EN)); }
+function tVaaram(te)    { return t(te, teToEn(te, _VAARAM_TE_LIST, _VAARAM_EN)); }
+function tMasam(te)     { return t(te, teToEn(te, _MASAM_TE_LIST, _MASAM_EN)); }
+function tDate(date_te, date_raw) {
+  if (APP_LANG === 'te' || !date_raw) return date_te;
+  // date_raw is "DD/MM/YYYY"
+  const [d, m, y] = date_raw.split('/').map(Number);
+  const months = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+  return `${d} ${months[m-1]} ${y}`;
+}
+
+// ── Re-render current results after lang toggle ───────────────────────────────
+function _rerenderCurrentResults() {
+  // If range results are showing, re-render all cards
+  const container = document.getElementById('cardsContainer');
+  if (container && allResults.length) {
+    container.innerHTML = '';
+    const end = Math.min(_resultsShown, allResults.length);
+    for (let i = 0; i < end; i++) container.appendChild(_renderResultCard(allResults[i], i));
+  }
+  // If check result is showing, re-render it
+  if (_lastCheckData) showCheckResult(_lastCheckData);
+}
+
 const API_BASE = "https://h3dp7amvn9.execute-api.ap-south-1.amazonaws.com";
 
 const CEREMONY_NAMES = {
@@ -981,6 +1237,7 @@ function renderWindowChecks(w, birthCharts) {
 }
 
 let selectedCeremony = null, allResults = [], personCount = 0;
+let _lastCheckData = null;
 let dateMode = "range"; // "range" | "single"
 
 function setDateMode(mode) {
@@ -1692,6 +1949,7 @@ function showResults() {
 }
 
 function showCheckResult(data) {
+  _lastCheckData = data;
   const list = document.getElementById("resultsList");
   list.innerHTML = "";
 
@@ -2053,6 +2311,16 @@ function resetWizard() {
 
 addPerson();
 renderProfileChips();
+
+// Apply initial language state
+(function() {
+  if (APP_LANG === 'en') {
+    const tgl = document.getElementById('langToggle');
+    if (tgl) tgl.classList.add('en');
+    const lbl = document.getElementById('langLabel');
+    if (lbl) lbl.textContent = 'EN';
+  }
+})();
 </script>
 </body>
 </html>
