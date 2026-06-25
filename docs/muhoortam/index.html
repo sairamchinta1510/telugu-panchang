@@ -129,6 +129,68 @@ body {
 #breadcrumb .sep, #breadcrumb .bc-sep { color: var(--text-3); margin: 0 4px; }
 #breadcrumb .bc-current { color: var(--text-2); font-weight: 600; }
 
+/* ════════════════════════════════
+   HERO
+════════════════════════════════ */
+.hero-section {
+  background: linear-gradient(135deg, var(--indigo-dark) 0%, var(--indigo) 60%, #6366F1 100%);
+  padding: 40px 20px 48px;
+}
+.hero-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+}
+.hero-eyebrow {
+  color: rgba(224,231,255,0.8);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 10px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.hero-title {
+  font-family: 'Noto Sans Telugu', 'Inter', system-ui, sans-serif;
+  color: #fff;
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 10px;
+}
+.hero-sub {
+  color: rgba(255,255,255,0.75);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  max-width: 400px;
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
+}
+.hero-orrery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.hero-orrery-inner {
+  width: 200px;
+  height: 200px;
+  margin: 0;
+}
+.hero-orrery-caption {
+  color: rgba(255,255,255,0.45);
+  font-size: 10px;
+  text-align: center;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+@media (max-width: 560px) {
+  .hero-inner { grid-template-columns: 1fr; }
+  .hero-orrery { display: none; }
+  .hero-title { font-size: 1.5rem; }
+}
+
 /* ── Day timeline bar ── */
 .day-timeline {
   position: relative;
@@ -543,7 +605,7 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--white); }
   position: absolute;
   top: 50%; left: 50%;
   border-radius: 50%;
-  border: 1px dashed rgba(196,154,108,0.25);
+  border: 1px dashed rgba(255,255,255,0.18);
   transform: translate(-50%, -50%);
   animation: orbit var(--dur) linear infinite;
 }
@@ -794,7 +856,7 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--white); }
 .empty-state p { font-size: 0.84rem; color: var(--brown-mid); line-height: 1.6; }
 
 @media print {
-  .header, .step-bar, .actions-row, .btn-details, .btn-primary, .overlay { display: none !important; }
+  .site-nav, .hero-section, .step-bar, .actions-row, .btn-details, .btn-primary, .overlay { display: none !important; }
   body { background: white; }
   .result-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
 }
@@ -847,6 +909,31 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   </div>
 </header>
 <nav id="breadcrumb" aria-label="breadcrumb"></nav>
+
+<!-- ══ HERO (shown on step 1 only) ══ -->
+<div id="hero" class="hero-section">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="hero-eyebrow" data-te="తెలుగు పంచాంగం" data-en="Telugu Panchangam">తెలుగు పంచాంగం</div>
+      <h1 class="hero-title" data-te="శుభ ముహూర్తం" data-en="Find Your Auspicious Moment">శుభ ముహూర్తం</h1>
+      <p class="hero-sub" data-te="తెలుగు సంప్రదాయం ప్రకారం ఖచ్చితమైన ముహూర్త గణన" data-en="Precision muhurtam calculation rooted in Telugu Sampradaya — validated against authentic Panchangams">తెలుగు సంప్రదాయం ప్రకారం ఖచ్చితమైన ముహూర్త గణన</p>
+    </div>
+    <div class="hero-orrery" aria-hidden="true">
+      <div class="nava-graha-orrery hero-orrery-inner">
+        <div class="graha-sun">సూర్య</div>
+        <div class="graha-orbit g-chandra" data-name="చంద్ర"></div>
+        <div class="graha-orbit g-budha"   data-name="బుధ"></div>
+        <div class="graha-orbit g-shukra"  data-name="శుక్ర"></div>
+        <div class="graha-orbit g-kuja"    data-name="కుజ"></div>
+        <div class="graha-orbit g-guru"    data-name="గురు"></div>
+        <div class="graha-orbit g-shani"   data-name="శని"></div>
+        <div class="graha-orbit g-rahu"    data-name="రాహు"></div>
+        <div class="graha-orbit g-ketu"    data-name="కేతు"></div>
+      </div>
+      <div class="hero-orrery-caption" data-te="నవగ్రహ స్థానాలు" data-en="Navagraha Positions">నవగ్రహ స్థానాలు</div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ STEP PROGRESS ══ -->
 <div class="step-bar">
@@ -1505,6 +1592,8 @@ function setStep(n) {
   });
   document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
   document.getElementById("panel"+n).classList.add("active");
+  const hero = document.getElementById("hero");
+  if (hero) hero.style.display = (n === 1) ? "" : "none";
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (n === 1) { _navStack = []; renderBreadcrumb(); }
 }
