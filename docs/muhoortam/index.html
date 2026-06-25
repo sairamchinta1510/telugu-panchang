@@ -44,105 +44,90 @@ body {
 /* ════════════════════════════════
    HEADER
 ════════════════════════════════ */
-.header {
-  background: linear-gradient(160deg, var(--maroon) 0%, var(--saffron-dark) 45%, var(--saffron) 100%);
-  padding: 28px 20px 24px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+/* ════════════════════════════════
+   NAVIGATION
+════════════════════════════════ */
+.site-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 200;
 }
-.header::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  pointer-events: none;
-}
-.header-om {
-  font-size: 2.8rem;
-  line-height: 1;
-  margin-bottom: 6px;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
-  animation: pulse 3s ease-in-out infinite;
-}
-@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
-.header h1 {
-  font-family: 'Noto Serif Telugu', serif;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--white);
-  letter-spacing: 0.02em;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-.header .sub {
-  font-size: 0.78rem;
-  color: rgba(255,255,255,0.75);
-  margin-top: 4px;
-  letter-spacing: 0.05em;
-}
-
-/* ── Language toggle ── */
-.lang-toggle {
-  position: absolute;
-  top: 12px;
-  right: 14px;
+.nav-logo {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #fff;
-  cursor: pointer;
-  user-select: none;
-  z-index: 10;
-  background: rgba(0,0,0,0.35);
-  border: 1.5px solid rgba(255,255,255,0.7);
-  border-radius: 20px;
-  padding: 4px 10px;
-  letter-spacing: 0.03em;
+  gap: 10px;
 }
-.lang-toggle .track {
-  width: 30px; height: 16px;
-  background: rgba(255,255,255,0.25);
-  border: 1px solid rgba(255,255,255,0.7);
+.nav-logo-mark {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--indigo-dark), var(--indigo));
   border-radius: 8px;
-  position: relative;
-  transition: background 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
 }
-.lang-toggle .thumb {
-  position: absolute;
-  top: 1px; left: 1px;
-  width: 12px; height: 12px;
-  background: #fff;
-  border-radius: 50%;
-  transition: transform 0.2s;
+.nav-logo-text {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
 }
-.lang-toggle.en .thumb { transform: translateX(14px); }
-.lang-toggle.en .track { background: rgba(255,255,255,0.5); }
-.lang-toggle:hover { background: rgba(0,0,0,0.5); border-color: #fff; }
+.nav-logo-text span { color: var(--indigo); }
+.nav-right { display: flex; align-items: center; gap: 12px; }
 
-/* ── Breadcrumb bar ── */
+.lang-toggle {
+  display: flex;
+  background: var(--indigo-xl);
+  border: 1.5px solid var(--indigo-light);
+  border-radius: 20px;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+}
+.lang-seg {
+  padding: 5px 13px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+  transition: all var(--transition);
+  line-height: 1;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.lang-seg.active {
+  background: var(--indigo);
+  color: #fff;
+  border-radius: 20px;
+}
+.lang-toggle:hover { background: var(--indigo-light); }
+
+/* Breadcrumb */
 #breadcrumb {
   display: none;
-  padding: 7px 16px;
+  padding: 7px 20px;
   font-size: 0.72rem;
-  color: var(--brown-mid);
-  background: var(--cream2);
-  border-bottom: 1px solid rgba(196,154,108,0.2);
+  color: var(--text-2);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
   gap: 2px;
   align-items: center;
 }
 #breadcrumb a, #breadcrumb .bc-link {
-  color: var(--saffron-dark);
+  color: var(--indigo);
   text-decoration: none;
   font-weight: 600;
   background: none; border: none; padding: 0; cursor: pointer;
   font-size: inherit; font-family: inherit;
 }
 #breadcrumb a:hover, #breadcrumb .bc-link:hover { text-decoration: underline; }
-#breadcrumb .sep, #breadcrumb .bc-sep { color: var(--brown-light); margin: 0 4px; }
-#breadcrumb .bc-current { color: var(--brown-mid); font-weight: 600; }
+#breadcrumb .sep, #breadcrumb .bc-sep { color: var(--text-3); margin: 0 4px; }
+#breadcrumb .bc-current { color: var(--text-2); font-weight: 600; }
 
 /* ── Day timeline bar ── */
 .day-timeline {
@@ -842,17 +827,25 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 </head>
 <body>
 
-<!-- ══ HEADER ══ -->
-<div class="header">
-  <button type="button" class="lang-toggle" id="langToggle" onclick="toggleLang()" title="Switch language / భాష మార్చండి" aria-label="Language toggle">
-    <span id="langLabel">తె</span>
-    <span class="track"><span class="thumb"></span></span>
-    <span>EN</span>
-  </button>
-  <div class="header-om">🕉</div>
-  <h1 data-te="శుభ ముహూర్తం" data-en="Shubha Muhoortam">శుభ ముహూర్తం</h1>
-  <div class="sub">Muhoortam.Sanathanadharmas.com</div>
-</div>
+<!-- ══ NAV ══ -->
+<header class="site-nav">
+  <div class="nav-logo">
+    <div class="nav-logo-mark">🕉</div>
+    <div class="nav-logo-text">Telugu <span>Muhurtam</span></div>
+  </div>
+  <div class="nav-right">
+    <button
+      type="button"
+      class="lang-toggle"
+      id="langToggle"
+      onclick="toggleLang()"
+      title="Switch language / భాష మార్చండి"
+      aria-label="Language toggle">
+      <span id="langLabel-te" class="lang-seg active">తె</span>
+      <span id="langLabel-en" class="lang-seg">EN</span>
+    </button>
+  </div>
+</header>
 <nav id="breadcrumb" aria-label="breadcrumb"></nav>
 
 <!-- ══ STEP PROGRESS ══ -->
@@ -1105,8 +1098,8 @@ let APP_LANG = localStorage.getItem('muhoortam_lang') || 'te';
 function toggleLang() {
   APP_LANG = APP_LANG === 'te' ? 'en' : 'te';
   localStorage.setItem('muhoortam_lang', APP_LANG);
-  document.getElementById('langToggle').classList.toggle('en', APP_LANG === 'en');
-  document.getElementById('langLabel').textContent = APP_LANG === 'te' ? 'తె' : 'EN';
+  document.getElementById('langLabel-te').classList.toggle('active', APP_LANG === 'te');
+  document.getElementById('langLabel-en').classList.toggle('active', APP_LANG === 'en');
   _applyI18n();
   _rerenderCurrentResults();
 }
@@ -2544,12 +2537,10 @@ renderProfileChips();
 
 // Apply initial language state
 (function() {
-  if (APP_LANG === 'en') {
-    const tgl = document.getElementById('langToggle');
-    if (tgl) tgl.classList.add('en');
-    const lbl = document.getElementById('langLabel');
-    if (lbl) lbl.textContent = 'EN';
-  }
+  const te = document.getElementById('langLabel-te');
+  const en = document.getElementById('langLabel-en');
+  if (te) te.classList.toggle('active', APP_LANG === 'te');
+  if (en) en.classList.toggle('active', APP_LANG === 'en');
   _applyI18n();
 })();
 </script>
