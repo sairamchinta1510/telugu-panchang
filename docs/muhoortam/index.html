@@ -55,6 +55,7 @@ body {
   position: absolute;
   inset: 0;
   background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
 }
 .header-om {
   font-size: 2.8rem;
@@ -359,6 +360,11 @@ body {
 .ceremony-card .cer-name-en { font-size: 0.67rem; color: var(--brown-mid); margin-top: 2px; }
 .ceremony-card.selected .cer-name { color: var(--white); }
 .ceremony-card.selected .cer-name-en { color: rgba(255,255,255,0.8); }
+/* ── Language EN: swap ceremony card name prominence ── */
+body.lang-en .ceremony-card .cer-name    { font-size: 0.67rem; font-weight: 600; color: var(--brown-mid); }
+body.lang-en .ceremony-card .cer-name-en { font-size: 0.82rem; font-weight: 700; color: var(--brown); margin-top: 0; }
+body.lang-en .ceremony-card.selected .cer-name    { color: rgba(255,255,255,0.75); }
+body.lang-en .ceremony-card.selected .cer-name-en { color: var(--white); }
 
 /* ════════════════════════════════
    HOROSCOPE CHART (South Indian)
@@ -836,7 +842,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <span>EN</span>
   </button>
   <div class="header-om">🕉</div>
-  <h1>శుభ ముహూర్తం</h1>
+  <h1 data-te="శుభ ముహూర్తం" data-en="Shubha Muhoortam">శుభ ముహూర్తం</h1>
   <div class="sub">Muhoortam.Sanathanadharmas.com</div>
 </div>
 <nav id="breadcrumb" aria-label="breadcrumb"></nav>
@@ -856,18 +862,18 @@ input[type="date"]::-webkit-calendar-picker-indicator {
      PANEL 1 — Event Details
 ══════════════════════════════════════════════════ -->
 <div id="panel1" class="panel active">
-  <div class="section-title">వేడుక వివరాలు</div>
+  <div class="section-title" data-te="వేడుక వివరాలు" data-en="Ceremony Details">వేడుక వివరాలు</div>
 
   <div class="card">
     <div class="field">
-      <label>వేడుక రకం</label>
+      <label data-te="వేడుక రకం" data-en="Ceremony Type">వేడుక రకం</label>
       <!-- Category tabs -->
       <div class="cer-tabs" id="cerTabs">
-        <div class="cer-tab active" data-cat="vivaha" onclick="selectCerCat(this)">💒 వివాహం</div>
-        <div class="cer-tab" data-cat="childhood" onclick="selectCerCat(this)">🍼 శైశవం</div>
-        <div class="cer-tab" data-cat="home" onclick="selectCerCat(this)">🏠 గృహ</div>
-        <div class="cer-tab" data-cat="life" onclick="selectCerCat(this)">🌟 జీవితం</div>
-        <div class="cer-tab" data-cat="pooja" onclick="selectCerCat(this)">🙏 పూజ</div>
+        <div class="cer-tab active" data-cat="vivaha" data-te="💒 వివాహం" data-en="💒 Wedding" onclick="selectCerCat(this)">💒 వివాహం</div>
+        <div class="cer-tab" data-cat="childhood" data-te="🍼 శైశవం" data-en="🍼 Childhood" onclick="selectCerCat(this)">🍼 శైశవం</div>
+        <div class="cer-tab" data-cat="home" data-te="🏠 గృహ" data-en="🏠 Home" onclick="selectCerCat(this)">🏠 గృహ</div>
+        <div class="cer-tab" data-cat="life" data-te="🌟 జీవితం" data-en="🌟 Life" onclick="selectCerCat(this)">🌟 జీవితం</div>
+        <div class="cer-tab" data-cat="pooja" data-te="🙏 పూజ" data-en="🙏 Pooja" onclick="selectCerCat(this)">🙏 పూజ</div>
       </div>
       <!-- All 14 ceremony cards; shown/hidden by category -->
       <div class="ceremony-grid">
@@ -949,7 +955,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     </div>
 
     <div class="field">
-      <label>వేడుక జరిగే స్థలం</label>
+      <label data-te="వేడుక జరిగే స్థలం" data-en="Ceremony Location">వేడుక జరిగే స్థలం</label>
       <div class="ac-wrap">
         <div class="input-icon-wrap">
           <span class="icon">📍</span>
@@ -961,21 +967,21 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     </div>
 
     <div class="field">
-      <label>తేదీ ఎంచుకోండి</label>
+      <label data-te="తేదీ ఎంచుకోండి" data-en="Select Date">తేదీ ఎంచుకోండి</label>
       <div style="display:flex;background:var(--cream2);border-radius:10px;padding:3px;margin-bottom:10px">
-        <button id="tabRange" class="date-tab active" onclick="setDateMode('range')">📅 తేదీ పరిధి</button>
-        <button id="tabSingle" class="date-tab" onclick="setDateMode('single')">🔍 నిర్దిష్ట తేదీ తనిఖీ</button>
+        <button id="tabRange" class="date-tab active" data-te="📅 తేదీ పరిధి" data-en="📅 Date Range" onclick="setDateMode('range')">📅 తేదీ పరిధి</button>
+        <button id="tabSingle" class="date-tab" data-te="🔍 నిర్దిష్ట తేదీ తనిఖీ" data-en="🔍 Check a Date" onclick="setDateMode('single')">🔍 నిర్దిష్ట తేదీ తనిఖీ</button>
       </div>
 
       <!-- Range mode -->
       <div id="dateRangeFields">
         <div class="date-range">
           <div>
-            <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 నుండి</label>
+            <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px" data-te="🗓 నుండి" data-en="🗓 From">🗓 నుండి</label>
             <input type="date" id="rangeFrom">
           </div>
           <div>
-            <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px">🗓 వరకు</label>
+            <label style="font-size:0.72rem;color:var(--brown-mid);display:block;margin-bottom:5px" data-te="🗓 వరకు" data-en="🗓 To">🗓 వరకు</label>
             <input type="date" id="rangeTo">
           </div>
         </div>
@@ -997,24 +1003,24 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     </div>
   </div>
 
-  <button class="btn-primary" onclick="goPanel2()">తదుపరి దశ → వ్యక్తుల వివరాలు</button>
+  <button class="btn-primary" data-te="తదుపరి దశ → వ్యక్తుల వివరాలు" data-en="Next → Person Details" onclick="goPanel2()">తదుపరి దశ → వ్యక్తుల వివరాలు</button>
 </div>
 
 <!-- ══════════════════════════════════════════════════
      PANEL 2 — People
 ══════════════════════════════════════════════════ -->
 <div id="panel2" class="panel">
-  <div class="section-title">వ్యక్తుల వివరాలు</div>
+  <div class="section-title" data-te="వ్యక్తుల వివరాలు" data-en="Person Details">వ్యక్తుల వివరాలు</div>
 
   <!-- Saved profiles chips (hidden until profiles exist) -->
   <div id="profileChips" style="display:none;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:12px;border:1px solid rgba(196,154,108,0.2)"></div>
 
   <div id="personList"></div>
-  <button class="btn-add" id="addPersonBtn" onclick="addPerson()">
+  <button class="btn-add" id="addPersonBtn" data-te="＋ మరో వ్యక్తిని జోడించండి (గరిష్టం 6)" data-en="＋ Add Another Person (max 6)" onclick="addPerson()">
     ＋ మరో వ్యక్తిని జోడించండి (గరిష్టం 6)
   </button>
   <div style="display:flex;gap:10px;margin-top:4px">
-    <button class="btn-outline" style="flex:0 0 auto" onclick="setStep(1);showError('')">← వేడుక మార్చండి</button>
+    <button class="btn-outline" style="flex:0 0 auto" data-te="← వేడుక మార్చండి" data-en="← Change Ceremony" onclick="setStep(1);showError('')">← వేడుక మార్చండి</button>
     <button id="findBtn" class="btn-primary" style="flex:1" onclick="startCompute()">ముహూర్తాలు వెతకండి 🔍</button>
   </div>
 </div>
@@ -1024,7 +1030,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 ══════════════════════════════════════════════════ -->
 <div id="panel3" class="panel">
   <!-- Loading area -->
-  <div id="loadingArea" class="card" style="display:none">
+  <div id="loadingArea" style="display:none;padding:20px 0;margin-bottom:14px">
     <div class="loading-wrap">
       <div class="nava-graha-orrery">
         <div class="graha-sun">సూర్య</div>
@@ -1093,7 +1099,17 @@ function toggleLang() {
   localStorage.setItem('muhoortam_lang', APP_LANG);
   document.getElementById('langToggle').classList.toggle('en', APP_LANG === 'en');
   document.getElementById('langLabel').textContent = APP_LANG === 'te' ? 'తె' : 'EN';
+  _applyI18n();
   _rerenderCurrentResults();
+}
+
+/** Apply language to static [data-te][data-en] elements and body class */
+function _applyI18n() {
+  document.body.classList.toggle('lang-en', APP_LANG === 'en');
+  document.querySelectorAll('[data-te][data-en]').forEach(el => {
+    el.textContent = APP_LANG === 'en' ? el.dataset.en : el.dataset.te;
+  });
+  setDateMode(dateMode);
 }
 
 /** Return te or en string based on APP_LANG. Falls back to te if en is absent. */
@@ -1307,7 +1323,7 @@ function renderBreadcrumb() {
   nav.innerHTML = _navStack.map((crumb, idx) => {
     const label = t(crumb.label_te, crumb.label_en);
     const isLast = idx === _navStack.length - 1;
-    if (isLast) return `<span class="bc-current">${label}</span>`;
+    if (isLast || !crumb.action) return `<span class="bc-current">${label}</span>`;
     return `<button class="bc-link" onclick="(${crumb.action.toString()})()">${label}</button><span class="bc-sep">›</span>`;
   }).join('');
 }
@@ -1320,7 +1336,7 @@ function setDateMode(mode) {
   document.getElementById("dateRangeFields").style.display = mode === "range" ? "" : "none";
   document.getElementById("dateSingleFields").style.display = mode === "single" ? "" : "none";
   document.getElementById("findBtn").textContent =
-    mode === "range" ? "ముహూర్తాలు వెతకండి 🔍" : "తనిఖీ చేయండి ✓";
+    mode === "range" ? t("ముహూర్తాలు వెతకండి 🔍","Find Muhurtams 🔍") : t("తనిఖీ చేయండి ✓","Check Date ✓");
 }
 
 let savedBirthCharts = [], savedPersons = [];
@@ -2331,8 +2347,11 @@ function showCheckResult(data) {
 function showDetail(i) {
   const r = allResults[i];
   // Push date crumb (replacing any previous detail crumb)
-  if (_navStack.length >= 3) _navStack = _navStack.slice(0, 3);
-  else if (_navStack.length === 0) _navStack = [{ label_te:'🏠 హోమ్', label_en:'🏠 Home', action:function(){ resetWizard(); } }];
+  if (_navStack.length >= 3) {
+    _navStack = _navStack.slice(0, 3);
+    // Give the Results crumb a back-action (close sheet) if it has none
+    if (!_navStack[2].action) _navStack[2].action = function(){ closeSheet(); };
+  } else if (_navStack.length === 0) _navStack = [{ label_te:'🏠 హోమ్', label_en:'🏠 Home', action:function(){ resetWizard(); } }];
   const detailLabel = t(r.date_te || '', tDate(r.date_te, r.date_raw) || r.date_te || '');
   _navStack.push({ label_te: detailLabel, label_en: detailLabel, action: null });
   renderBreadcrumb();
@@ -2517,6 +2536,7 @@ renderProfileChips();
     const lbl = document.getElementById('langLabel');
     if (lbl) lbl.textContent = 'EN';
   }
+  _applyI18n();
 })();
 </script>
 </body>
