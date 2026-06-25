@@ -6,6 +6,7 @@ Lambda entry point for the Muhoortam API.
   POST /muhoortam/window-detail  — planet rashis for a single ceremony date
 """
 from __future__ import annotations
+import datetime
 import json
 import threading
 import traceback
@@ -19,6 +20,8 @@ from compute.muhurta_finder import find_muhurtas_for_month, check_muhurta_day
 from compute.astro import local_date_to_jd, compute_planet_rashis
 from compute.precompute import precompute_month
 from compute.s3_cache import read_month_cache, write_month_cache
+from compute.panchangam_validator import validate_muhurtam_date
+from compute.panchang import TITHI_EN, NAKSHATRA_EN
 
 _tf = TimezoneFinder()
 
@@ -170,6 +173,27 @@ def _handle_find(body: dict) -> dict:
     except Exception:
         traceback.print_exc()
         return _error(500, "Muhurta calculation failed")
+
+    # Cross-validate each result date against Prokerala Panchangam.
+    # Runs only for the final result set (not every day in the scan range).
+    # Failures are silently caught — validation never blocks the response.
+    for r in results:
+        try:
+            day_str, month_str, year_str = r["date_raw"].split("/")
+            result_date = datetime.date(int(year_str), int(month_str), int(day_str))
+            tithi_en     = TITHI_EN[r["tithi_idx"]]
+            nakshatra_en = NAKSHATRA_EN[r["nak_idx"]]
+            r["validation"] = validate_muhurtam_date(
+                date=result_date,
+                lat=geo["lat"],
+                lon=geo["lon"],
+                tz_name=geo["tz_name"],
+                tithi_en=tithi_en,
+                nakshatra_en=nakshatra_en,
+                sunrise=r["sunrise"],
+            )
+        except Exception:
+            r["validation"] = {"status": "unavailable", "source": "Prokerala Panchangam"}
 
     if month_cache is None:
         def _populate_cache() -> None:

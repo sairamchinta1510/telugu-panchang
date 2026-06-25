@@ -164,7 +164,7 @@ def validate_muhurtam_date(
         f"{_PROKERALA_BASE}/{date.year}/{date.month:02d}/{date.day:02d}/"
         f"?la={lat:.4f}&lo={lon:.4f}&tz={tz_off:.1f}&ayanamsa=1"
     )
-    checked_at = datetime.datetime.utcnow().isoformat() + "Z"
+    checked_at = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
     base = {
         "source": "Prokerala Panchangam",
         "source_url": source_url,
