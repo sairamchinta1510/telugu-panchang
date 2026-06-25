@@ -1064,6 +1064,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   filter: invert(23%) sepia(94%) saturate(600%) hue-rotate(222deg);
 }
+.validation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 2px 8px;
+  margin-top: 3px;
+}
+.validation-badge.verified  { background: var(--success-bg); color: var(--success); }
+.validation-badge.partial   { background: var(--success-bg); color: var(--success); }
+.validation-badge.mismatch  { background: var(--amber-light); color: #92400E; }
 </style>
 </head>
 <body>
@@ -2223,6 +2236,19 @@ function _renderResultCard(r, i) {
       </div>`;
   }
 
+  function _validationBadgeHtml(validation) {
+    if (!validation) return '';
+    const st = validation.status;
+    if (st === 'verified' || st === 'partial') {
+      const src = validation.source || 'Prokerala Panchangam';
+      return `<span class="validation-badge ${st}">✓ ${t('పరీక్షించబడింది','Verified')} · ${src}</span>`;
+    }
+    if (st === 'mismatch') {
+      return `<span class="validation-badge mismatch">⚠ ${t('స్థానిక పంచాంగంతో తనిఖీ చేయండి','Verify with local pandit')}</span>`;
+    }
+    return '';
+  }
+
   // ── Zone B: Best window (hero) ────────────────────────────────────────────
   let heroHtml = '';
   if (best) {
@@ -2279,6 +2305,7 @@ function _renderResultCard(r, i) {
       </div>
       <div class="result-badge">${tNakshatra(r.nakshatra_te)}<br>${tTithi(r.tithi_te)}</div>
     </div>
+    ${_validationBadgeHtml(r.validation)}
     <div class="result-body">
       ${timelineHtml}
       ${heroHtml}
@@ -2753,7 +2780,35 @@ function showDetail(i) {
 
         ${r.gulika_kalam?`<div class="kalam-row"><span class="kalam-name">⚠️ గులిక కాలం</span><span class="kalam-time">${r.gulika_kalam.start} – ${r.gulika_kalam.end}</span></div>`:""}
       </div>
-    </div>`;
+    </div>
+    ${(() => {
+      const val = r.validation;
+      if (!val || val.status === 'unavailable') return '';
+      const details = val.details || {};
+      const rows = Object.entries(details).map(([key, d]) => `
+        <tr>
+          <td style="text-transform:capitalize">${key}</td>
+          <td>${d.ours || '—'}</td>
+          <td>${d.reference || '—'}</td>
+          <td style="color:${d.match?'var(--success)':'#DC2626'};font-weight:700">${d.match ? '✓' : '✗'}</td>
+        </tr>`).join('');
+      const srcUrl = val.source_url
+        ? `<a href="${val.source_url}" target="_blank" rel="noopener" style="font-size:0.6rem;color:var(--indigo)">${val.source}</a>`
+        : val.source;
+      return `
+        <div class="detail-section">
+          <div class="detail-section-title">${t('పంచాంగ పరీక్ష','Panchangam Cross-Check')} · ${srcUrl}</div>
+          <table class="score-details-table">
+            <tr style="font-size:0.6rem;color:var(--text-3)">
+              <th>${t('అంశం','Element')}</th>
+              <th>${t('మన విలువ','Ours')}</th>
+              <th>${t('మూలం','Reference')}</th>
+              <th>${t('సరిపోలిక','Match')}</th>
+            </tr>
+            ${rows}
+          </table>
+        </div>`;
+    })()}`;
 
   document.getElementById("overlay").classList.add("open");
   document.body.style.overflow = "hidden";
