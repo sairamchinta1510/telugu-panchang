@@ -2819,7 +2819,7 @@ function showDetail(i) {
       const prokeralaUrl = (val && val.source_url)
         ? val.source_url
         : (dd && mm && yyyy)
-          ? `https://www.prokerala.com/astrology/panchangam/date/${yyyy}/${mm}/${dd}/?location=${encodeURIComponent(_scanPlace)}&ayanamsa=1`
+          ? `https://www.prokerala.com/astrology/panchangam/?panchangam-date=${yyyy}-${mm}-${dd}&ayanamsa=1`
           : 'https://www.prokerala.com/astrology/telugu-panchangam/';
       const prokeralaLink = `<a href="${prokeralaUrl}" target="_blank" rel="noopener" style="color:var(--indigo);text-decoration:underline">${t('Prokerala తెలుగు పంచాంగం','Prokerala Telugu Panchangam')}</a>`;
 

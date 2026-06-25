@@ -196,7 +196,17 @@ def _handle_find(body: dict) -> dict:
                 sunrise=r["sunrise"],
             )
         except Exception:
-            r["validation"] = {"status": "unavailable", "source": "Prokerala Panchangam"}
+            # Build a valid Prokerala URL even when the validator threw unexpectedly
+            try:
+                from compute.panchangam_validator import _build_url, _tz_offset
+                _url = _build_url(result_date, geo["lat"], geo["lon"], geo["tz_name"])
+            except Exception:
+                _url = "https://www.prokerala.com/astrology/panchangam/"
+            r["validation"] = {
+                "status": "unavailable",
+                "source": "Prokerala Panchangam",
+                "source_url": _url,
+            }
 
         # Exclude results where panchang elements confirmed to be wrong
         if r["validation"]["status"] != "mismatch":
