@@ -257,6 +257,7 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
 }
 .win-card.best .win-card-time { font-size: 1.05rem; }
+.win-card.best .win-card-sub { color: var(--text-2); }
 .win-card-score {
   font-size: 11px;
   font-weight: 700;
@@ -1043,25 +1044,25 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
 input[type="date"] {
   width: 100%;
   padding: 11px 12px;
-  border: 1.5px solid var(--brown-light);
+  border: 1.5px solid var(--border);
   border-radius: 10px;
   font-family: 'Noto Sans Telugu', 'Segoe UI', system-ui, sans-serif;
   font-size: 15px;
-  color: var(--brown);
-  background: var(--white);
+  color: var(--text);
+  background: var(--surface);
   cursor: pointer;
   -webkit-appearance: none;
   appearance: none;
 }
 input[type="date"]:focus {
   outline: none;
-  border-color: var(--saffron);
-  box-shadow: 0 0 0 3px rgba(193,68,14,0.12);
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 3px rgba(67,56,202,0.12);
 }
 input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.6;
   cursor: pointer;
-  filter: invert(25%) sepia(40%) saturate(800%) hue-rotate(340deg);
+  filter: invert(23%) sepia(94%) saturate(600%) hue-rotate(222deg);
 }
 </style>
 </head>
@@ -2362,18 +2363,18 @@ function showResults() {
   // Birth chart summary panel
   if(savedBirthCharts.length) {
     const bcDiv = document.createElement("div");
-    bcDiv.style.cssText = "background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px;border:1px solid rgba(196,154,108,0.2)";
+    bcDiv.style.cssText = "background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px;border:1px solid var(--border)";
     bcDiv.innerHTML = `
-      <div style="font-size:0.7rem;font-weight:700;color:var(--brown-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">
+      <div style="font-size:0.7rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">
         ముహూర్తం లెక్కించిన వ్యక్తుల జన్మ వివరాలు
       </div>
       ${savedBirthCharts.map((bc,i)=>`
-        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px;background:var(--cream2);border-radius:10px;margin-bottom:8px">
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px;background:var(--indigo-xl);border-radius:10px;margin-bottom:8px">
           <div style="font-size:1.3rem;flex-shrink:0">👤</div>
           <div style="flex:1">
-            <div style="font-weight:700;font-size:0.88rem;color:var(--maroon);margin-bottom:6px">${savedPersons[i]?.name||"వ్యక్తి "+(i+1)}</div>
+            <div style="font-weight:700;font-size:0.88rem;color:var(--indigo);margin-bottom:6px">${savedPersons[i]?.name||"వ్యక్తి "+(i+1)}</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <span style="background:var(--gold-light);border:1px solid var(--gold);border-radius:20px;padding:3px 10px;font-size:0.76rem;color:var(--brown)">
+              <span style="background:var(--amber-light);border:1px solid var(--amber);border-radius:20px;padding:3px 10px;font-size:0.76rem;color:#92400E">
                 🌟 జన్మ నక్షత్రం: <strong>${bc.janma_nakshatra_te}</strong>${bc.janma_nakshatra_padam ? ` (${bc.janma_nakshatra_padam}వ పాదం)` : ""}
               </span>
               <span style="background:#EDE7F6;border:1px solid #B39DDB;border-radius:20px;padding:3px 10px;font-size:0.76rem;color:#4A148C">
@@ -2405,9 +2406,9 @@ function showResults() {
   const loadMoreWrap = document.createElement("div");
   loadMoreWrap.style.cssText = "margin:16px 0 8px;text-align:center";
   loadMoreWrap.innerHTML = `<button id="loadMoreBtn" onclick="loadMoreResults()"
-    style="background:linear-gradient(135deg,var(--saffron-dark),var(--saffron));color:white;border:none;
+    style="background:linear-gradient(135deg,var(--indigo-dark),var(--indigo));color:white;border:none;
            border-radius:12px;padding:12px 20px;font-size:0.85rem;font-family:inherit;font-weight:700;
-           cursor:pointer;width:100%;box-shadow:0 4px 14px rgba(193,68,14,0.3);letter-spacing:0.02em">
+           cursor:pointer;width:100%;box-shadow:0 4px 14px rgba(67,56,202,0.3);letter-spacing:0.02em">
   </button>`;
   list.appendChild(loadMoreWrap);
 
@@ -2440,16 +2441,16 @@ function showCheckResult(data) {
   // Birth chart summary
   if (savedBirthCharts.length) {
     const bcDiv = document.createElement("div");
-    bcDiv.style.cssText = "background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px;border:1px solid rgba(196,154,108,0.2)";
+    bcDiv.style.cssText = "background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px;border:1px solid var(--border)";
     bcDiv.innerHTML = `
-      <div style="font-size:0.7rem;font-weight:700;color:var(--brown-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">${t('వ్యక్తుల జన్మ వివరాలు','Birth Details')}</div>
+      <div style="font-size:0.7rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">${t('వ్యక్తుల జన్మ వివరాలు','Birth Details')}</div>
       ${savedBirthCharts.map((bc,i)=>`
-        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px;background:var(--cream2);border-radius:10px;margin-bottom:8px">
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px;background:var(--indigo-xl);border-radius:10px;margin-bottom:8px">
           <div style="font-size:1.3rem;flex-shrink:0">👤</div>
           <div style="flex:1">
-            <div style="font-weight:700;font-size:0.88rem;color:var(--maroon);margin-bottom:6px">${savedPersons[i]?.name||"వ్యక్తి "+(i+1)}</div>
+            <div style="font-weight:700;font-size:0.88rem;color:var(--indigo);margin-bottom:6px">${savedPersons[i]?.name||"వ్యక్తి "+(i+1)}</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <span style="background:var(--gold-light);border:1px solid var(--gold);border-radius:20px;padding:3px 10px;font-size:0.76rem;color:var(--brown)">🌟 ${bc.janma_nakshatra_te}${bc.janma_nakshatra_padam?" ("+bc.janma_nakshatra_padam+"వ పాదం)":""}</span>
+              <span style="background:var(--amber-light);border:1px solid var(--amber);border-radius:20px;padding:3px 10px;font-size:0.76rem;color:#92400E">🌟 ${bc.janma_nakshatra_te}${bc.janma_nakshatra_padam?" ("+bc.janma_nakshatra_padam+"వ పాదం)":""}</span>
               <span style="background:#EDE7F6;border:1px solid #B39DDB;border-radius:20px;padding:3px 10px;font-size:0.76rem;color:#4A148C">♈ ${bc.janma_rashi_te}</span>
               <span style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:20px;padding:3px 10px;font-size:0.76rem;color:#1B5E20">⬆️ ${bc.lagna_te}</span>
             </div>
@@ -2729,13 +2730,13 @@ function showDetail(i) {
     ${r.good_windows && r.good_windows.length ? `
     <div class="detail-section">
       <div class="detail-section-title">🪐 ముహూర్తం గ్రహ స్థానాలు</div>
-      ${r.sudhi_name_te ? `<div style="font-size:0.72rem;color:#5D1B1B;background:var(--gold-light);border:1px solid var(--gold);border-radius:6px;padding:4px 10px;margin-bottom:10px">🔯 లగ్న సుద్ధి: ${r.sudhi_name_te}</div>` : ""}
+      ${r.sudhi_name_te ? `<div style="font-size:0.72rem;color:#92400E;background:var(--amber-light);border:1px solid var(--amber);border-radius:6px;padding:4px 10px;margin-bottom:10px">🔯 లగ్న సుద్ధి: ${r.sudhi_name_te}</div>` : ""}
       ${r.good_windows.map((w,wi)=>`
       <div style="margin-bottom:${wi<r.good_windows.length-1?'14px':'0'}">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
           ${wi===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:4px;padding:2px 6px;font-weight:700">ఉత్తమం</span>':'<span style="font-size:0.65rem;background:#A5D6A7;color:#1B5E20;border-radius:4px;padding:2px 6px;font-weight:600">${wi+1}వ</span>'}
-          <span style="font-size:0.82rem;font-weight:700;color:var(--maroon)">${w.best_time||w.from} (${w.from}–${w.to})</span>
-          <span style="font-size:0.72rem;color:var(--brown-mid)">${w.lagna_te||''} లగ్నం</span>
+          <span style="font-size:0.82rem;font-weight:700;color:var(--indigo)">${w.best_time||w.from} (${w.from}–${w.to})</span>
+          <span style="font-size:0.72rem;color:var(--text-2)">${w.lagna_te||''} లగ్నం</span>
         </div>
         <div id="horoscope-${r.date_raw.replace(/\//g,'-')}-w${wi}" style="min-height:40px">
           <div style="font-size:0.75rem;color:var(--brown-mid);padding:8px 0">⏳ గ్రహ స్థానాలు లోడ్ అవుతున్నాయి...</div>
