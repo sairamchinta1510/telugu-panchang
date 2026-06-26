@@ -1563,39 +1563,63 @@ function renderWindowChecks(w, birthCharts) {
   if (!w || w.nak_idx === undefined) return "";
   const { nak_idx, tithi_idx, sun_idx, lagna_idx } = w;
 
-  const panchaka = ((sun_idx+1) + (tithi_idx+1) + (nak_idx+1) + (lagna_idx+1)) % 9;
+  const nakName   = _NAKSHATRA_TE_LIST[nak_idx]   || nak_idx;
+  const titName   = _TITHI_TE_LIST[tithi_idx]     || tithi_idx;
+  const lagName   = _LAGNA_TE_LIST[lagna_idx]     || lagna_idx;
+  const vaarName  = _VAARAM_TE_LIST[sun_idx]      || sun_idx;
+
+  const pSum      = (sun_idx+1) + (tithi_idx+1) + (nak_idx+1) + (lagna_idx+1);
+  const panchaka  = pSum % 9;
   const panchakaGood = [0,3,5,7].includes(panchaka);
 
+  const badgeStyle = ok => ok
+    ? `background:#E8F5E9;color:#1B5E20;border:1px solid #A5D6A7`
+    : `background:#FFEBEE;color:#B71C1C;border:1px solid #FFCDD2`;
+
   let rows = `
-    <table style="width:100%;border-collapse:collapse;font-size:0.72rem;margin-top:8px">
-      <tr style="background:var(--cream2)">
-        <th style="text-align:left;padding:5px 6px;border-bottom:1px solid #E8D5C4;color:var(--brown-mid);font-weight:700">తనిఖీ</th>
-        <th style="text-align:left;padding:5px 6px;border-bottom:1px solid #E8D5C4;color:var(--brown-mid);font-weight:700">విలువ</th>
-        <th style="padding:5px 6px;border-bottom:1px solid #E8D5C4"></th>
-      </tr>
-      <tr>
-        <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">పంచక</td>
-        <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">(${sun_idx+1}+${tithi_idx+1}+${nak_idx+1}+${lagna_idx+1})%9=${panchaka}</td>
-        <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">${panchakaGood ? "✅" : "❌"}</td>
-      </tr>`;
+    <div style="margin-top:10px">
+      <div style="font-size:0.68rem;font-weight:700;color:var(--brown-mid);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px">🔢 లెక్కింపు వివరాలు</div>
+      <table style="width:100%;border-collapse:collapse;font-size:0.72rem">
+        <tr style="background:var(--cream2)">
+          <th style="text-align:left;padding:5px 6px;border-bottom:1px solid #E8D5C4;color:var(--brown-mid);font-weight:700;width:28%">తనిఖీ</th>
+          <th style="text-align:left;padding:5px 6px;border-bottom:1px solid #E8D5C4;color:var(--brown-mid);font-weight:700">లెక్కింపు</th>
+          <th style="padding:5px 6px;border-bottom:1px solid #E8D5C4;width:28px"></th>
+        </tr>
+        <tr>
+          <td style="padding:5px 6px;border-bottom:1px solid #f5ede4;vertical-align:top;font-weight:600">పంచక</td>
+          <td style="padding:5px 6px;border-bottom:1px solid #f5ede4;color:#555">
+            <span style="font-family:monospace">(${vaarName}:${sun_idx+1} + ${titName}:${tithi_idx+1} + ${nakName}:${nak_idx+1} + ${lagName}:${lagna_idx+1}) = ${pSum} → ${pSum}%9 = ${panchaka}</span>
+          </td>
+          <td style="padding:5px 6px;border-bottom:1px solid #f5ede4;text-align:center">
+            <span style="font-size:0.68rem;padding:2px 5px;border-radius:4px;font-weight:700;${badgeStyle(panchakaGood)}">${panchakaGood ? "✅" : "❌"}</span>
+          </td>
+        </tr>`;
 
   if (birthCharts && birthCharts.length) {
     birthCharts.forEach(bc => {
       if (bc.janma_nakshatra_idx === undefined) return;
-      const taraPos = ((nak_idx - bc.janma_nakshatra_idx + 27) % 27) % 9;
-      const taraGood = TARA_GOOD[taraPos];
-      const taraName = TARA_NAMES[taraPos] || taraPos;
-      const name = bc.name || "వ్యక్తి";
+      const jIdx     = bc.janma_nakshatra_idx;
+      const jName    = _NAKSHATRA_TE_LIST[jIdx] || jIdx;
+      const offset   = (nak_idx - jIdx + 27) % 27;
+      const taraNum  = (offset % 9) + 1;
+      const taraGood = TARA_GOOD[taraNum - 1];
+      const taraName = TARA_NAMES[taraNum - 1] || taraNum;
+      const name     = bc.name || "వ్యక్తి";
       rows += `
         <tr>
-          <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">${name} తార</td>
-          <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">${taraPos+1}వ తార (${taraName})</td>
-          <td style="padding:5px 6px;border-bottom:1px solid #f5ede4">${taraGood ? "✅" : "❌"}</td>
+          <td style="padding:5px 6px;border-bottom:1px solid #f5ede4;vertical-align:top;font-weight:600">${name} తార</td>
+          <td style="padding:5px 6px;border-bottom:1px solid #f5ede4;color:#555">
+            <div>జన్మ: <strong>${jName}</strong> (${jIdx}), ముహూర్తం: <strong>${nakName}</strong> (${nak_idx})</div>
+            <span style="font-family:monospace">(${nak_idx}−${jIdx}+27)%27 = ${offset} → ${offset}%9+1 = ${taraNum}వ తార (${taraName})</span>
+          </td>
+          <td style="padding:5px 6px;border-bottom:1px solid #f5ede4;text-align:center">
+            <span style="font-size:0.68rem;padding:2px 5px;border-radius:4px;font-weight:700;${badgeStyle(taraGood)}">${taraGood ? "✅" : "❌"}</span>
+          </td>
         </tr>`;
     });
   }
 
-  rows += `</table>`;
+  rows += `</table></div>`;
   return rows;
 }
 
@@ -2656,104 +2680,41 @@ function showDetail(i) {
   document.getElementById("sheetBody").innerHTML = `
     <div class="detail-section">
       <div class="detail-section-title">పంచాంగ వివరాలు</div>
-      <div class="detail-item">
-        <div class="di-icon">🌟</div>
-        <div>
-          <div class="di-label">నక్షత్రం</div>
-          <div class="di-val">${r.nakshatra_te}</div>
-          <div class="di-sub">${CEREMONY_NAK_REASON[selectedCeremony]||""}</div>
-          <span class="badge badge-green">✅ శుభమైన నక్షత్రం</span>
-        </div>
-      </div>
-      <div class="detail-item">
-        <div class="di-icon">📅</div>
-        <div>
-          <div class="di-label">తిథి</div>
-          <div class="di-val">${r.tithi_te}</div>
-          <div class="di-sub">ఋక్త తిథి లేదు — సంప్రదాయం ప్రకారం అనుకూలమైన తిథి</div>
-          <span class="badge badge-green">✅ అనుకూలమైన తిథి</span>
-        </div>
-      </div>
-      <div class="detail-item">
-        <div class="di-icon">✨</div>
-        <div>
-          <div class="di-label">యోగం</div>
-          <div class="di-val">${r.yoga_te}</div>
-        </div>
-      </div>
-      <div class="detail-item">
-        <div class="di-icon">☀️</div>
-        <div>
-          <div class="di-label">సూర్యోదయం — అస్తమయం</div>
-          <div class="di-val">${r.sunrise} — ${r.sunset}</div>
-        </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.78rem">
+        <div style="display:flex;gap:6px;align-items:baseline"><span>🌟</span><span><strong>${tNakshatra(r.nakshatra_te)}</strong></span></div>
+        <div style="display:flex;gap:6px;align-items:baseline"><span>📅</span><span><strong>${tTithi(r.tithi_te)}</strong></span></div>
+        <div style="display:flex;gap:6px;align-items:baseline"><span>✨</span><span>${r.yoga_te}</span></div>
+        <div style="display:flex;gap:6px;align-items:baseline"><span>☀️</span><span>${r.sunrise} – ${r.sunset}</span></div>
       </div>
     </div>
 
-    <div class="detail-section">
-      <div class="detail-section-title">జ్యోతిష్య పరీక్షలు</div>
-      <div class="detail-item">
-        <div class="di-icon">⭐</div>
-        <div>
-          <div class="di-label">తార బలం</div>
-          <div class="di-val">అందరికీ అనుకూలం</div>
-          <div class="di-sub">జన్మ నక్షత్రం నుండి లెక్కించిన తార స్థానం శుభంగా ఉంది</div>
-          <span class="badge badge-green">✅ తార బలం సరి</span>
-        </div>
+    ${r.good_windows && r.good_windows.length ? r.good_windows.map((w,wi)=>`
+    <div class="detail-section" style="border:2px solid ${wi===0?'#388E3C':'#A5D6A7'};border-radius:12px;padding:14px;margin-bottom:12px;background:${wi===0?'#F1F8E9':'#FAFFF8'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        ${wi===0
+          ? `<span style="background:#388E3C;color:white;border-radius:6px;padding:3px 10px;font-size:0.68rem;font-weight:700;letter-spacing:0.05em">⭐ ఉత్తమం</span>`
+          : `<span style="background:#A5D6A7;color:#1B5E20;border-radius:6px;padding:3px 10px;font-size:0.68rem;font-weight:700">${wi+1}వ ముహూర్తం</span>`}
+        <span style="font-size:1rem;font-weight:800;color:#1B5E20">${w.best_time||w.from}</span>
+        <span style="font-size:0.75rem;color:#555">(${w.from}–${w.to})</span>
       </div>
-      <div class="detail-item">
-        <div class="di-icon">🔯</div>
-        <div>
-          <div class="di-label">పంచక దోషం</div>
-          <div class="di-val">పంచక దోషం లేదు</div>
-          <div class="di-sub">(వారం+తిథి+నక్షత్రం+లగ్నం) % 9 = పంచక రహిత</div>
-          <span class="badge badge-green">✅ పంచక రహిత</span>
-        </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;font-size:0.72rem">
+        <span style="background:#E8F5E9;color:#2E7D32;border-radius:10px;padding:2px 8px">🌅 ${tLagna(w.lagna_te||'')} లగ్నం</span>
+        <span style="background:#E8F5E9;color:#2E7D32;border-radius:10px;padding:2px 8px">🌟 ${tNakshatra(w.nakshatra_te||'')}</span>
+        <span style="background:#E8F5E9;color:#2E7D32;border-radius:10px;padding:2px 8px">📅 ${tTithi(w.tithi_te||'')}</span>
+        ${w.choghadiya_te?`<span style="background:#E8F5E9;color:#2E7D32;border-radius:10px;padding:2px 8px">⏰ ${tChoghadiya(w.choghadiya_te)}</span>`:''}
+        ${(w.lagna_quality&&w.lagna_quality.score)?`<span style="background:#FFF8E1;color:#E65100;border-radius:10px;padding:2px 8px;border:1px solid #FFE082">⭐ ${w.lagna_quality.score}/150</span>`:''}
       </div>
-      <div class="detail-item">
-        <div class="di-icon">🌙</div>
-        <div>
-          <div class="di-label">లగ్న సుద్ధి</div>
-          <div class="di-val">రాశి స్థానం అనుకూలం</div>
-          <div class="di-sub">${r.sudhi_name_te || "సప్తమ / అష్టమ స్థాన దోషం లేదు"}</div>
-          <span class="badge badge-green">✅ రాశి శుద్ధి సరి</span>
-        </div>
+      <div id="horoscope-${r.date_raw.replace(/\//g,'-')}-w${wi}" style="min-height:40px">
+        <div style="font-size:0.75rem;color:var(--brown-mid);padding:8px 0">⏳ గ్రహ స్థానాలు లోడ్ అవుతున్నాయి...</div>
       </div>
-      <div class="detail-item">
-        <div class="di-icon">📿</div>
-        <div>
-          <div class="di-label">మాస శుద్ధి</div>
-          <div class="di-val">మాసం అనుకూలం</div>
-          <div class="di-sub">చాతుర్మాస్య దోషం లేదు, అధిక మాసం కాదు</div>
-          <span class="badge badge-green">✅ మాస శుద్ధి సరి</span>
-        </div>
-      </div>
-    </div>
-
-    ${r.good_windows && r.good_windows.length ? `
-    <div class="detail-section">
-      <div class="detail-section-title">🪐 ముహూర్తం గ్రహ స్థానాలు</div>
-      ${r.sudhi_name_te ? `<div style="font-size:0.72rem;color:#92400E;background:var(--amber-light);border:1px solid var(--amber);border-radius:6px;padding:4px 10px;margin-bottom:10px">🔯 లగ్న సుద్ధి: ${r.sudhi_name_te}</div>` : ""}
-      ${r.good_windows.map((w,wi)=>`
-      <div style="margin-bottom:${wi<r.good_windows.length-1?'14px':'0'}">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-          ${wi===0?'<span style="font-size:0.65rem;background:#388E3C;color:white;border-radius:4px;padding:2px 6px;font-weight:700">ఉత్తమం</span>':'<span style="font-size:0.65rem;background:#A5D6A7;color:#1B5E20;border-radius:4px;padding:2px 6px;font-weight:600">${wi+1}వ</span>'}
-          <span style="font-size:0.82rem;font-weight:700;color:var(--indigo)">${w.best_time||w.from} (${w.from}–${w.to})</span>
-          <span style="font-size:0.72rem;color:var(--text-2)">${w.lagna_te||''} లగ్నం</span>
-        </div>
-        <div id="horoscope-${r.date_raw.replace(/\//g,'-')}-w${wi}" style="min-height:40px">
-          <div style="font-size:0.75rem;color:var(--brown-mid);padding:8px 0">⏳ గ్రహ స్థానాలు లోడ్ అవుతున్నాయి...</div>
-        </div>
-        ${renderWindowChecks(w, savedBirthCharts)}
-      </div>`).join('')}
-    </div>` : ""}
+      ${renderWindowChecks(w, savedBirthCharts)}
+    </div>`).join('') : `<div style="color:#888;font-size:0.82rem;padding:10px 0">ఈ రోజు శుభ ముహూర్తాలు లేవు</div>`}
 
     <div class="detail-section">
       <div class="detail-section-title">నివారించాల్సిన సమయాలు</div>
       <div class="kalam-grid">
         ${r.rahu_kalam?`<div class="kalam-row"><span class="kalam-name">🔴 రాహు కాలం</span><span class="kalam-time">${r.rahu_kalam.start} – ${r.rahu_kalam.end}</span></div>`:""}
         ${r.yamaganda?`<div class="kalam-row"><span class="kalam-name">🔴 యమగండ కాలం</span><span class="kalam-time">${r.yamaganda.start} – ${r.yamaganda.end}</span></div>`:""}
-
         ${r.gulika_kalam?`<div class="kalam-row"><span class="kalam-name">⚠️ గులిక కాలం</span><span class="kalam-time">${r.gulika_kalam.start} – ${r.gulika_kalam.end}</span></div>`:""}
       </div>
     </div>

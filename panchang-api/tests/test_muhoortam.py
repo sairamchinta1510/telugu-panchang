@@ -86,23 +86,43 @@ from compute.muhurta_rules import is_auspicious, _tara_ok, _panchaka_ok, _rashi_
 
 
 def test_tara_ok_good():
-    # Janma=3 (Rohini), day=9 (Magha): tara = (9-3)%27+1 = 7 → INAUSPICIOUS
+    # Janma=3 (Rohini), day=9 (Magha): offset=6, tara=(6%9)+1=7 → INAUSPICIOUS (Naidhana)
     assert _tara_ok(3, 9) is False
 
 
 def test_tara_ok_bad_same():
-    # Janma=5, day=5: tara=1 (Janma) → inauspicious
+    # Janma=5, day=5: offset=0, tara=1 (Janma) → inauspicious
     assert _tara_ok(5, 5) is False
 
 
 def test_tara_ok_safe():
-    # Janma=3, day=5: tara=(5-3)%27+1=3 → inauspicious
+    # Janma=3, day=5: offset=2, tara=(2%9)+1=3 (Vipat) → inauspicious
     assert _tara_ok(3, 5) is False
 
 
 def test_tara_ok_position_2():
-    # Janma=3, day=4: tara=(4-3)%27+1=2 → auspicious
+    # Janma=3, day=4: offset=1, tara=(1%9)+1=2 (Sampat) → auspicious
     assert _tara_ok(3, 4) is True
+
+
+def test_tara_ok_second_cycle_vipath():
+    # 2nd cycle: Janma=0, day=11: offset=11, tara=(11%9)+1=3 (Vipat) → inauspicious
+    assert _tara_ok(0, 11) is False
+
+
+def test_tara_ok_second_cycle_naidhana():
+    # 2nd cycle: Janma=0, day=15: offset=15, tara=(15%9)+1=7 (Naidhana) → inauspicious
+    assert _tara_ok(0, 15) is False
+
+
+def test_tara_ok_third_cycle_vipath():
+    # 3rd cycle: Janma=0, day=20: offset=20, tara=(20%9)+1=3 (Vipat) → inauspicious
+    assert _tara_ok(0, 20) is False
+
+
+def test_tara_ok_second_cycle_sampat():
+    # 2nd cycle: Janma=0, day=10: offset=10, tara=(10%9)+1=2 (Sampat) → auspicious
+    assert _tara_ok(0, 10) is True
 
 
 def test_panchaka_ok_inauspicious():
@@ -124,14 +144,14 @@ def test_pushya_excluded_from_vivaha():
 def test_pushya_allowed_for_upanayanam():
     # Pushya (idx=7) is excellent for Upanayanam — must NOT be rejected
     # nak=7→8, sun=4→5, tithi=1→2, lagna=0→1; 8+5+2+1=16 → 16%9=7 → SAFE
-    # tara: janma=0, day=7: (7-0)%27+1=8 → safe
+    # tara: janma=0, day=7: offset=7, tara=(7%9)+1=8 → safe
     birth_charts = [{"janma_nakshatra_idx": 0}]
     assert is_auspicious(7, 1, 4, 0, birth_charts, "upanayanam") is True
 
 
 def test_is_auspicious_vivaha_good_day():
     # naks=3 (Rohini - good), tithi=0 (Prathama - safe), sun=4 (Thursday), lagna=3 (Vrishchika)
-    # tara: janma=0 (Ashvini), day=3: tara=(3-0)%27+1=4 → safe
+    # tara: janma=0 (Ashvini), day=3: offset=3, tara=(3%9)+1=4 → safe
     # panchaka: nak=3→4, sun=4→5, tithi=0→1, lagna=3→4; 4+5+1+4=14 → 14%9=5 → SAFE
     birth_charts = [{"janma_nakshatra_idx": 0}]
     assert is_auspicious(3, 0, 4, 3, birth_charts, "vivaha") is True
@@ -244,18 +264,20 @@ def test_vara_dosha_rejected_without_mitigation():
 def test_vara_dosha_mitigated_by_amrita_choghadiya():
     """Saturday vivaha at night with Amrita Choghadiya (rank=6) is allowed."""
     birth_charts = [{"janma_nakshatra_idx": 0}]
-    assert is_auspicious(3, 0, 6, 7, birth_charts, "vivaha",
+    # nak=3, tithi=0, sun=6(Sat), lagna=1: panchaka=(4+1+7+2)%9=5 → SAFE
+    assert is_auspicious(3, 0, 6, 1, birth_charts, "vivaha",
                          is_night=True, choghadiya_rank=6) is True
 
 
 def test_vara_dosha_mitigated_by_guru_aspect_on_lagna():
     """Saturday vivaha at night with Guru aspecting lagna is allowed (Char Choghadiya)."""
     birth_charts = [{"janma_nakshatra_idx": 0}]
-    # Guru in Meena (11): 5th=3(Karka), 7th=5(Kanya), 9th=7(Vrischika)
-    # Vrischika lagna (idx=7) → Guru's 9th aspect → mitigated
-    planet_rashis = {"guru": 11, "chandra": 2, "kuja": 6, "shani": 0,
+    # nak=14(Swati), tithi=0, sun=6(Sat), lagna=1(Vrishabha)
+    # panchaka=(15+1+7+2)%9=7 → SAFE
+    # Guru in Dhanu(9): (9+4)%12=1 → Guru's 5th aspect hits Vrishabha(1) → mitigation
+    planet_rashis = {"guru": 9, "chandra": 2, "kuja": 6, "shani": 0,
                      "rahu": 3, "ketu": 9, "shukra": 2}
-    assert is_auspicious(14, 4, 6, 7, birth_charts, "vivaha",
+    assert is_auspicious(14, 0, 6, 1, birth_charts, "vivaha",
                          is_night=True, choghadiya_rank=3,
                          planet_rashis=planet_rashis) is True
 

@@ -416,13 +416,18 @@ def _rashi_shuddhi_ok(day_rashi: int, janma_rashi: int, ceremony_type: str) -> b
     return pos not in _RASHI_SHUDDHI_FORBIDDEN.get(ceremony_type, set())
 
 
+_TARA_NAMES_TE = ["జన్మ", "సంపత్", "విపత్", "క్షేమ", "ప్రత్యక్", "సాధన", "నైధన", "మిత్ర", "పరమ మిత్ర"]
+
+
 def _tara_ok(janma_nak: int, day_nak: int) -> bool:
     """Return True if the day nakshatra is auspicious for this person's janma nakshatra.
 
-    Computes 1-indexed Tara position (Tara Balam) and rejects:
+    Computes 1-indexed Tara position (Tara Balam) cyclically (1–9, repeating
+    across all 27 nakshatras) and rejects:
     1=Janma, 3=Vipat, 5=Pratyak, 7=Naidhana.
     """
-    tara = ((day_nak - janma_nak) % 27) + 1
+    offset = (day_nak - janma_nak) % 27
+    tara = (offset % 9) + 1   # 1-9, cyclical across all 27 nakshatras
     return tara not in {1, 3, 5, 7}
 
 
@@ -513,8 +518,8 @@ def is_auspicious(
             jrashi = chart.get("janma_rashi_idx", -1)
             if jrashi >= 0 and not _rashi_shuddhi_ok(day_rashi_idx, jrashi, ceremony_type):
                 return False
-    # Panchaka is not a hard block — major samskaras proceed with Panchaka Shanti.
-    # It is shown as a warning in check_muhurta_day() instead.
+    if not _panchaka_ok(naks_idx, sun_idx, tithi_idx, lagna_idx):
+        return False
     return True
 
 

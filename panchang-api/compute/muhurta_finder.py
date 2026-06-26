@@ -47,6 +47,7 @@ from .muhurta_rules import (
     get_amritadi_yoga,
     check_lagna_graha_quality,
     _guru_aspects_lagna,
+    _TARA_NAMES_TE,
 )
 
 _MONTH_TE = [
@@ -837,9 +838,11 @@ def check_muhurta_day(
         if _tara_ok(chart["janma_nakshatra_idx"], naks_idx):
             _gf(f"{name}: తార బలం అనుకూలం ✓")
         else:
+            offset = (naks_idx - chart["janma_nakshatra_idx"]) % 27
+            tara_num = (offset % 9) + 1
+            tara_name = _TARA_NAMES_TE[tara_num - 1]
             _bf(
-                f"{name}: తార బలం అననుకూలం — జన్మ నక్షత్రానికి "
-                f"వ్యతిరేక తార (1, 3, 5 లేదా 7వ తార)"
+                f"{name} తార: {tara_num}వ తార ({tara_name})"
             )
 
     # 6. Rashi Shuddhi
@@ -858,7 +861,7 @@ def check_muhurta_day(
     if _panchaka_ok(naks_idx, sun_idx, tithi_idx, lagna_idx):
         _gf("పంచక దోషం లేదు ✓")
     else:
-        _gf("పంచక దోషం ఉంది — పంచక శాంతి చేయించుకోవాలి ⚠")
+        _bf("పంచక దోషం ఉంది — నివారించాల్సిన సమయం")
 
     # 8. Lagna Graha Quality — use already-computed planet positions
     try:
