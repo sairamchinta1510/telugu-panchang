@@ -1034,10 +1034,146 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
 .empty-state h3 { font-size: 1rem; color: var(--text); font-weight: 700; margin-bottom: 6px; font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif; }
 .empty-state p { font-size: 0.84rem; color: var(--text-2); line-height: 1.6; font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif; }
 
+/* ════════════════════════════════
+   JANMA CHAKRAM MODAL
+════════════════════════════════ */
+#janmaChakramModal {
+  border: none;
+  border-radius: var(--radius);
+  padding: 0;
+  width: min(480px, 96vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  background: var(--surface);
+}
+#janmaChakramModal::backdrop {
+  background: rgba(0,0,0,0.45);
+}
+.jc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 16px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.jc-header-text h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  font-family: 'Noto Sans Telugu', 'Inter', system-ui, sans-serif;
+}
+.jc-header-text p {
+  font-size: 0.75rem;
+  color: var(--text-2);
+  margin-top: 2px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.jc-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-3);
+  padding: 0 4px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.jc-close-btn:hover { color: var(--text); }
+.jc-body { padding: 14px 16px; }
+.jc-chart-wrap { display: flex; justify-content: center; margin-bottom: 14px; }
+.jc-details-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.jc-detail-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  text-align: center;
+}
+.jc-detail-box .jc-label {
+  font-size: 0.65rem;
+  color: var(--text-2);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.jc-detail-box .jc-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  font-family: 'Noto Sans Telugu', system-ui, sans-serif;
+}
+.jc-detail-box .jc-sub {
+  font-size: 0.65rem;
+  color: var(--text-2);
+  margin-top: 2px;
+  font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
+}
+.jc-panchang-strip {
+  background: var(--indigo-xl);
+  border: 1px solid var(--indigo-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.jc-panchang-strip .jc-p-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--indigo-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.jc-panchang-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.jc-pan-item {
+  background: var(--surface);
+  border: 1px solid var(--indigo-light);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-family: 'Noto Sans Telugu', 'Inter', system-ui, sans-serif;
+  color: var(--text);
+}
+.jc-pan-item span { color: var(--text-2); font-size: 0.65rem; margin-right: 3px; }
+.jc-pdf-btn {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  background: var(--indigo);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.jc-pdf-btn:hover { background: var(--indigo-dark); }
+.jc-loading { text-align: center; padding: 32px 16px; font-size: 0.85rem; color: var(--text-2); }
+.jc-error { text-align: center; padding: 20px 16px; font-size: 0.85rem; color: #DC2626; }
+
 @media print {
   .site-nav, .hero-section, .step-bar, .actions-row, .btn-details, .btn-primary, .overlay { display: none !important; }
   body { background: white; }
   .result-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+  /* Janma Chakram PDF export */
+  body > *:not(#janmaChakramModal) { display: none !important; }
+  #janmaChakramModal { display: block !important; position: static; box-shadow: none; width: 100%; max-height: none; }
+  .jc-pdf-btn { display: none !important; }
+  .jc-close-btn { display: none !important; }
 }
 
 /* ── Native date input styling ───────────────────────────────────────── */
@@ -2793,5 +2929,18 @@ renderProfileChips();
   _applyI18n();
 })();
 </script>
+<!-- ══ JANMA CHAKRAM MODAL ══ -->
+<dialog id="janmaChakramModal" aria-modal="true" aria-labelledby="jcModalTitle">
+  <div class="jc-header">
+    <div class="jc-header-text">
+      <h2 id="jcModalTitle">🪐 జన్మ చక్రం</h2>
+      <p id="jcModalSubtitle"></p>
+    </div>
+    <button class="jc-close-btn" onclick="closeJanmaChakram()" aria-label="Close">✕</button>
+  </div>
+  <div class="jc-body" id="jcModalBody">
+    <div class="jc-loading">⏳ లోడ్ అవుతున్నది...</div>
+  </div>
+</dialog>
 </body>
 </html>
