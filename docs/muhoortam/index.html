@@ -2628,7 +2628,9 @@ async function openFullKundali(idx) {
   const body = document.getElementById("kundaliBody");
   const bc   = p.birthChart || {};
 
-  if (bc.planet_details && bc.vimshottari_dasha) {
+  // Use cache only if enriched fields are present (nakshatra_te signals post-enrichment data)
+  const firstPlanet = bc.planet_details && Object.values(bc.planet_details)[0];
+  if (bc.planet_details && bc.vimshottari_dasha && firstPlanet && firstPlanet.nakshatra_te) {
     _renderKundaliBody(bc, p);
     return;
   }
