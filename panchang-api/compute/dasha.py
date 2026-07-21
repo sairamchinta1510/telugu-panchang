@@ -75,7 +75,14 @@ def compute_vimshottari_dasha(moon_lon: float, birth_dt: datetime) -> list[dict]
 
     for i in range(9):
         lord = DASHA_SEQUENCE[(lord_seq_start + i) % 9]
-        years = balance_years if i == 0 else float(DASHA_YEARS[lord])
+        full_years = float(DASHA_YEARS[lord])
+        if i == 0:
+            elapsed_years = full_years - balance_years
+            maha_true_start = birth_dt - timedelta(days=elapsed_years * _DAYS_PER_YEAR)
+            years = balance_years
+        else:
+            maha_true_start = current_dt
+            years = full_years
         end_dt = current_dt + timedelta(days=years * _DAYS_PER_YEAR)
 
         dashas.append(
@@ -86,7 +93,9 @@ def compute_vimshottari_dasha(moon_lon: float, birth_dt: datetime) -> list[dict]
                 "years": round(years, 4),
                 "start_date": current_dt.strftime("%Y-%m-%d"),
                 "end_date": end_dt.strftime("%Y-%m-%d"),
-                "antardashas": _compute_antardashas(lord, years, current_dt),
+                "antardashas": _compute_antardashas(
+                    lord, full_years, maha_true_start
+                ),
             }
         )
         current_dt = end_dt

@@ -1,6 +1,6 @@
 """Tests for Vimshottari dasha computation."""
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 
 def _load_dasha():
@@ -67,7 +67,27 @@ def test_each_mahadasha_has_nine_antardashas():
         assert len(maha["antardashas"]) == 9, f"{maha['lord']} has {len(maha['antardashas'])} antardashas"
 
 
-def test_antardasha_dates_are_contiguous():
+def test_first_mahadasha_antardashas_use_true_maha_start():
+    d = _load_dasha()
+    birth_dt = _birth_dt(1990, 8, 15)
+    dashas = d.compute_vimshottari_dasha(44.0, birth_dt)
+    first_maha = dashas[0]
+    elapsed_years = d.DASHA_YEARS[first_maha["lord"]] - first_maha["years"]
+    expected_true_start = (
+        birth_dt - timedelta(days=elapsed_years * d._DAYS_PER_YEAR)
+    ).strftime("%Y-%m-%d")
+    assert first_maha["antardashas"][0]["start"] == expected_true_start
+
+
+def test_first_mahadasha_antardasha_dates_are_contiguous():
+    d = _load_dasha()
+    dashas = d.compute_vimshottari_dasha(44.0, _birth_dt(1990, 8, 15))
+    ads = dashas[0]["antardashas"]
+    for i in range(len(ads) - 1):
+        assert ads[i]["end"] == ads[i + 1]["start"], f"Gap between antardasha {i} and {i+1}"
+
+
+def test_full_mahadasha_antardasha_dates_are_contiguous():
     d = _load_dasha()
     dashas = d.compute_vimshottari_dasha(44.0, _birth_dt(1990, 8, 15))
     maha = dashas[1]
@@ -109,6 +129,8 @@ def test_response_includes_telugu_name_and_emoji():
     d = _load_dasha()
     dashas = d.compute_vimshottari_dasha(44.0, _birth_dt(1990, 8, 15))
     chandra = dashas[0]
+    kuja = dashas[1]
     assert chandra["lord_te"] == "చంద్ర"
     assert chandra["lord_emoji"] == "🌙"
-    assert chandra["antardashas"][0]["lord_te"] == "చంద్ర"
+    assert kuja["lord_te"] == "కుజ"
+    assert kuja["antardashas"][0]["lord_te"] == "కుజ"
