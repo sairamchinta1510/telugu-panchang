@@ -392,10 +392,6 @@ body {
   body.kundali-printing .horo-cell { min-height: 80px; }
   body.kundali-printing .horo-cell .horo-rashi { font-size: 0.85rem !important; }
   body.kundali-printing .horo-cell .horo-planets { font-size: 1rem !important; }
-  body.kundali-printing .kundali-planet-table-wrap { flex: 1; }
-  body.kundali-printing .kundali-planet-table { font-size: 11pt; width: 100%; }
-  body.kundali-printing .kundali-planet-table th,
-  body.kundali-printing .kundali-planet-table td { padding: 7px 9px; font-size: 11pt; }
   body.kundali-printing .kundali-birth-strip { font-size: 11pt; padding: 10px 14px; break-inside: avoid; gap: 10px 24px; }
   body.kundali-printing .kundali-birth-strip b { color: #6b3a2a; }
 
@@ -416,6 +412,35 @@ body {
   body.kundali-printing .dasha-ad-table th,
   body.kundali-printing .dasha-ad-table td { font-size: 11pt; padding: 7px 9px; }
   body.kundali-printing .dasha-ad-table tr.current-ad > td { background: #fff9c4 !important; font-weight: 700; }
+
+  /* New section layout */
+  body.kundali-printing .kundali-section { break-inside: avoid; margin-bottom: 12pt; }
+  body.kundali-printing .kundali-section-header { font-size: 11pt; padding: 6px 10px; }
+  body.kundali-printing .kundali-section-body { padding: 10px; }
+
+  /* Charts row: side by side in print */
+  body.kundali-printing .kundali-charts-row { flex-wrap: nowrap; gap: 16pt; }
+  body.kundali-printing .kundali-chart-col { flex: 1; }
+
+  /* Planet table */
+  body.kundali-printing .kundali-pt { font-size: 10pt; width: 100%; }
+  body.kundali-printing .kundali-pt th,
+  body.kundali-printing .kundali-pt td { padding: 5px 7px; font-size: 10pt; }
+  body.kundali-printing .kundali-pt-hint { display: none !important; }
+  body.kundali-printing .str-badge { font-size: 9pt; padding: 1px 5px; }
+
+  /* Dosha cards: row in print */
+  body.kundali-printing .kundali-dosha-row { flex-wrap: nowrap; gap: 10pt; }
+  body.kundali-printing .kundali-dosha-card { font-size: 10pt; }
+
+  /* Aspect pills */
+  body.kundali-printing .kundali-asp-wrap { gap: 4pt; }
+  body.kundali-printing .asp-pill { font-size: 9pt; padding: 2px 7px; }
+
+  /* Dasha section last child */
+  body.kundali-printing .kundali-section:last-child .kundali-section-header {
+    border-radius: 6px; margin-bottom: 8pt;
+  }
 }
 
 .lang-toggle {
