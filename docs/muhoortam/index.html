@@ -1639,8 +1639,8 @@ function openJanmaChakram(name, dob, time, place, cachedChart) {
   if (cachedChart && cachedChart.planet_rashis) {
     _renderJanmaChakram(cachedChart);
   } else {
-    document.getElementById("jcModalBody").innerHTML =
-      '<div class="jc-loading">⏳ లోడ్ అవుతున్నది...</div>';
+    const body = document.getElementById("jcModalBody");
+    if (body) body.innerHTML = '<div class="jc-loading">⏳ లోడ్ అవుతున్నది...</div>';
     modal.showModal();
     _fetchAndRenderJanmaChakram(name, dob, time, place);
     return;
@@ -1661,13 +1661,10 @@ async function _fetchAndRenderJanmaChakram(name, dob, time, place) {
     });
     if (!resp.ok) throw new Error("API error " + resp.status);
     const chart = await resp.json();
-    // Update any matching cached entry that lacks planet_rashis
-    for (const [id, saved] of Object.entries(savedProfileCharts)) {
-      if (!saved.planet_rashis) savedProfileCharts[id] = { ...saved, ...chart };
-    }
     _renderJanmaChakram(chart);
   } catch (e) {
-    document.getElementById("jcModalBody").innerHTML =
+    const body = document.getElementById("jcModalBody");
+    if (body) body.innerHTML =
       '<div class="jc-error">⚠️ చార్ట్ లోడ్ కాలేదు. మళ్ళీ ప్రయత్నించండి.</div>';
   }
 }
@@ -1689,7 +1686,8 @@ function _renderJanmaChakram(chart) {
     { label: "కరణం",     value: bp.karanam_te  || "—" },
   ];
 
-  document.getElementById("jcModalBody").innerHTML = `
+  const body = document.getElementById("jcModalBody");
+  if (body) body.innerHTML = `
     <div class="jc-chart-wrap">${chartHtml}</div>
     <div class="jc-details-row">
       <div class="jc-detail-box">
