@@ -1169,11 +1169,11 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
   .site-nav, .hero-section, .step-bar, .actions-row, .btn-details, .btn-primary, .overlay { display: none !important; }
   body { background: white; }
   .result-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
-  /* Janma Chakram PDF export */
-  body > *:not(#janmaChakramModal) { display: none !important; }
-  #janmaChakramModal { display: block !important; position: static; box-shadow: none; width: 100%; max-height: none; }
-  .jc-pdf-btn { display: none !important; }
-  .jc-close-btn { display: none !important; }
+  /* Janma Chakram PDF export — only active when body.jc-printing is set */
+  body.jc-printing > *:not(#janmaChakramModal) { display: none !important; }
+  body.jc-printing #janmaChakramModal { display: block !important; position: static; box-shadow: none; width: 100%; max-height: none; }
+  body.jc-printing .jc-pdf-btn { display: none !important; }
+  body.jc-printing .jc-close-btn { display: none !important; }
 }
 
 /* ── Native date input styling ───────────────────────────────────────── */
