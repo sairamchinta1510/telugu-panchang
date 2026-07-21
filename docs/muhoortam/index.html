@@ -203,6 +203,96 @@ body {
   background: var(--cream, #fdf6ee);
 }
 .kundali-retro { color: #c00; font-size: 0.72rem; font-weight: 700; }
+
+/* ── Section layout ── */
+.kundali-section { margin-bottom: 18px; }
+.kundali-section-header {
+  background: var(--gold, #f5c842); color: var(--brown-dark, #3b1f0a);
+  padding: 7px 12px; font-weight: 700; font-size: 0.88rem;
+  border-radius: 6px 6px 0 0; margin-bottom: 0;
+}
+.kundali-section-body {
+  border: 1px solid var(--border, #e8d5c4); border-top: none;
+  border-radius: 0 0 6px 6px; padding: 12px;
+  background: #fff;
+}
+
+/* ── D-1 + D-9 charts row ── */
+.kundali-charts-row {
+  display: flex; gap: 16px; flex-wrap: wrap;
+}
+.kundali-chart-col { flex: 1 1 200px; }
+.kundali-chart-label {
+  font-size: 0.75rem; font-weight: 700; color: var(--brown-mid, #6b3a2a);
+  text-align: center; margin-bottom: 6px;
+}
+
+/* ── Enhanced planet table ── */
+.kundali-pt {
+  width: 100%; border-collapse: collapse; font-size: 0.8rem;
+}
+.kundali-pt th {
+  background: var(--cream2, #fdf0e0); padding: 5px 8px;
+  text-align: left; font-size: 0.73rem; color: var(--brown-mid, #6b3a2a);
+  border-bottom: 2px solid var(--gold-light, #d4a96a); white-space: nowrap;
+}
+.kundali-pt td {
+  padding: 4px 8px; border-bottom: 1px solid var(--border, #e8d5c4);
+  vertical-align: middle; white-space: nowrap;
+}
+.kundali-pt tr:nth-child(even) td { background: var(--cream, #fdf6ee); }
+.kundali-pt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.kundali-pt-hint { font-size: 0.65rem; color: var(--text-2, #888); margin-top: 3px; display: none; }
+@media (max-width: 480px) { .kundali-pt-hint { display: block; } }
+
+/* ── Strength badges ── */
+.str-badge {
+  display: inline-block; padding: 1px 7px; border-radius: 10px;
+  font-size: 0.7rem; font-weight: 700; white-space: nowrap;
+}
+.str-exalted    { background: #d1fae5; color: #065f46; }
+.str-debilitated{ background: #fee2e2; color: #dc2626; }
+.str-own        { background: #dbeafe; color: #1e40af; }
+.str-moolatrikona { background: #ede9fe; color: #5b21b6; }
+.str-combust    { background: #ffedd5; color: #c2410c; }
+.str-normal     { background: var(--cream2, #fdf0e0); color: var(--brown-mid, #6b3a2a); }
+
+/* ── Dosha & yoga cards ── */
+.kundali-dosha-row {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.kundali-dosha-card {
+  flex: 1 1 160px; border-radius: 8px; padding: 10px 12px;
+  font-size: 0.82rem; line-height: 1.45;
+}
+.kundali-dosha-card.danger { background: #fef2f2; border: 1.5px solid #fca5a5; color: #7f1d1d; }
+.kundali-dosha-card.safe   { background: #f0fdf4; border: 1.5px solid #86efac; color: #14532d; }
+.kundali-dosha-card.info   { background: #eff6ff; border: 1.5px solid #93c5fd; color: #1e3a5f; }
+.kundali-dosha-card .dc-title { font-weight: 700; margin-bottom: 4px; font-size: 0.85rem; }
+.kundali-yoga-item {
+  display: flex; align-items: center; gap: 6px; margin: 3px 0; font-size: 0.78rem;
+}
+.yoga-badge {
+  display: inline-block; padding: 1px 7px; border-radius: 10px;
+  font-size: 0.68rem; font-weight: 700;
+}
+.yoga-maha    { background: #fef9c3; color: #854d0e; border: 1px solid #f5c842; }
+.yoga-dainya  { background: #fee2e2; color: #7f1d1d; border: 1px solid #fca5a5; }
+.yoga-kahala  { background: var(--cream2, #fdf0e0); color: var(--brown-mid, #6b3a2a); border: 1px solid var(--gold-light, #d4a96a); }
+
+/* ── Graha Drishti aspect pills ── */
+.kundali-asp-wrap {
+  display: flex; flex-wrap: wrap; gap: 5px;
+}
+.asp-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 12px; font-size: 0.75rem;
+  white-space: nowrap;
+}
+.asp-full    { background: var(--cream2, #fdf0e0); border: 1px solid var(--gold-light, #d4a96a); color: var(--brown-dark, #3b1f0a); }
+.asp-special { background: #fff9e6; border: 1.5px solid var(--gold, #f5c842); color: #7c4700; font-weight: 600; }
+.asp-dot     { font-size: 0.6rem; }
+
 .kundali-birth-strip {
   background: var(--cream, #fdf6ee);
   border: 1px solid var(--border, #e8d5c4);
