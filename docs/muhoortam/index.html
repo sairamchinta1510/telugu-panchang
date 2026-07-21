@@ -645,13 +645,12 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
 .horo-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-rows: repeat(4, minmax(72px, auto));
   width: 100%;
   max-width: 360px;
-  aspect-ratio: 1;
   border: 2px solid var(--brown-light);
   border-radius: 6px;
-  overflow: hidden;
+  overflow: visible;
   margin: 0 auto;
   background: var(--white);
 }
@@ -662,7 +661,6 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
   line-height: 1.35;
   color: var(--brown);
   position: relative;
-  min-height: 60px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -2628,7 +2626,7 @@ function _renderMiniDashaChart(planetRashis, lagnaIdx, highlightRashiIdx) {
       }
     }
   }
-  return `<div class="horo-wrap"><div class="horo-grid" style="width:150px;height:150px">${rows}</div></div>`;
+  return `<div class="horo-wrap"><div class="horo-grid" style="width:150px;max-width:150px">${rows}</div></div>`;
 }
 
 function _fmtDate(iso) {
