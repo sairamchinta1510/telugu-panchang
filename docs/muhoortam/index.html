@@ -636,7 +636,7 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(4, 1fr);
   width: 100%;
-  max-width: 280px;
+  max-width: 360px;
   aspect-ratio: 1;
   border: 2px solid var(--brown-light);
   border-radius: 6px;
@@ -646,21 +646,23 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
 }
 .horo-cell {
   border: 1px solid #D4B896;
-  padding: 3px;
-  font-size: 0.62rem;
-  line-height: 1.4;
+  padding: 4px 3px;
+  font-size: 0.72rem;
+  line-height: 1.35;
   color: var(--brown);
   position: relative;
-  min-height: 48px;
+  min-height: 60px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 .horo-cell.horo-center { background: var(--cream2); border: 1px solid #EDD9C0; }
 .horo-cell.horo-lagna { background: #FFF3CC; border: 1.5px solid var(--gold); }
-.horo-cell .horo-rashi { font-size: 0.58rem; color: var(--brown-mid); font-weight: 600; }
-.horo-cell .horo-planets { font-size: 0.7rem; font-weight: 700; color: var(--maroon); line-height: 1.5; }
-.horo-lagna-mark { font-size: 0.6rem; background: var(--gold); color: white; border-radius: 2px; padding: 0 3px; position: absolute; bottom: 2px; right: 2px; }
+.horo-cell .horo-rashi { font-size: 0.72rem; color: var(--brown-mid); font-weight: 600; }
+.horo-cell .horo-planets { font-size: 0.82rem; font-weight: 700; color: var(--maroon); line-height: 1.5; }
+.horo-lagna-mark { font-size: 0.62rem; background: var(--gold); color: white; border-radius: 2px; padding: 0 3px; position: absolute; bottom: 2px; right: 2px; }
 
 /* ════════════════════════════════
    FIELDS & INPUTS
@@ -2608,14 +2610,14 @@ function _renderMiniDashaChart(planetRashis, lagnaIdx, highlightRashiIdx) {
           ? "background:#ffd700;border-color:#f5c842;" : "";
         const cls = cell.isLagna ? "horo-cell horo-lagna" : "horo-cell";
         rows += `<div class="${cls}" style="${highlight}">
-          <div class="horo-rashi" style="font-size:0.55rem">${RASHI_TE_SHORT[cell.ri]}</div>
-          <div class="horo-planets" style="font-size:0.62rem">${cell.planets.join(" ")}</div>
+          <div class="horo-rashi" style="font-size:0.65rem">${RASHI_TE_SHORT[cell.ri]}</div>
+          <div class="horo-planets" style="font-size:0.72rem">${cell.planets.join(" ")}</div>
           ${cell.isLagna ? '<span class="horo-lagna-mark">ల</span>' : ""}
         </div>`;
       }
     }
   }
-  return `<div class="horo-wrap"><div class="horo-grid" style="width:80px;height:80px">${rows}</div></div>`;
+  return `<div class="horo-wrap"><div class="horo-grid" style="width:150px;height:150px">${rows}</div></div>`;
 }
 
 function _fmtDate(iso) {
