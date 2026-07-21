@@ -164,6 +164,101 @@ body {
 }
 .people-add-form label { font-size: 0.75rem; color: var(--text-2, #888); }
 
+/* ── Kundali full page ──────────────────────────────── */
+#kundali-panel { max-width: 900px; margin: 0 auto; padding: 16px; }
+.kundali-header {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--brown-dark, #3b1f0a); color: #fff;
+  padding: 10px 14px; border-radius: 8px; margin-bottom: 16px;
+}
+.kundali-back-btn {
+  background: transparent; border: 1px solid rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.85); padding: 4px 10px; border-radius: 4px;
+  cursor: pointer; font-size: 0.8rem; font-family: inherit;
+}
+.kundali-title { flex: 1; font-weight: 700; font-size: 1rem; }
+.kundali-pdf-btn {
+  background: var(--gold, #f5c842); border: none;
+  color: var(--brown-dark, #3b1f0a); padding: 5px 12px;
+  border-radius: 4px; cursor: pointer; font-size: 0.82rem;
+  font-weight: 700; font-family: inherit;
+}
+.kundali-top {
+  display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.kundali-chart-wrap { flex: 0 0 auto; }
+.kundali-planet-table-wrap { flex: 1; min-width: 220px; }
+.kundali-planet-table {
+  width: 100%; border-collapse: collapse; font-size: 0.82rem;
+}
+.kundali-planet-table th {
+  background: var(--cream2, #fdf0e0); padding: 5px 8px;
+  text-align: left; font-size: 0.75rem; color: var(--brown-mid, #6b3a2a);
+  border-bottom: 2px solid var(--gold-light, #d4a96a);
+}
+.kundali-planet-table td {
+  padding: 4px 8px; border-bottom: 1px solid var(--border, #e8d5c4);
+}
+.kundali-planet-table tr:nth-child(even) td {
+  background: var(--cream, #fdf6ee);
+}
+.kundali-retro { color: #c00; font-size: 0.72rem; font-weight: 700; }
+.kundali-birth-strip {
+  background: var(--cream, #fdf6ee);
+  border: 1px solid var(--border, #e8d5c4);
+  border-radius: 6px; padding: 10px 14px; margin-bottom: 16px;
+  display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 0.82rem;
+}
+.kundali-birth-strip b { color: var(--brown-mid, #6b3a2a); }
+.kundali-dasha-header {
+  background: var(--gold, #f5c842); color: var(--brown-dark, #3b1f0a);
+  padding: 8px 12px; font-weight: 700; font-size: 0.9rem;
+  border-radius: 6px 6px 0 0; margin-top: 16px;
+}
+.dasha-row {
+  border: 1px solid var(--border, #e8d5c4);
+  border-top: none; background: #fff;
+}
+.dasha-row-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; cursor: pointer; font-size: 0.85rem;
+  color: var(--brown-dark, #3b1f0a); user-select: none;
+}
+.dasha-row-header:hover { background: var(--cream, #fdf6ee); }
+.dasha-row.current > .dasha-row-header {
+  background: #fff9e6; font-weight: 700;
+}
+.dasha-current-badge {
+  background: #e63946; color: #fff;
+  font-size: 0.68rem; padding: 1px 7px; border-radius: 10px; font-weight: 700;
+}
+.dasha-row-dates { margin-left: auto; font-size: 0.78rem; color: var(--text-2, #888); }
+.dasha-row-body {
+  display: none; padding: 10px 12px;
+  border-top: 1px solid var(--border, #e8d5c4);
+  background: var(--cream, #fdf6ee);
+}
+.dasha-row.open > .dasha-row-body { display: flex; gap: 14px; flex-wrap: wrap; }
+.dasha-mini-chart { flex: 0 0 auto; }
+.dasha-ad-table {
+  flex: 1; min-width: 200px; border-collapse: collapse; font-size: 0.78rem;
+}
+.dasha-ad-table th {
+  background: var(--cream2, #fdf0e0); padding: 4px 8px;
+  text-align: left; font-size: 0.72rem; color: var(--brown-mid, #6b3a2a);
+  border-bottom: 1px solid var(--gold-light, #d4a96a);
+}
+.dasha-ad-table td { padding: 3px 8px; border-bottom: 1px solid var(--border, #e8d5c4); }
+.dasha-ad-table tr.current-ad > td { background: #fff9c4; font-weight: 700; }
+@media print {
+  body.kundali-printing .site-nav,
+  body.kundali-printing #people-panel,
+  body.kundali-printing .kundali-back-btn,
+  body.kundali-printing .kundali-pdf-btn { display: none !important; }
+  body.kundali-printing #kundali-panel { display: block !important; }
+  body.kundali-printing .dasha-row-body { display: flex !important; }
+}
+
 .lang-toggle {
   display: flex;
   background: var(--indigo-xl);
@@ -1321,6 +1416,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   </div>
   <div class="people-grid" id="peopleGrid"></div>
 </div>
+<!-- ══ KUNDALI PANEL ══ -->
+<div id="kundali-panel" style="display:none">
+  <div class="kundali-header">
+    <button class="kundali-back-btn" onclick="showAppTab('people')">← జనాలు</button>
+    <div class="kundali-title" id="kundaliTitle">పూర్ణ కుండలి</div>
+    <button class="kundali-pdf-btn" onclick="printKundaliPage()">📄 PDF ఎగుమతి</button>
+  </div>
+  <div class="kundali-body" id="kundaliBody">
+    <div class="jc-loading">⏳ లోడ్ అవుతున్నది...</div>
+  </div>
+</div>
 <nav id="breadcrumb" aria-label="breadcrumb"></nav>
 
 <!-- ══ HERO (shown on step 1 only) ══ -->
@@ -2313,6 +2419,109 @@ function goToCurrentStep() {
     const p1 = document.getElementById("panel1");
     if (p1) p1.style.display = "";
   }
+}
+
+// ── Full Kundali panel ───────────────────────────────────────────────────────
+
+async function openFullKundali(idx) {
+  const profiles = loadProfiles();
+  const p = profiles[idx];
+  if (!p) return;
+
+  document.getElementById("people-panel").style.display   = "none";
+  document.getElementById("kundali-panel").style.display  = "";
+  document.getElementById("kundaliTitle").textContent =
+    p.name + " — పూర్ణ కుండలి";
+
+  const body = document.getElementById("kundaliBody");
+  const bc   = p.birthChart || {};
+
+  if (bc.planet_details && bc.vimshottari_dasha) {
+    _renderKundaliBody(bc, p);
+    return;
+  }
+
+  body.innerHTML = '<div class="jc-loading">⏳ లోడ్ అవుతున్నది...</div>';
+  try {
+    let dob = p.dob || "";
+    if (dob.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [y, m, d] = dob.split("-");
+      dob = `${d}/${m}/${y}`;
+    }
+    const resp = await fetch(API_BASE + "/muhoortam/birth-chart", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dob, time: p.time || "", place: p.place || "" }),
+    });
+    if (!resp.ok) {
+      const txt = await resp.text().catch(() => "");
+      throw new Error("API " + resp.status + ": " + txt);
+    }
+    const chart = await resp.json();
+    p.birthChart = chart;
+    saveProfileToStorage(p);
+    _renderKundaliBody(chart, p);
+  } catch (e) {
+    body.innerHTML = `<div class="jc-error">⚠️ లోడ్ విఫలమైంది.<br><small>${_escHtml(e.message)}</small></div>`;
+  }
+}
+
+function _renderKundaliBody(chart, profile) {
+  const body = document.getElementById("kundaliBody");
+  if (!body) return;
+
+  const RASHI_TE_LIST = ["మేషం","వృషభం","మిథునం","కర్కాటకం","సింహం","కన్య",
+                          "తులం","వృశ్చికం","ధనుస్సు","మకరం","కుంభం","మీనం"];
+  const PLANET_LABELS = {
+    ravi:"☀️ రవి", chandra:"🌙 చంద్ర", kuja:"♂ కుజ", budha:"☿ బుధ",
+    guru:"♃ గురు", shukra:"♀ శుక్ర", shani:"♄ శని", rahu:"☊ రాహు", ketu:"☋ కేతు"
+  };
+  const PLANET_ORDER = ["ravi","chandra","kuja","budha","guru","shukra","shani","rahu","ketu"];
+
+  const chartHtml = renderHoroscopeChart(chart.planet_rashis, chart.lagna_idx);
+
+  let planetRows = "";
+  for (const name of PLANET_ORDER) {
+    const d  = (chart.planet_details || {})[name] || {};
+    const ri = d.rashi_idx ?? (chart.planet_rashis || {})[name] ?? 0;
+    const deg = d.deg !== undefined ? `${String(d.deg).padStart(2,"0")}°${String(d.min||0).padStart(2,"0")}'` : "—";
+    const retro = d.retrograde ? '<span class="kundali-retro">వ</span>' : "";
+    planetRows += `<tr>
+      <td>${PLANET_LABELS[name] || name}</td>
+      <td>${RASHI_TE_LIST[ri] || ri}</td>
+      <td>${deg}</td>
+      <td>${retro}</td>
+    </tr>`;
+  }
+
+  const bp = chart.birth_panchang || {};
+
+  const dashaHtml = _renderDashaAccordion(
+    chart.vimshottari_dasha || [], profile.dob || "",
+    chart.planet_rashis || {}, chart.lagna_idx ?? 0
+  );
+
+  body.innerHTML = `
+    <div class="kundali-top">
+      <div class="kundali-chart-wrap">${chartHtml}</div>
+      <div class="kundali-planet-table-wrap">
+        <table class="kundali-planet-table">
+          <thead><tr><th>గ్రహం</th><th>రాశి</th><th>స్థానం</th><th></th></tr></thead>
+          <tbody>${planetRows}</tbody>
+        </table>
+        <div style="font-size:0.7rem;color:var(--text-2);margin-top:4px">వ = వక్రి (retrograde)</div>
+      </div>
+    </div>
+    <div class="kundali-birth-strip">
+      <span><b>నక్షత్రం:</b> ${chart.janma_nakshatra_te || "—"}${chart.janma_nakshatra_padam ? " " + chart.janma_nakshatra_padam + "వ పాదం" : ""}</span>
+      <span><b>రాశి:</b> ${chart.janma_rashi_te || "—"}</span>
+      <span><b>లగ్నం:</b> ${chart.lagna_te || "—"}</span>
+      <span><b>తిథి:</b> ${bp.tithi_te || "—"}</span>
+      <span><b>వారం:</b> ${bp.vaara_te || "—"}</span>
+      <span><b>యోగం:</b> ${bp.yoga_te || "—"}</span>
+      <span><b>కరణం:</b> ${bp.karanam_te || "—"}</span>
+    </div>
+    <div class="kundali-dasha-header">వింశోత్తరి దశలు — 120 సంవత్సరాల పూర్ణ పట్టిక</div>
+    ${dashaHtml}`;
 }
 
 // Default dates for range pickers
