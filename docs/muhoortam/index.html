@@ -1628,6 +1628,111 @@ function _rerenderCurrentResults() {
 
 const API_BASE = "https://h3dp7amvn9.execute-api.ap-south-1.amazonaws.com";
 
+// ── Janma Chakram modal ────────────────────────────────────────────────────────
+
+function openJanmaChakram(name, dob, time, place, cachedChart) {
+  const modal = document.getElementById("janmaChakramModal");
+  document.getElementById("jcModalTitle").textContent = "🪐 జన్మ చక్రం — " + name;
+  document.getElementById("jcModalSubtitle").textContent =
+    [dob, place].filter(Boolean).join(" · ");
+
+  if (cachedChart && cachedChart.planet_rashis) {
+    _renderJanmaChakram(cachedChart);
+  } else {
+    document.getElementById("jcModalBody").innerHTML =
+      '<div class="jc-loading">⏳ లోడ్ అవుతున్నది...</div>';
+    modal.showModal();
+    _fetchAndRenderJanmaChakram(name, dob, time, place);
+    return;
+  }
+  modal.showModal();
+}
+
+function closeJanmaChakram() {
+  document.getElementById("janmaChakramModal").close();
+}
+
+async function _fetchAndRenderJanmaChakram(name, dob, time, place) {
+  try {
+    const resp = await fetch(API_BASE + "/muhoortam/birth-chart", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dob, time, place }),
+    });
+    if (!resp.ok) throw new Error("API error " + resp.status);
+    const chart = await resp.json();
+    // Update any matching cached entry that lacks planet_rashis
+    for (const [id, saved] of Object.entries(savedProfileCharts)) {
+      if (!saved.planet_rashis) savedProfileCharts[id] = { ...saved, ...chart };
+    }
+    _renderJanmaChakram(chart);
+  } catch (e) {
+    document.getElementById("jcModalBody").innerHTML =
+      '<div class="jc-error">⚠️ చార్ట్ లోడ్ కాలేదు. మళ్ళీ ప్రయత్నించండి.</div>';
+  }
+}
+
+function _renderJanmaChakram(chart) {
+  const PADAM_TE = ["", "1వ", "2వ", "3వ", "4వ"];
+  const padamLabel = chart.janma_nakshatra_padam
+    ? " " + (PADAM_TE[chart.janma_nakshatra_padam] || chart.janma_nakshatra_padam) + " పాదం"
+    : "";
+
+  const chartHtml = renderHoroscopeChart(chart.planet_rashis, chart.lagna_idx);
+
+  const bp = chart.birth_panchang || {};
+  const pItems = [
+    { label: "తిథి",     value: bp.tithi_te    || "—" },
+    { label: "వారం",     value: bp.vaara_te    || "—" },
+    { label: "నక్షత్రం", value: bp.nakshatra_te|| "—" },
+    { label: "యోగం",     value: bp.yoga_te     || "—" },
+    { label: "కరణం",     value: bp.karanam_te  || "—" },
+  ];
+
+  document.getElementById("jcModalBody").innerHTML = `
+    <div class="jc-chart-wrap">${chartHtml}</div>
+    <div class="jc-details-row">
+      <div class="jc-detail-box">
+        <div class="jc-label">నక్షత్రం</div>
+        <div class="jc-value">${chart.janma_nakshatra_te || "—"}</div>
+        ${padamLabel ? `<div class="jc-sub">${padamLabel}</div>` : ""}
+      </div>
+      <div class="jc-detail-box">
+        <div class="jc-label">రాశి</div>
+        <div class="jc-value">${chart.janma_rashi_te || "—"}</div>
+      </div>
+      <div class="jc-detail-box">
+        <div class="jc-label">లగ్నం</div>
+        <div class="jc-value">${chart.lagna_te || "—"}</div>
+      </div>
+    </div>
+    <div class="jc-panchang-strip">
+      <div class="jc-p-label">⭐ జన్మ పంచాంగం</div>
+      <div class="jc-panchang-grid">
+        ${pItems.map(i =>
+          `<div class="jc-pan-item"><span>${i.label}:</span>${i.value}</div>`
+        ).join("")}
+      </div>
+    </div>
+    <button class="jc-pdf-btn" onclick="printJanmaChakram()">📄 PDF గా Export చేయండి</button>
+  `;
+}
+
+function printJanmaChakram() {
+  document.body.classList.add('jc-printing');
+  window.print();
+  document.body.classList.remove('jc-printing');
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("janmaChakramModal");
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.close();
+    });
+  }
+});
+
 const CEREMONY_NAMES = {
   vivaha:"వివాహం", gruha_pravesam:"గృహ ప్రవేశం", upanayanam:"ఉపనయనం", pooja:"పూజ",
   yuddham:"యుద్ధం", anna_prasana:"అన్నప్రాశన", chelamu:"చెలము",
