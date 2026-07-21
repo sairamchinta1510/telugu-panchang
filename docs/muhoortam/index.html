@@ -1942,6 +1942,8 @@ function renderProfileChips() {
           ${p.birthChart ? `<div class="profile-chip-nak">🌟 ${p.birthChart.janma_nakshatra_te}${p.birthChart.janma_nakshatra_padam ? " "+p.birthChart.janma_nakshatra_padam+"వ పాదం" : ""}</div>` : ""}
           <div class="profile-chip-actions">
             <button type="button" class="profile-chip-add" onclick="addFromProfile(${i})">＋ Add</button>
+            <button type="button" class="profile-chip-add" style="background:var(--amber)"
+              onclick="openJanmaChakram(${JSON.stringify(p.name)},${JSON.stringify(p.dob||'')},${JSON.stringify(p.time||'')},${JSON.stringify(p.place||'')},${p.birthChart ? JSON.stringify(p.birthChart) : 'null'})">🪐</button>
             <button type="button" class="profile-chip-del" onclick="deleteProfile('${p.name.replace(/'/g,"\\'")}')">✕</button>
           </div>
         </div>`).join("")}
