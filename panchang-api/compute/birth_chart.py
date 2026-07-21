@@ -57,6 +57,9 @@ def compute_birth_chart(
     janma_rashi_idx, janma_rashi_te, lagna_idx, lagna_te,
     planet_rashis (all 9 grahas), and birth_panchang
     (tithi_te, vaara_te, nakshatra_te, yoga_te, karanam_te).
+
+    Note: birth_panchang elements reflect the panchang at sunrise on the birth
+    day, following Telugu traditional convention — not the exact birth moment.
     """
     jd = _birth_jd(year, month, day, hour, minute, tz_name)
     moon_lon = moon_longitude(jd)
