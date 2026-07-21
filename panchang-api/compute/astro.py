@@ -172,3 +172,53 @@ def compute_planet_rashis(jd: float) -> dict[str, int]:
     rashis["rahu"] = int(xx[0] / 30) % 12
     rashis["ketu"] = (rashis["rahu"] + 6) % 12
     return rashis
+
+
+def compute_planet_details(jd: float) -> dict[str, dict]:
+    """Return rashi_idx, deg, min, retrograde for all 9 Jyotish grahas at jd.
+
+    deg and min are the planet's position within its rashi (0–29°, 0–59').
+    retrograde is True when the planet's apparent motion is backward.
+    Rahu and Ketu are always retrograde by convention.
+    """
+    _init_swe()
+    flags = swe.FLG_SWIEPH | swe.FLG_SIDEREAL | swe.FLG_SPEED
+    bodies = {
+        "ravi":    swe.SUN,
+        "chandra": swe.MOON,
+        "kuja":    swe.MARS,
+        "budha":   swe.MERCURY,
+        "guru":    swe.JUPITER,
+        "shukra":  swe.VENUS,
+        "shani":   swe.SATURN,
+    }
+    details: dict[str, dict] = {}
+    for name, pid in bodies.items():
+        xx, _ = swe.calc_ut(jd, pid, flags)
+        lon = xx[0] % 360
+        speed = xx[3]
+        deg_in_rashi = lon % 30
+        details[name] = {
+            "rashi_idx":  int(lon / 30) % 12,
+            "deg":        int(deg_in_rashi),
+            "min":        int((deg_in_rashi % 1) * 60),
+            "retrograde": speed < 0,
+        }
+    xx, _ = swe.calc_ut(jd, swe.TRUE_NODE, flags)
+    rahu_lon = xx[0] % 360
+    rahu_deg = rahu_lon % 30
+    details["rahu"] = {
+        "rashi_idx":  int(rahu_lon / 30) % 12,
+        "deg":        int(rahu_deg),
+        "min":        int((rahu_deg % 1) * 60),
+        "retrograde": True,
+    }
+    ketu_lon = (rahu_lon + 180) % 360
+    ketu_deg = ketu_lon % 30
+    details["ketu"] = {
+        "rashi_idx":  int(ketu_lon / 30) % 12,
+        "deg":        int(ketu_deg),
+        "min":        int((ketu_deg % 1) * 60),
+        "retrograde": True,
+    }
+    return details
