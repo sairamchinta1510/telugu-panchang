@@ -2633,33 +2633,31 @@ function _renderKundaliBody(chart, profile) {
   const body = document.getElementById("kundaliBody");
   if (!body) return;
 
-  const RASHI_TE_LIST = ["మేషం","వృషభం","మిథునం","కర్కాటకం","సింహం","కన్య",
-                          "తులం","వృశ్చికం","ధనుస్సు","మకరం","కుంభం","మీనం"];
+  const RASHI_TE = ["మేషం","వృషభం","మిథునం","కర్కాటకం","సింహం","కన్య",
+                    "తులం","వృశ్చికం","ధనుస్సు","మకరం","కుంభం","మీనం"];
   const PLANET_LABELS = {
     ravi:"☀️ రవి", chandra:"🌙 చంద్ర", kuja:"♂ కుజ", budha:"☿ బుధ",
     guru:"♃ గురు", shukra:"♀ శుక్ర", shani:"♄ శని", rahu:"☊ రాహు", ketu:"☋ కేతు"
   };
+  const PLANET_SHORT = {
+    ravi:"రవి", chandra:"చంద్ర", kuja:"కుజ", budha:"బుధ",
+    guru:"గురు", shukra:"శుక్ర", shani:"శని", rahu:"రా", ketu:"కే"
+  };
   const PLANET_ORDER = ["ravi","chandra","kuja","budha","guru","shukra","shani","rahu","ketu"];
-
-  const chartHtml = renderHoroscopeChart(chart.planet_rashis, chart.lagna_idx);
-
-  let planetRows = "";
-  for (const name of PLANET_ORDER) {
-    const d  = (chart.planet_details || {})[name] || {};
-    const ri = d.rashi_idx ?? (chart.planet_rashis || {})[name] ?? 0;
-    const deg = d.deg !== undefined ? `${String(d.deg).padStart(2,"0")}°${String(d.min||0).padStart(2,"0")}'` : "—";
-    const retro = d.retrograde ? '<span class="kundali-retro">వ</span>' : "";
-    planetRows += `<tr>
-      <td>${PLANET_LABELS[name] || name}</td>
-      <td>${RASHI_TE_LIST[ri] || ri}</td>
-      <td>${deg}</td>
-      <td>${retro}</td>
-    </tr>`;
-  }
+  const STRENGTH_LABELS = {
+    exalted: ["ఉచ్చ", "str-exalted"],
+    debilitated: ["నీచ", "str-debilitated"],
+    own: ["స్వక్షేత్ర", "str-own"],
+    moolatrikona: ["మూలత్రికోణ", "str-moolatrikona"],
+    combust: ["అస్తమయ", "str-combust"],
+    normal: ["సాధారణ", "str-normal"]
+  };
 
   const bp = chart.birth_panchang || {};
+  const pd = chart.planet_details || {};
   const dobDisplay = (profile.dob || "").split("-").reverse().join("/");
 
+  // ── Print cover (hidden on screen) ──────────────────────────────────────
   const printCover = `
     <div class="kundali-print-cover">
       <div class="kpc-om">🕉</div>
@@ -2667,33 +2665,15 @@ function _renderKundaliBody(chart, profile) {
       <div class="kpc-subheading">Telugu Muhurtam · Godavari Sampradaya</div>
       <div class="kpc-name">${_escHtml(profile.name || "")}</div>
       <div class="kpc-info-grid">
-        <div class="kpc-info-item">
-          <span class="kpc-info-label">జన్మ తేదీ</span>
-          <span class="kpc-info-val">${dobDisplay || "—"}</span>
-        </div>
-        <div class="kpc-info-item">
-          <span class="kpc-info-label">జన్మ సమయం</span>
-          <span class="kpc-info-val">${profile.time || "—"}</span>
-        </div>
-        <div class="kpc-info-item">
-          <span class="kpc-info-label">జన్మ స్థలం</span>
-          <span class="kpc-info-val">${_escHtml(profile.place || "—")}</span>
-        </div>
+        <div class="kpc-info-item"><span class="kpc-info-label">జన్మ తేదీ</span><span class="kpc-info-val">${dobDisplay || "—"}</span></div>
+        <div class="kpc-info-item"><span class="kpc-info-label">జన్మ సమయం</span><span class="kpc-info-val">${profile.time || "—"}</span></div>
+        <div class="kpc-info-item"><span class="kpc-info-label">జన్మ స్థలం</span><span class="kpc-info-val">${_escHtml(profile.place || "—")}</span></div>
       </div>
       <div class="kpc-divider"></div>
       <div class="kpc-astro-boxes">
-        <div class="kpc-astro-box">
-          <div class="kpc-astro-label">నక్షత్రం</div>
-          <div class="kpc-astro-val">${chart.janma_nakshatra_te || "—"}${chart.janma_nakshatra_padam ? " · " + chart.janma_nakshatra_padam + "వ పాదం" : ""}</div>
-        </div>
-        <div class="kpc-astro-box">
-          <div class="kpc-astro-label">రాశి</div>
-          <div class="kpc-astro-val">${chart.janma_rashi_te || "—"}</div>
-        </div>
-        <div class="kpc-astro-box">
-          <div class="kpc-astro-label">లగ్నం</div>
-          <div class="kpc-astro-val">${chart.lagna_te || "—"}</div>
-        </div>
+        <div class="kpc-astro-box"><div class="kpc-astro-label">నక్షత్రం</div><div class="kpc-astro-val">${chart.janma_nakshatra_te || "—"}${chart.janma_nakshatra_padam ? " · " + chart.janma_nakshatra_padam + "వ పాదం" : ""}</div></div>
+        <div class="kpc-astro-box"><div class="kpc-astro-label">రాశి</div><div class="kpc-astro-val">${chart.janma_rashi_te || "—"}</div></div>
+        <div class="kpc-astro-box"><div class="kpc-astro-label">లగ్నం</div><div class="kpc-astro-val">${chart.lagna_te || "—"}</div></div>
       </div>
       <div class="kpc-panchang">
         <span><b>తిథి:</b> ${bp.tithi_te || "—"}</span>
@@ -2704,22 +2684,65 @@ function _renderKundaliBody(chart, profile) {
       </div>
     </div>`;
 
-  const dashaHtml = _renderDashaAccordion(
-    chart.vimshottari_dasha || [], profile.dob || "",
-    chart.planet_rashis || {}, chart.lagna_idx ?? 0
-  );
-
-  body.innerHTML = printCover + `
-    <div class="kundali-top">
-      <div class="kundali-chart-wrap">${chartHtml}</div>
-      <div class="kundali-planet-table-wrap">
-        <table class="kundali-planet-table">
-          <thead><tr><th>గ్రహం</th><th>రాశి</th><th>స్థానం</th><th></th></tr></thead>
-          <tbody>${planetRows}</tbody>
-        </table>
-        <div style="font-size:0.7rem;color:var(--text-2);margin-top:4px">వ = వక్రి (retrograde)</div>
+  // ── Section 1: D-1 + D-9 charts ─────────────────────────────────────────
+  const d1Html = renderHoroscopeChart(chart.planet_rashis || {}, chart.lagna_idx ?? 0);
+  const d9Html = renderHoroscopeChart(chart.navamsa_rashis || {}, null);
+  const sec1 = `
+    <div class="kundali-section">
+      <div class="kundali-section-header">🗺 జన్మ చక్రాలు</div>
+      <div class="kundali-section-body">
+        <div class="kundali-charts-row">
+          <div class="kundali-chart-col">
+            <div class="kundali-chart-label">D-1 జన్మ చక్రం</div>
+            ${d1Html}
+          </div>
+          <div class="kundali-chart-col">
+            <div class="kundali-chart-label">D-9 నవాంశ చక్రం</div>
+            ${d9Html}
+          </div>
+        </div>
       </div>
-    </div>
+    </div>`;
+
+  // ── Section 2: Enhanced planet table ────────────────────────────────────
+  let ptRows = "";
+  for (const name of PLANET_ORDER) {
+    const d = pd[name] || {};
+    const ri = d.rashi_idx ?? (chart.planet_rashis || {})[name] ?? 0;
+    const retro = d.retrograde ? '<sup class="kundali-retro">వ</sup>' : "";
+    const nak = d.nakshatra_te ? `${d.nakshatra_te} · ${d.nakshatra_pada || ""}` : "—";
+    const lord = d.nakshatra_lord || "—";
+    const [strLabel, strCls] = STRENGTH_LABELS[d.strength] || ["—", "str-normal"];
+    const d9Rashi = d.navamsa_rashi_te || (chart.navamsa_rashis ? RASHI_TE[chart.navamsa_rashis[name]] : "—") || "—";
+    ptRows += `<tr>
+      <td>${PLANET_LABELS[name] || name}${retro}</td>
+      <td>${RASHI_TE[ri] || ri}</td>
+      <td>${nak}</td>
+      <td>${lord}</td>
+      <td><span class="str-badge ${strCls}">${strLabel}</span></td>
+      <td>${d9Rashi}</td>
+    </tr>`;
+  }
+  const sec2 = `
+    <div class="kundali-section">
+      <div class="kundali-section-header">🪐 గ్రహ స్థితి</div>
+      <div class="kundali-section-body">
+        <div class="kundali-pt-scroll">
+          <table class="kundali-pt">
+            <thead><tr>
+              <th>గ్రహం</th><th>రాశి</th><th>నక్షత్రం · పాద</th>
+              <th>నక్ష. స్వామి</th><th>బలం</th><th>D-9 రాశి</th>
+            </tr></thead>
+            <tbody>${ptRows}</tbody>
+          </table>
+        </div>
+        <div class="kundali-pt-hint">← స్వైప్ చేయండి</div>
+        <div style="font-size:0.68rem;color:var(--text-2,#888);margin-top:4px">వ = వక్రి (retrograde)</div>
+      </div>
+    </div>`;
+
+  // ── Section 3: Birth panchang strip ─────────────────────────────────────
+  const sec3 = `
     <div class="kundali-birth-strip">
       <span><b>నక్షత్రం:</b> ${chart.janma_nakshatra_te || "—"}${chart.janma_nakshatra_padam ? " " + chart.janma_nakshatra_padam + "వ పాదం" : ""}</span>
       <span><b>రాశి:</b> ${chart.janma_rashi_te || "—"}</span>
@@ -2728,9 +2751,77 @@ function _renderKundaliBody(chart, profile) {
       <span><b>వారం:</b> ${bp.vaara_te || "—"}</span>
       <span><b>యోగం:</b> ${bp.yoga_te || "—"}</span>
       <span><b>కరణం:</b> ${bp.karanam_te || "—"}</span>
-    </div>
-    <div class="kundali-dasha-header">వింశోత్తరి దశలు — 120 సంవత్సరాల పూర్ణ పట్టిక</div>
-    ${dashaHtml}`;
+    </div>`;
+
+  // ── Section 4: Doshas & Parivartana yogas ───────────────────────────────
+  const md = chart.mangala_dosha || {};
+  let mdDetail = "";
+  if (md.present) {
+    const froms = [];
+    if (md.from_lagna) froms.push(`లగ్నం నుండి ${md.kuja_house_lagna}వ భావం`);
+    if (md.from_moon)  froms.push(`చంద్రుని నుండి ${md.kuja_house_moon}వ భావం`);
+    if (md.from_venus) froms.push(`శుక్రుని నుండి ${md.kuja_house_venus}వ భావం`);
+    mdDetail = froms.join(", ");
+  }
+  const mdCard = md.present
+    ? `<div class="kundali-dosha-card danger"><div class="dc-title">🔴 మాంగళిక దోషం</div><div>${mdDetail}</div><div style="margin-top:4px;font-size:0.75rem">తీవ్రత: ${md.severity || "—"}</div></div>`
+    : `<div class="kundali-dosha-card safe"><div class="dc-title">✅ మాంగళిక దోషం లేదు</div></div>`;
+
+  const ks = chart.kala_sarpa_dosha || {};
+  const ksCard = ks.present
+    ? `<div class="kundali-dosha-card danger"><div class="dc-title">🔴 కాళసర్ప దోషం</div><div>${ks.type === "kalamrita" ? "కాళామృత" : "కాళసర్ప"}</div><div style="margin-top:4px;font-size:0.75rem">రాహు: ${ks.rahu_rashi_te || "—"} · కేతు: ${ks.ketu_rashi_te || "—"}</div></div>`
+    : `<div class="kundali-dosha-card safe"><div class="dc-title">✅ కాళసర్ప దోషం లేదు</div></div>`;
+
+  const yogas = chart.parivartana_yogas || [];
+  const YOGA_TYPE_LABELS = { maha: ["మహా పరివర్తన", "yoga-maha"], dainya: ["దైన్య పరివర్తన", "yoga-dainya"], kahala: ["కహళ పరివర్తన", "yoga-kahala"] };
+  const yogaItems = yogas.length === 0
+    ? `<div style="font-size:0.78rem;color:var(--text-2,#888)">పరివర్తన యోగాలు లేవు</div>`
+    : yogas.map(y => {
+        const [label, cls] = YOGA_TYPE_LABELS[y.type] || ["పరివర్తన", "yoga-kahala"];
+        return `<div class="kundali-yoga-item"><span>${PLANET_SHORT[y.planet_a]||y.planet_a} ↔ ${PLANET_SHORT[y.planet_b]||y.planet_b}</span><span class="yoga-badge ${cls}">${label}</span></div>`;
+      }).join("");
+  const yogaCard = `<div class="kundali-dosha-card info"><div class="dc-title">♻️ పరివర్తన యోగాలు</div>${yogaItems}</div>`;
+
+  const sec4 = `
+    <div class="kundali-section">
+      <div class="kundali-section-header">⚠️ దోషాలు & యోగాలు</div>
+      <div class="kundali-section-body">
+        <div class="kundali-dosha-row">
+          ${mdCard}${ksCard}${yogaCard}
+        </div>
+      </div>
+    </div>`;
+
+  // ── Section 5: Graha Drishti ─────────────────────────────────────────────
+  const aspects = chart.graha_drishti || [];
+  const aspPills = aspects.length === 0
+    ? `<div style="font-size:0.78rem;color:var(--text-2,#888)">దృష్టి సమాచారం లేదు</div>`
+    : aspects.map(a => {
+        const cls = a.type === "special" ? "asp-special" : "asp-full";
+        const dot = a.type === "special" ? "◆" : "●";
+        return `<span class="asp-pill ${cls}"><span class="asp-dot">${dot}</span>${PLANET_SHORT[a.from]||a.from} → ${PLANET_SHORT[a.to]||a.to} <span style="font-size:0.68rem;opacity:0.75">${a.aspect_house}వ</span></span>`;
+      }).join("");
+  const sec5 = `
+    <div class="kundali-section">
+      <div class="kundali-section-header">👁 గ్రహ దృష్టి</div>
+      <div class="kundali-section-body">
+        <div class="kundali-asp-wrap">${aspPills}</div>
+        <div style="font-size:0.65rem;color:var(--text-2,#888);margin-top:6px">● పూర్ణ దృష్టి &nbsp; ◆ విశేష దృష్టి</div>
+      </div>
+    </div>`;
+
+  // ── Section 6: Dasha accordion ──────────────────────────────────────────
+  const dashaHtml = _renderDashaAccordion(
+    chart.vimshottari_dasha || [], profile.dob || "",
+    chart.planet_rashis || {}, chart.lagna_idx ?? 0
+  );
+  const sec6 = `
+    <div class="kundali-section">
+      <div class="kundali-section-header">⏳ వింశోత్తరి దశలు — 120 సంవత్సరాల పూర్ణ పట్టిక</div>
+      ${dashaHtml}
+    </div>`;
+
+  body.innerHTML = printCover + sec1 + sec2 + sec3 + sec4 + sec5 + sec6;
 }
 
 function _renderDashaAccordion(dashas, birthDobIso, planetRashis, lagnaIdx) {
