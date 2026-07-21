@@ -55,6 +55,19 @@ def _make_birth_chart_module():
     ] * 9
     sys.modules["compute.dasha"] = fake_dasha
 
+    fake_analysis = types.ModuleType("compute.analysis")
+    fake_analysis.enrich_planet_details = lambda d: {
+        p: {**v, "nakshatra_idx": 0, "nakshatra_te": "అశ్వని", "nakshatra_pada": 1,
+            "nakshatra_lord": "ketu", "navamsa_rashi_idx": 0, "navamsa_rashi_te": "మేషం",
+            "strength": "normal"}
+        for p, v in d.items()
+    }
+    fake_analysis.compute_graha_drishti = lambda pr: []
+    fake_analysis.compute_parivartana_yogas = lambda pr, li: []
+    fake_analysis.compute_mangala_dosha = lambda pr, li: {"present": False}
+    fake_analysis.compute_kala_sarpa_dosha = lambda pr: {"present": False}
+    sys.modules["compute.analysis"] = fake_analysis
+
     # Ensure NAKSHATRA_TE on the panchang mock is a real list so birth_chart works
     _NAKSHATRA_TE = [
         "అశ్వని", "భరణి", "కృత్తిక", "రోహిణి", "మృగశిర",

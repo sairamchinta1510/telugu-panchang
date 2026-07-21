@@ -8,6 +8,13 @@ import pytz
 from datetime import datetime
 
 from .astro import moon_longitude, compute_planet_rashis, compute_planet_details
+from .analysis import (
+    enrich_planet_details,
+    compute_graha_drishti,
+    compute_parivartana_yogas,
+    compute_mangala_dosha,
+    compute_kala_sarpa_dosha,
+)
 from .panchang import NAKSHATRA_TE, compute_panchang
 from .dasha import compute_vimshottari_dasha
 
@@ -80,6 +87,12 @@ def compute_birth_chart(
 
     planet_rashis  = compute_planet_rashis(jd)
     planet_details = compute_planet_details(jd)
+    planet_details = enrich_planet_details(planet_details)
+    graha_drishti = compute_graha_drishti(planet_rashis)
+    parivartana = compute_parivartana_yogas(planet_rashis, lagna_idx)
+    mangala_dosha = compute_mangala_dosha(planet_rashis, lagna_idx)
+    kala_sarpa = compute_kala_sarpa_dosha(planet_rashis)
+    navamsa_rashis = {planet: details["navamsa_rashi_idx"] for planet, details in planet_details.items()}
 
     pan = compute_panchang(jd, lat, lon, tz_name)
     birth_panchang = {
@@ -103,6 +116,11 @@ def compute_birth_chart(
         "lagna_te":              RASHI_TE[lagna_idx],
         "planet_rashis":         planet_rashis,
         "planet_details":        planet_details,
+        "navamsa_rashis":        navamsa_rashis,
+        "graha_drishti":         graha_drishti,
+        "parivartana_yogas":     parivartana,
+        "mangala_dosha":         mangala_dosha,
+        "kala_sarpa_dosha":      kala_sarpa,
         "birth_panchang":        birth_panchang,
         "vimshottari_dasha":     vimshottari_dasha,
     }
