@@ -1645,11 +1645,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <div class="field">
       <label data-te="వేడుక జరిగే స్థలం" data-en="Ceremony Location">వేడుక జరిగే స్థలం</label>
       <div class="ac-wrap">
-        <div class="input-icon-wrap">
-          <span class="icon">📍</span>
-          <input type="text" id="ceremonyPlace" placeholder="నగరం వెతకండి... (ఉదా: Hyderabad)"
-                 oninput="acSearch(this,'acCeremony')" autocomplete="off">
-        </div>
+        <input type="text" id="ceremonyPlace" placeholder="నగరం వెతకండి... (ఉదా: Hyderabad)"
+               oninput="acSearch(this,'acCeremony')" autocomplete="off">
         <div class="ac-list" id="acCeremony"></div>
       </div>
     </div>
@@ -2851,7 +2848,7 @@ function acSearch(input, listId) {
       list.innerHTML = data.map(p => {
         const short = _shortPlace(p);
         return `<div class="ac-item" onclick="acPick('${input.id}','${listId}',this)" data-val="${short.replace(/"/g,'&quot;')}" title="${p.display_name.replace(/"/g,'&quot;')}">
-          📍 ${short}
+          ${short}
         </div>`;
       }).join("");
     } catch { list.innerHTML = '<div class="ac-empty">లోపం జరిగింది</div>'; }
@@ -2914,11 +2911,8 @@ function addPerson() {
     <div class="field" style="margin-top:10px;margin-bottom:0">
       <label>జన్మ స్థలం</label>
       <div class="ac-wrap">
-        <div class="input-icon-wrap">
-          <span class="icon">📍</span>
-          <input type="text" id="place${idx}" placeholder="నగరం వెతకండి..."
-                 oninput="acSearch(this,'acP${idx}');delete savedProfileCharts[${idx}]" autocomplete="off">
-        </div>
+        <input type="text" id="place${idx}" placeholder="నగరం వెతకండి..."
+               oninput="acSearch(this,'acP${idx}');delete savedProfileCharts[${idx}]" autocomplete="off">
         <div class="ac-list" id="acP${idx}"></div>
       </div>
     </div>
