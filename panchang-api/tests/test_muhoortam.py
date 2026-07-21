@@ -35,7 +35,25 @@ def _make_birth_chart_module():
         "ravi": 0, "chandra": 1, "kuja": 2, "budha": 3,
         "guru": 4, "shukra": 5, "shani": 6, "rahu": 7, "ketu": 1,
     }
+    fake_astro.compute_planet_details = lambda jd: {
+        p: {"rashi_idx": i % 12, "deg": 5, "min": 30, "retrograde": False}
+        for i, p in enumerate(["ravi","chandra","kuja","budha","guru","shukra","shani","rahu","ketu"])
+    }
     sys.modules["compute.astro"] = fake_astro
+
+    # Mock dasha module
+    fake_dasha = types.ModuleType("compute.dasha")
+    fake_dasha.compute_vimshottari_dasha = lambda moon_lon, birth_dt: [
+        {
+            "lord": "chandra", "lord_te": "చంద్ర", "lord_emoji": "🌙",
+            "years": 10.0, "start_date": "1990-08-15", "end_date": "2000-08-14",
+            "antardashas": [
+                {"lord": "chandra", "lord_te": "చంద్ర",
+                 "start": "1990-08-15", "end": "1991-02-14"}
+            ] * 9,
+        }
+    ] * 9
+    sys.modules["compute.dasha"] = fake_dasha
 
     # Ensure NAKSHATRA_TE on the panchang mock is a real list so birth_chart works
     _NAKSHATRA_TE = [
@@ -122,6 +140,44 @@ def test_birth_chart_birth_panchang_values():
     assert bp["nakshatra_te"] == "మృగశిర"
     assert bp["yoga_te"]      == "సిద్ధి"
     assert bp["karanam_te"]   == "బవ"
+
+
+def test_birth_chart_planet_details_present():
+    bc = _make_birth_chart_module()
+    result = bc.compute_birth_chart(1990, 8, 15, 10, 30, 17.38, 78.49, "Asia/Kolkata")
+    assert "planet_details" in result
+    assert set(result["planet_details"].keys()) == {
+        "ravi","chandra","kuja","budha","guru","shukra","shani","rahu","ketu"
+    }
+
+
+def test_birth_chart_planet_details_structure():
+    bc = _make_birth_chart_module()
+    result = bc.compute_birth_chart(1990, 8, 15, 10, 30, 17.38, 78.49, "Asia/Kolkata")
+    for name, d in result["planet_details"].items():
+        assert "rashi_idx" in d, f"{name} missing rashi_idx"
+        assert "deg" in d, f"{name} missing deg"
+        assert "min" in d, f"{name} missing min"
+        assert "retrograde" in d, f"{name} missing retrograde"
+        assert 0 <= d["rashi_idx"] <= 11
+        assert 0 <= d["deg"] <= 29
+        assert 0 <= d["min"] <= 59
+
+
+def test_birth_chart_vimshottari_dasha_present():
+    bc = _make_birth_chart_module()
+    result = bc.compute_birth_chart(1990, 8, 15, 10, 30, 17.38, 78.49, "Asia/Kolkata")
+    assert "vimshottari_dasha" in result
+    assert len(result["vimshottari_dasha"]) == 9
+
+
+def test_birth_chart_vimshottari_dasha_structure():
+    bc = _make_birth_chart_module()
+    result = bc.compute_birth_chart(1990, 8, 15, 10, 30, 17.38, 78.49, "Asia/Kolkata")
+    maha = result["vimshottari_dasha"][0]
+    for key in ("lord", "lord_te", "lord_emoji", "years", "start_date", "end_date", "antardashas"):
+        assert key in maha, f"missing key: {key}"
+    assert len(maha["antardashas"]) == 9
 
 
 # ── Muhurta rules tests ───────────────────────────────────────────────────────
