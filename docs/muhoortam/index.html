@@ -80,6 +80,89 @@ body {
 }
 .nav-logo-text span { color: var(--indigo); }
 .nav-right { display: flex; align-items: center; gap: 12px; }
+.nav-tab {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.8);
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-tab.active {
+  background: var(--gold, #f5c842);
+  border-color: var(--gold, #f5c842);
+  color: var(--brown-dark, #3b1f0a);
+  font-weight: 700;
+}
+.nav-tab:hover:not(.active) {
+  background: rgba(255,255,255,0.1);
+}
+.nav-tab-label { display: inline; }
+@media (max-width: 420px) {
+  .nav-tab-label { display: none; }
+}
+
+/* ── People panel ──────────────────────────────── */
+#people-panel { max-width: 900px; margin: 0 auto; padding: 16px; }
+.people-header { margin-bottom: 16px; }
+.people-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+.people-card {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--gold-light, #d4a96a);
+  border-radius: 10px;
+  padding: 14px;
+}
+.people-card-name { font-weight: 700; font-size: 1rem; color: var(--brown-dark, #3b1f0a); }
+.people-card-meta { font-size: 0.78rem; color: var(--text-2, #888); margin-top: 2px; }
+.people-card-astro {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px;
+  font-size: 0.76rem; margin: 8px 0; color: var(--brown-mid, #6b3a2a);
+}
+.people-card-astro b { color: var(--text-1, #444); }
+.people-card-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.people-card-btn-primary {
+  background: var(--brown-dark, #3b1f0a);
+  color: var(--gold, #f5c842);
+  border: none; border-radius: 5px;
+  padding: 6px 10px; cursor: pointer; font-size: 0.8rem; font-weight: 700;
+  font-family: inherit; width: 100%;
+}
+.people-card-btn-secondary {
+  background: transparent;
+  border: 1px solid var(--gold-light, #d4a96a);
+  color: var(--brown-dark, #3b1f0a);
+  border-radius: 5px; padding: 5px 10px;
+  cursor: pointer; font-size: 0.78rem; font-family: inherit; width: 100%;
+}
+.people-card-btn-del {
+  background: transparent; border: none;
+  color: var(--text-2, #888); font-size: 0.72rem;
+  cursor: pointer; text-align: right; padding: 0; font-family: inherit;
+}
+.people-card-add {
+  border: 2px dashed var(--gold-light, #d4a96a);
+  border-radius: 10px; padding: 14px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--gold-light, #d4a96a); cursor: pointer;
+  min-height: 120px; background: transparent;
+  font-size: 0.88rem; gap: 6px;
+}
+.people-card-add:hover { background: rgba(212,169,106,0.07); }
+.people-add-form { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.people-add-form input {
+  border: 1px solid var(--gold-light, #d4a96a);
+  border-radius: 5px; padding: 6px 8px;
+  font-size: 0.82rem; font-family: inherit; width: 100%; box-sizing: border-box;
+}
+.people-add-form label { font-size: 0.75rem; color: var(--text-2, #888); }
 
 .lang-toggle {
   display: flex;
@@ -1211,6 +1294,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <div class="nav-logo-text">Telugu <span>Muhurtam</span></div>
   </div>
   <div class="nav-right">
+    <button type="button" class="nav-tab active" id="tabMuhurtam"
+      onclick="showAppTab('muhurtam')" aria-label="ముహూర్తం">
+      🗓 <span class="nav-tab-label">ముహూర్తం</span>
+    </button>
+    <button type="button" class="nav-tab" id="tabPeople"
+      onclick="showAppTab('people')" aria-label="జనాలు">
+      👥 <span class="nav-tab-label">జనాలు</span>
+    </button>
     <button
       type="button"
       class="lang-toggle"
@@ -1223,6 +1314,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     </button>
   </div>
 </header>
+<!-- ══ PEOPLE PANEL ══ -->
+<div id="people-panel" style="display:none">
+  <div class="people-header">
+    <div class="section-title">👥 నా జనాలు</div>
+  </div>
+  <div class="people-grid" id="peopleGrid"></div>
+</div>
 <nav id="breadcrumb" aria-label="breadcrumb"></nav>
 
 <!-- ══ HERO (shown on step 1 only) ══ -->
@@ -2043,6 +2141,177 @@ async function savePersonProfile(idx) {
   } catch(e) {
     if (btn) btn.textContent = "💾 Save Profile";
     showError("Profile save failed: " + e.message);
+  }
+}
+
+// ── App tab switching ────────────────────────────────────────────────────────
+function showAppTab(tab) {
+  const muhurtamEls = [
+    document.getElementById("hero"),
+    document.querySelector(".step-bar"),
+    document.getElementById("panel1"),
+    document.getElementById("panel2"),
+    document.getElementById("panel3"),
+    document.getElementById("breadcrumb"),
+  ].filter(Boolean);
+  const peoplePanel   = document.getElementById("people-panel");
+  const kundaliPanel  = document.getElementById("kundali-panel");
+  const tabMuhurtam   = document.getElementById("tabMuhurtam");
+  const tabPeople     = document.getElementById("tabPeople");
+
+  if (tab === "people") {
+    muhurtamEls.forEach(el => el.style.display = "none");
+    if (kundaliPanel) kundaliPanel.style.display = "none";
+    if (peoplePanel)  peoplePanel.style.display  = "";
+    if (tabMuhurtam)  tabMuhurtam.classList.remove("active");
+    if (tabPeople)    tabPeople.classList.add("active");
+    renderPeoplePanel();
+  } else {
+    if (peoplePanel)  peoplePanel.style.display  = "none";
+    if (kundaliPanel) kundaliPanel.style.display  = "none";
+    muhurtamEls.forEach(el => { el.style.display = ""; });
+    if (tabMuhurtam)  tabMuhurtam.classList.add("active");
+    if (tabPeople)    tabPeople.classList.remove("active");
+    goToCurrentStep();
+  }
+}
+
+// ── People panel rendering ────────────────────────────────────────────────────
+function renderPeoplePanel() {
+  const grid = document.getElementById("peopleGrid");
+  if (!grid) return;
+  const profiles = loadProfiles();
+  const cards = profiles.map((p, i) => {
+    const bc = p.birthChart || {};
+    const nak = bc.janma_nakshatra_te
+      ? `${bc.janma_nakshatra_te}${bc.janma_nakshatra_padam ? " " + bc.janma_nakshatra_padam + "వ పాదం" : ""}`
+      : "—";
+    const dob = p.dob ? p.dob.split("-").reverse().join("/") : "—";
+    return `
+      <div class="people-card">
+        <div class="people-card-name">${_escHtml(p.name)}</div>
+        <div class="people-card-meta">${dob}${p.place ? " · " + _escHtml(p.place) : ""}</div>
+        <div class="people-card-astro">
+          <b>నక్షత్రం</b><span>${nak}</span>
+          <b>రాశి</b><span>${bc.janma_rashi_te || "—"}</span>
+          <b>లగ్నం</b><span>${bc.lagna_te || "—"}</span>
+        </div>
+        <div class="people-card-actions">
+          <button class="people-card-btn-primary" onclick="openFullKundali(${i})">🪐 పూర్ణ కుండలి చూడండి</button>
+          <button class="people-card-btn-secondary" onclick="addProfileToMuhurtam(${i})">+ ముహూర్తంలో జోడించు</button>
+          <button class="people-card-btn-del" onclick="deletePeopleProfile(${i})">✕ తొలగించు</button>
+        </div>
+      </div>`;
+  }).join("");
+
+  grid.innerHTML = cards + `
+    <div class="people-card-add" id="peopleAddCard" onclick="togglePeopleAddForm()">
+      <span style="font-size:1.8rem">＋</span>
+      <span>కొత్త వ్యక్తిని జోడించు</span>
+      <div id="peopleAddFormWrap" style="display:none;width:100%" onclick="event.stopPropagation()">
+        <div class="people-add-form" id="peopleAddForm">
+          <label>పేరు</label>
+          <input id="paName" type="text" placeholder="పేరు నమోదు చేయండి">
+          <label>పుట్టిన తేదీ</label>
+          <input id="paDob"  type="date">
+          <label>పుట్టిన సమయం</label>
+          <input id="paTime" type="time">
+          <label>పుట్టిన స్థలం</label>
+          <input id="paPlace" type="text" placeholder="ఊరు పేరు">
+          <button class="people-card-btn-primary" onclick="savePeopleProfile()">💾 సేవ్ చేయండి</button>
+          <div id="paError" style="color:#c00;font-size:0.75rem;display:none"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function togglePeopleAddForm() {
+  const wrap = document.getElementById("peopleAddFormWrap");
+  if (wrap) wrap.style.display = wrap.style.display === "none" ? "" : "none";
+}
+
+async function savePeopleProfile() {
+  const name  = (document.getElementById("paName")?.value  || "").trim();
+  const dobRaw= (document.getElementById("paDob")?.value   || "").trim();
+  const time  = (document.getElementById("paTime")?.value  || "").trim();
+  const place = (document.getElementById("paPlace")?.value || "").trim();
+  const errEl = document.getElementById("paError");
+  if (!name || !dobRaw || !time || !place) {
+    if (errEl) { errEl.textContent = "అన్ని వివరాలు నమోదు చేయండి"; errEl.style.display = ""; }
+    return;
+  }
+  if (errEl) errEl.style.display = "none";
+  const [y, m, d] = dobRaw.split("-");
+  const btn = document.querySelector("#peopleAddForm .people-card-btn-primary");
+  if (btn) btn.textContent = "⏳ ...";
+  try {
+    const r = await fetch(API_BASE + "/muhoortam/birth-chart", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dob: `${d}/${m}/${y}`, time, place }),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    const birthChart = await r.json();
+    saveProfileToStorage({ name, dob: dobRaw, time, place, birthChart });
+    renderPeoplePanel();
+  } catch (e) {
+    if (btn) btn.textContent = "💾 సేవ్ చేయండి";
+    if (errEl) { errEl.textContent = "సేవ్ విఫలమైంది: " + e.message; errEl.style.display = ""; }
+  }
+}
+
+function deletePeopleProfile(idx) {
+  const profiles = loadProfiles();
+  const p = profiles[idx];
+  if (!p) return;
+  if (!confirm(`"${p.name}" ని తొలగించాలా?`)) return;
+  profiles.splice(idx, 1);
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+  renderProfileChips();
+  renderPeoplePanel();
+}
+
+function addProfileToMuhurtam(idx) {
+  const profiles = loadProfiles();
+  const p = profiles[idx];
+  if (!p) return;
+  const blocks = document.querySelectorAll(".person-block");
+  if (blocks.length >= 6) {
+    alert("ముహూర్తం ఫారంలో గరిష్టం 6 వ్యక్తులు మాత్రమే జోడించవచ్చు.");
+    return;
+  }
+  showAppTab("muhurtam");
+  goPanel2();
+  setTimeout(() => {
+    addPerson();
+    const newBlocks = document.querySelectorAll(".person-block");
+    const last = newBlocks[newBlocks.length - 1];
+    if (!last) return;
+    const bid = last.id.replace("person", "");
+    const nameEl  = document.getElementById("pname"  + bid);
+    const dobEl   = document.getElementById("dob"    + bid);
+    const timeEl  = document.getElementById("time"   + bid);
+    const placeEl = document.getElementById("place"  + bid);
+    if (nameEl)  nameEl.value  = p.name;
+    if (dobEl)   dobEl.value   = p.dob;
+    if (timeEl)  timeEl.value  = p.time;
+    if (placeEl) placeEl.value = p.place;
+  }, 150);
+}
+
+function _escHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function goToCurrentStep() {
+  const panels = ["panel1","panel2","panel3"];
+  let found = false;
+  panels.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.style.display !== "none") found = true;
+  });
+  if (!found) {
+    const p1 = document.getElementById("panel1");
+    if (p1) p1.style.display = "";
   }
 }
 
