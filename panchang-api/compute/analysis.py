@@ -232,7 +232,14 @@ def compute_parivartana_yogas(planet_rashis: dict[str, int], lagna_idx: int) -> 
 
 
 def compute_mangala_dosha(planet_rashis: dict[str, int], lagna_idx: int) -> dict:
-    """Check Mangala Dosha from lagna, moon, and venus."""
+    """Check Mangala Dosha from lagna, moon, and venus.
+
+    Cancellation rules (universally accepted in Telugu/South Indian tradition):
+    - Kuja in own sign (Mesha=0 or Vrischika=7): dosha cancelled
+    - Kuja in exaltation (Makara=9): dosha cancelled
+    - Kuja in 1st house and lagna is Mesha or Vrischika (Kuja is lagna lord): cancelled
+    - Kuja in 2nd house and lagna is Makara or Kumbha (Shani lagna, 2nd-house rule relaxed): cancelled
+    """
     dosha_houses = {1, 2, 4, 7, 8, 12}
     kuja_rashi = planet_rashis.get("kuja")
     moon_rashi = planet_rashis.get("chandra")
@@ -241,9 +248,25 @@ def compute_mangala_dosha(planet_rashis: dict[str, int], lagna_idx: int) -> dict
     if kuja_rashi is None:
         return {"present": False}
 
+    # Cancellation: own sign or exaltation nullifies dosha entirely
+    if kuja_rashi in (0, 7, 9):  # Mesha, Vrischika, Makara
+        return {"present": False, "cancelled": True,
+                "cancel_reason": "స్వక్షేత్ర లేదా ఉచ్చ స్థానం" if kuja_rashi != 9
+                else "ఉచ్చ స్థానం (మకరం)"}
+
     kuja_house_lagna = (kuja_rashi - lagna_idx) % 12 + 1
     kuja_house_moon = (kuja_rashi - moon_rashi) % 12 + 1 if moon_rashi is not None else None
     kuja_house_venus = (kuja_rashi - venus_rashi) % 12 + 1 if venus_rashi is not None else None
+
+    # Cancellation: Kuja in 1st house but lagna is Mesha or Vrischika (own-sign lagna)
+    if kuja_house_lagna == 1 and lagna_idx in (0, 7):
+        return {"present": False, "cancelled": True,
+                "cancel_reason": "కుజ లగ్నాధిపతి — లగ్నంలో స్వగ్రహం"}
+
+    # Cancellation: Kuja in 2nd house from Makara/Kumbha lagna (Saturn lagna exception)
+    if kuja_house_lagna == 2 and lagna_idx in (9, 10):
+        return {"present": False, "cancelled": True,
+                "cancel_reason": "మకర/కుంభ లగ్నానికి 2వ భావంలో కుజ — దోషం లేదు"}
 
     from_lagna = kuja_house_lagna in dosha_houses
     from_moon = kuja_house_moon in dosha_houses if kuja_house_moon else False

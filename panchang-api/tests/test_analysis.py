@@ -137,6 +137,33 @@ def test_no_mangala_dosha():
     assert result["from_lagna"] is False
 
 
+def test_mangala_dosha_cancelled_own_sign():
+    m = _load()
+    # Kuja in Mesha (own sign, rashi 0) — dosha cancelled regardless of house
+    rashis = {"kuja": 0, "chandra": 3, "shukra": 1}
+    result = m.compute_mangala_dosha(rashis, lagna_idx=6)  # Kuja in 7th house from Tula lagna
+    assert result["present"] is False
+    assert result.get("cancelled") is True
+
+
+def test_mangala_dosha_cancelled_vrischika():
+    m = _load()
+    # Kuja in Vrischika (own sign, rashi 7) — dosha cancelled
+    rashis = {"kuja": 7, "chandra": 3, "shukra": 1}
+    result = m.compute_mangala_dosha(rashis, lagna_idx=0)
+    assert result["present"] is False
+    assert result.get("cancelled") is True
+
+
+def test_mangala_dosha_cancelled_exalted():
+    m = _load()
+    # Kuja in Makara (exaltation, rashi 9) — dosha cancelled
+    rashis = {"kuja": 9, "chandra": 3, "shukra": 1}
+    result = m.compute_mangala_dosha(rashis, lagna_idx=2)
+    assert result["present"] is False
+    assert result.get("cancelled") is True
+
+
 # ── Kala Sarpa Dosha ─────────────────────────────────────────────────────────
 
 def test_kala_sarpa_detected():
