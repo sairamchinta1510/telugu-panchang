@@ -1630,6 +1630,13 @@ const API_BASE = "https://h3dp7amvn9.execute-api.ap-south-1.amazonaws.com";
 
 // ── Janma Chakram modal ────────────────────────────────────────────────────────
 
+function openJanmaChakramByIndex(idx) {
+  const profiles = loadProfiles();
+  const p = profiles[idx];
+  if (!p) return;
+  openJanmaChakram(p.name, p.dob || '', p.time || '', p.place || '', p.birthChart || null);
+}
+
 function openJanmaChakram(name, dob, time, place, cachedChart) {
   const modal = document.getElementById("janmaChakramModal");
   document.getElementById("jcModalTitle").textContent = "🪐 జన్మ చక్రం — " + name;
@@ -1943,7 +1950,7 @@ function renderProfileChips() {
           <div class="profile-chip-actions">
             <button type="button" class="profile-chip-add" onclick="addFromProfile(${i})">＋ Add</button>
             <button type="button" class="profile-chip-add" style="background:var(--amber)"
-              onclick="openJanmaChakram(${JSON.stringify(p.name)},${JSON.stringify(p.dob||'')},${JSON.stringify(p.time||'')},${JSON.stringify(p.place||'')},${p.birthChart ? JSON.stringify(p.birthChart) : 'null'})">🪐</button>
+              onclick="openJanmaChakramByIndex(${i})">🪐</button>
             <button type="button" class="profile-chip-del" onclick="deleteProfile('${p.name.replace(/'/g,"\\'")}')">✕</button>
           </div>
         </div>`).join("")}
