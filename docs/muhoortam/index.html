@@ -1634,7 +1634,13 @@ function openJanmaChakramByIndex(idx) {
   const profiles = loadProfiles();
   const p = profiles[idx];
   if (!p) return;
-  openJanmaChakram(p.name, p.dob || '', p.time || '', p.place || '', p.birthChart || null);
+  // p.dob is stored as YYYY-MM-DD (HTML date input); API expects DD/MM/YYYY
+  let dob = p.dob || '';
+  if (dob.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [y, m, d] = dob.split('-');
+    dob = `${d}/${m}/${y}`;
+  }
+  openJanmaChakram(p.name, dob, p.time || '', p.place || '', p.birthChart || null);
 }
 
 function openJanmaChakram(name, dob, time, place, cachedChart) {
