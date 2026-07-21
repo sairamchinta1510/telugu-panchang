@@ -30,6 +30,11 @@ def _make_birth_chart_module():
     # moon at 54.67° sidereal → nakshatra idx = int(54.67 / 13.333) = 4 (Mrigashira)
     # rashi idx = int(54.67 / 30) = 1 (Vrishabha)
     fake_astro.moon_longitude = lambda jd: 54.67
+    # planet_rashis: all planets in rashi 0 (Mesha) for simplicity
+    fake_astro.compute_planet_rashis = lambda jd: {
+        "ravi": 0, "chandra": 1, "kuja": 2, "budha": 3,
+        "guru": 4, "shukra": 5, "shani": 6, "rahu": 7, "ketu": 1,
+    }
     sys.modules["compute.astro"] = fake_astro
 
     # Ensure NAKSHATRA_TE on the panchang mock is a real list so birth_chart works
@@ -46,6 +51,14 @@ def _make_birth_chart_module():
         from unittest.mock import MagicMock as _MM
         sys.modules["compute.panchang"] = _MM()
     sys.modules["compute.panchang"].NAKSHATRA_TE = _NAKSHATRA_TE
+    # Mock compute_panchang on the panchang module
+    sys.modules["compute.panchang"].compute_panchang = lambda jd, lat, lon, tz: {
+        "tithi":    {"te": "పంచమి",    "en": "Panchami"},
+        "vaaram":   {"te": "మంగళవారం", "en": "Tuesday"},
+        "nakshatra":{"te": "మృగశిర",   "en": "Mrigashira"},
+        "yoga":     {"te": "సిద్ధి",   "en": "Siddhi"},
+        "karana":   {"te": "బవ",       "en": "Bava"},
+    }
 
     import importlib
     import compute.birth_chart as bc
@@ -73,6 +86,42 @@ def test_birth_chart_lagna():
     result = bc.compute_birth_chart(1990, 8, 15, 10, 30, 17.38, 78.49, "Asia/Kolkata")
     assert result["lagna_idx"] == 1
     assert result["lagna_te"] == "వృషభం"
+
+
+def test_birth_chart_planet_rashis_present():
+    bc = _make_birth_chart_module()
+    result = bc.compute_birth_chart(1990, 8, 15, 10, 30, 17.38, 78.49, "Asia/Kolkata")
+    assert "planet_rashis" in result
+    expected_keys = {"ravi", "chandra", "kuja", "budha", "guru", "shukra", "shani", "rahu", "ketu"}
+    assert set(result["planet_rashis"].keys()) == expected_keys
+
+
+def test_birth_chart_planet_rashi_values_in_range():
+    bc = _make_birth_chart_module()
+    result = bc.compute_birth_chart(1990, 8, 15, 10, 30, 17.38, 78.49, "Asia/Kolkata")
+    for planet, rashi_idx in result["planet_rashis"].items():
+        assert 0 <= rashi_idx <= 11, f"{planet} rashi {rashi_idx} out of range"
+
+
+def test_birth_chart_birth_panchang_present():
+    bc = _make_birth_chart_module()
+    result = bc.compute_birth_chart(1990, 8, 15, 10, 30, 17.38, 78.49, "Asia/Kolkata")
+    assert "birth_panchang" in result
+    bp = result["birth_panchang"]
+    for key in ("tithi_te", "vaara_te", "nakshatra_te", "yoga_te", "karanam_te"):
+        assert key in bp, f"Missing key: {key}"
+        assert isinstance(bp[key], str) and bp[key], f"{key} must be a non-empty string"
+
+
+def test_birth_chart_birth_panchang_values():
+    bc = _make_birth_chart_module()
+    result = bc.compute_birth_chart(1990, 8, 15, 10, 30, 17.38, 78.49, "Asia/Kolkata")
+    bp = result["birth_panchang"]
+    assert bp["tithi_te"]     == "పంచమి"
+    assert bp["vaara_te"]     == "మంగళవారం"
+    assert bp["nakshatra_te"] == "మృగశిర"
+    assert bp["yoga_te"]      == "సిద్ధి"
+    assert bp["karanam_te"]   == "బవ"
 
 
 # ── Muhurta rules tests ───────────────────────────────────────────────────────
