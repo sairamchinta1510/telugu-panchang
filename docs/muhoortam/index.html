@@ -831,11 +831,13 @@ body.lang-en .ceremony-card.selected .cer-name-en { color: var(--indigo); }
   gap: 6px;
   margin: 0;
   font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
+  overflow: hidden;
 }
 .person-block-body {
   padding: 14px 16px;
 }
 .person-remove {
+  flex: 0 0 auto;
   margin-left: auto;
   background: none;
   border: none;
@@ -2321,12 +2323,9 @@ async function savePersonProfile(idx) {
 
 // ── App tab switching ────────────────────────────────────────────────────────
 function showAppTab(tab) {
-  const muhurtamEls = [
+  const chromeEls = [
     document.getElementById("hero"),
     document.querySelector(".step-bar"),
-    document.getElementById("panel1"),
-    document.getElementById("panel2"),
-    document.getElementById("panel3"),
     document.getElementById("breadcrumb"),
   ].filter(Boolean);
   const peoplePanel   = document.getElementById("people-panel");
@@ -2335,7 +2334,12 @@ function showAppTab(tab) {
   const tabPeople     = document.getElementById("tabPeople");
 
   if (tab === "people") {
-    muhurtamEls.forEach(el => el.style.display = "none");
+    // Hide muhurtam chrome + panels (save panel inline style so restore works)
+    chromeEls.forEach(el => el.style.display = "none");
+    document.querySelectorAll(".panel").forEach(p => {
+      p.dataset.savedDisplay = p.style.display;
+      p.style.display = "none";
+    });
     if (kundaliPanel) kundaliPanel.style.display = "none";
     if (peoplePanel)  peoplePanel.style.display  = "";
     if (tabMuhurtam)  tabMuhurtam.classList.remove("active");
@@ -2344,10 +2348,14 @@ function showAppTab(tab) {
   } else {
     if (peoplePanel)  peoplePanel.style.display  = "none";
     if (kundaliPanel) kundaliPanel.style.display  = "none";
-    muhurtamEls.forEach(el => { el.style.display = ""; });
+    chromeEls.forEach(el => { el.style.display = ""; });
+    // Restore panels to saved inline style (let .panel.active CSS control visibility)
+    document.querySelectorAll(".panel").forEach(p => {
+      p.style.display = p.dataset.savedDisplay || "";
+    });
     if (tabMuhurtam)  tabMuhurtam.classList.add("active");
     if (tabPeople)    tabPeople.classList.remove("active");
-    goToCurrentStep();
+    _updateRemoveBtns();
   }
 }
 
