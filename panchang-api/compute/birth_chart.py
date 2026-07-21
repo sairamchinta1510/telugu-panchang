@@ -7,8 +7,8 @@ import swisseph as swe
 import pytz
 from datetime import datetime
 
-from .astro import moon_longitude
-from .panchang import NAKSHATRA_TE
+from .astro import moon_longitude, compute_planet_rashis
+from .panchang import NAKSHATRA_TE, compute_panchang
 
 RASHI_TE = [
     "మేషం", "వృషభం", "మిథునం", "కర్కాటకం",
@@ -54,7 +54,9 @@ def compute_birth_chart(
     """Compute birth chart indices and Telugu names from birth data.
 
     Returns dict with janma_nakshatra_idx, janma_nakshatra_te,
-    janma_rashi_idx, janma_rashi_te, lagna_idx, lagna_te.
+    janma_rashi_idx, janma_rashi_te, lagna_idx, lagna_te,
+    planet_rashis (all 9 grahas), and birth_panchang
+    (tithi_te, vaara_te, nakshatra_te, yoga_te, karanam_te).
     """
     jd = _birth_jd(year, month, day, hour, minute, tz_name)
     moon_lon = moon_longitude(jd)
@@ -67,12 +69,25 @@ def compute_birth_chart(
     nak_start = nak_idx * (360.0 / 27)
     padam = int((moon_lon - nak_start) / (360.0 / 108)) + 1  # 1–4
 
+    planet_rashis = compute_planet_rashis(jd)
+
+    pan = compute_panchang(jd, lat, lon, tz_name)
+    birth_panchang = {
+        "tithi_te":     pan["tithi"]["te"],
+        "vaara_te":     pan["vaaram"]["te"],
+        "nakshatra_te": pan["nakshatra"]["te"],
+        "yoga_te":      pan["yoga"]["te"],
+        "karanam_te":   pan["karana"]["te"],
+    }
+
     return {
-        "janma_nakshatra_idx": nak_idx,
-        "janma_nakshatra_te":  NAKSHATRA_TE[nak_idx],
+        "janma_nakshatra_idx":   nak_idx,
+        "janma_nakshatra_te":    NAKSHATRA_TE[nak_idx],
         "janma_nakshatra_padam": padam,
-        "janma_rashi_idx":     rashi_idx,
-        "janma_rashi_te":      RASHI_TE[rashi_idx],
-        "lagna_idx":           lagna_idx,
-        "lagna_te":            RASHI_TE[lagna_idx],
+        "janma_rashi_idx":       rashi_idx,
+        "janma_rashi_te":        RASHI_TE[rashi_idx],
+        "lagna_idx":             lagna_idx,
+        "lagna_te":              RASHI_TE[lagna_idx],
+        "planet_rashis":         planet_rashis,
+        "birth_panchang":        birth_panchang,
     }
