@@ -250,24 +250,82 @@ body {
 }
 .dasha-ad-table td { padding: 3px 8px; border-bottom: 1px solid var(--border, #e8d5c4); }
 .dasha-ad-table tr.current-ad > td { background: #fff9c4; font-weight: 700; }
+/* ── Print cover page (hidden on screen, shown in print) ── */
+.kundali-print-cover { display: none; }
+
 @media print {
+  @page { size: A4 portrait; margin: 12mm 15mm 12mm 15mm; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  /* Hide everything except the kundali panel */
   body.kundali-printing .site-nav,
+  body.kundali-printing #breadcrumb,
+  body.kundali-printing #hero,
+  body.kundali-printing .step-bar,
+  body.kundali-printing #panel1,
+  body.kundali-printing #panel2,
+  body.kundali-printing #panel3,
   body.kundali-printing #people-panel,
-  body.kundali-printing .kundali-back-btn,
-  body.kundali-printing .kundali-pdf-btn { display: none !important; }
-  body.kundali-printing #kundali-panel { display: block !important; }
-  body.kundali-printing .dasha-row-body { display: flex !important; }
-  /* Keep header + chart + birth strip together on page 1 */
-  body.kundali-printing .kundali-header,
-  body.kundali-printing .kundali-top,
-  body.kundali-printing .kundali-birth-strip,
-  body.kundali-printing .kundali-dasha-header { break-inside: avoid; }
-  /* Each mahadasha on its own page */
-  body.kundali-printing .dasha-row { break-before: page; break-inside: avoid; }
-  /* Don't break inside mini chart or antardasha table */
-  body.kundali-printing .dasha-row-body,
-  body.kundali-printing .dasha-mini-chart,
-  body.kundali-printing .dasha-ad-table { break-inside: avoid; }
+  body.kundali-printing .kundali-header { display: none !important; }
+  body.kundali-printing #kundali-panel { display: block !important; max-width: 100%; padding: 0; margin: 0; }
+
+  /* ── Cover page ── */
+  body.kundali-printing .kundali-print-cover {
+    display: flex !important; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; min-height: 85vh;
+    break-after: page;
+  }
+  .kpc-om         { font-size: 3.2rem; margin-bottom: 6px; }
+  .kpc-heading    { font-size: 2rem; font-weight: 700; color: #3b1f0a; letter-spacing: 1px; }
+  .kpc-subheading { font-size: 0.9rem; color: #6b3a2a; margin-bottom: 18px; }
+  .kpc-name       { font-size: 2.6rem; font-weight: 700; color: #3b1f0a;
+                    border-bottom: 4px solid #f5c842; padding-bottom: 12px; margin: 14px 0 22px; }
+  .kpc-info-grid  { display: flex; gap: 28px; justify-content: center; margin: 10px 0 18px; }
+  .kpc-info-item  { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .kpc-info-label { font-size: 0.72rem; color: #6b3a2a; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpc-info-val   { font-size: 1.1rem; font-weight: 700; color: #3b1f0a; }
+  .kpc-divider    { width: 55%; height: 2px; background: #f5c842; margin: 14px auto; }
+  .kpc-astro-boxes { display: flex; gap: 20px; justify-content: center; margin: 18px 0; }
+  .kpc-astro-box  { background: #fff9e6; border: 2px solid #f5c842; border-radius: 10px;
+                    padding: 14px 24px; text-align: center; min-width: 130px; }
+  .kpc-astro-label { font-size: 0.72rem; color: #6b3a2a; font-weight: 700; text-transform: uppercase; }
+  .kpc-astro-val  { font-size: 1.3rem; font-weight: 700; color: #3b1f0a; margin-top: 5px; }
+  .kpc-panchang   { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: center;
+                    font-size: 0.95rem; margin-top: 18px; color: #3b1f0a; }
+  .kpc-panchang b { color: #6b3a2a; }
+
+  /* ── Page 2: chart + planet table (full width) ── */
+  body.kundali-printing .kundali-top { display: flex; gap: 24px; width: 100%; flex-wrap: nowrap; margin-bottom: 14px; break-inside: avoid; }
+  body.kundali-printing .kundali-chart-wrap { flex: 0 0 44%; }
+  body.kundali-printing .horo-grid { max-width: 100% !important; }
+  body.kundali-printing .horo-cell { min-height: 80px; }
+  body.kundali-printing .horo-cell .horo-rashi { font-size: 0.85rem !important; }
+  body.kundali-printing .horo-cell .horo-planets { font-size: 1rem !important; }
+  body.kundali-printing .kundali-planet-table-wrap { flex: 1; }
+  body.kundali-printing .kundali-planet-table { font-size: 11pt; width: 100%; }
+  body.kundali-printing .kundali-planet-table th,
+  body.kundali-printing .kundali-planet-table td { padding: 7px 9px; font-size: 11pt; }
+  body.kundali-printing .kundali-birth-strip { font-size: 11pt; padding: 10px 14px; break-inside: avoid; gap: 10px 24px; }
+  body.kundali-printing .kundali-birth-strip b { color: #6b3a2a; }
+
+  /* ── Dasha section header: new page ── */
+  body.kundali-printing .kundali-dasha-header { break-before: page; font-size: 14pt; padding: 10px 14px; margin: 0; }
+  body.kundali-printing .dasha-row-body { display: flex !important; gap: 22px; flex-wrap: nowrap; padding: 14px; break-inside: avoid; }
+
+  /* ── Each mahadasha on its own page ── */
+  body.kundali-printing .dasha-row { break-before: page; break-inside: avoid; border: 1px solid #e8d5c4; }
+  body.kundali-printing .dasha-row-header { font-size: 14pt; padding: 13px 14px; font-weight: 700; background: #fff9e6 !important; }
+  body.kundali-printing .dasha-row-dates { font-size: 11pt; }
+  body.kundali-printing .dasha-current-badge { font-size: 9pt; }
+  body.kundali-printing .dasha-mini-chart .horo-grid { width: 210px !important; max-width: 210px !important; }
+  body.kundali-printing .dasha-mini-chart .horo-cell { min-height: 52px; }
+  body.kundali-printing .dasha-mini-chart .horo-rashi { font-size: 0.75rem !important; }
+  body.kundali-printing .dasha-mini-chart .horo-planets { font-size: 0.85rem !important; }
+  body.kundali-printing .dasha-ad-table { font-size: 11pt; flex: 1; }
+  body.kundali-printing .dasha-ad-table th,
+  body.kundali-printing .dasha-ad-table td { font-size: 11pt; padding: 7px 9px; }
+  body.kundali-printing .dasha-ad-table tr.current-ad > td { background: #fff9c4 !important; font-weight: 700; }
 }
 
 .lang-toggle {
@@ -2505,13 +2563,58 @@ function _renderKundaliBody(chart, profile) {
   }
 
   const bp = chart.birth_panchang || {};
+  const dobDisplay = (profile.dob || "").split("-").reverse().join("/");
+
+  const printCover = `
+    <div class="kundali-print-cover">
+      <div class="kpc-om">🕉</div>
+      <div class="kpc-heading">జాతక కుండలి</div>
+      <div class="kpc-subheading">Telugu Muhurtam · Godavari Sampradaya</div>
+      <div class="kpc-name">${_escHtml(profile.name || "")}</div>
+      <div class="kpc-info-grid">
+        <div class="kpc-info-item">
+          <span class="kpc-info-label">జన్మ తేదీ</span>
+          <span class="kpc-info-val">${dobDisplay || "—"}</span>
+        </div>
+        <div class="kpc-info-item">
+          <span class="kpc-info-label">జన్మ సమయం</span>
+          <span class="kpc-info-val">${profile.time || "—"}</span>
+        </div>
+        <div class="kpc-info-item">
+          <span class="kpc-info-label">జన్మ స్థలం</span>
+          <span class="kpc-info-val">${_escHtml(profile.place || "—")}</span>
+        </div>
+      </div>
+      <div class="kpc-divider"></div>
+      <div class="kpc-astro-boxes">
+        <div class="kpc-astro-box">
+          <div class="kpc-astro-label">నక్షత్రం</div>
+          <div class="kpc-astro-val">${chart.janma_nakshatra_te || "—"}${chart.janma_nakshatra_padam ? " · " + chart.janma_nakshatra_padam + "వ పాదం" : ""}</div>
+        </div>
+        <div class="kpc-astro-box">
+          <div class="kpc-astro-label">రాశి</div>
+          <div class="kpc-astro-val">${chart.janma_rashi_te || "—"}</div>
+        </div>
+        <div class="kpc-astro-box">
+          <div class="kpc-astro-label">లగ్నం</div>
+          <div class="kpc-astro-val">${chart.lagna_te || "—"}</div>
+        </div>
+      </div>
+      <div class="kpc-panchang">
+        <span><b>తిథి:</b> ${bp.tithi_te || "—"}</span>
+        <span><b>వారం:</b> ${bp.vaara_te || "—"}</span>
+        <span><b>నక్షత్రం:</b> ${bp.nakshatra_te || "—"}</span>
+        <span><b>యోగం:</b> ${bp.yoga_te || "—"}</span>
+        <span><b>కరణం:</b> ${bp.karanam_te || "—"}</span>
+      </div>
+    </div>`;
 
   const dashaHtml = _renderDashaAccordion(
     chart.vimshottari_dasha || [], profile.dob || "",
     chart.planet_rashis || {}, chart.lagna_idx ?? 0
   );
 
-  body.innerHTML = `
+  body.innerHTML = printCover + `
     <div class="kundali-top">
       <div class="kundali-chart-wrap">${chartHtml}</div>
       <div class="kundali-planet-table-wrap">
