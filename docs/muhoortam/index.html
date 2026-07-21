@@ -257,6 +257,17 @@ body {
   body.kundali-printing .kundali-pdf-btn { display: none !important; }
   body.kundali-printing #kundali-panel { display: block !important; }
   body.kundali-printing .dasha-row-body { display: flex !important; }
+  /* Keep header + chart + birth strip together on page 1 */
+  body.kundali-printing .kundali-header,
+  body.kundali-printing .kundali-top,
+  body.kundali-printing .kundali-birth-strip,
+  body.kundali-printing .kundali-dasha-header { break-inside: avoid; }
+  /* Each mahadasha on its own page */
+  body.kundali-printing .dasha-row { break-before: page; break-inside: avoid; }
+  /* Don't break inside mini chart or antardasha table */
+  body.kundali-printing .dasha-row-body,
+  body.kundali-printing .dasha-mini-chart,
+  body.kundali-printing .dasha-ad-table { break-inside: avoid; }
 }
 
 .lang-toggle {
@@ -2627,11 +2638,24 @@ function _fmtDate(iso) {
 }
 
 function printKundaliPage() {
+  // Expand all dasha rows before printing
+  const wasOpen = new Set();
+  document.querySelectorAll(".dasha-row").forEach(r => {
+    if (r.classList.contains("open")) wasOpen.add(r.id);
+    r.classList.add("open");
+  });
   document.body.classList.add("kundali-printing");
-  document.querySelectorAll(".dasha-row").forEach(r => r.classList.add("open"));
+
+  // Restore state after print dialog closes
+  function afterPrint() {
+    document.body.classList.remove("kundali-printing");
+    document.querySelectorAll(".dasha-row").forEach(r => {
+      if (!wasOpen.has(r.id)) r.classList.remove("open");
+    });
+    window.removeEventListener("afterprint", afterPrint);
+  }
+  window.addEventListener("afterprint", afterPrint);
   window.print();
-  document.body.classList.remove("kundali-printing");
-  document.querySelectorAll(".dasha-row:not(.current)").forEach(r => r.classList.remove("open"));
 }
 
 // Default dates for range pickers
