@@ -2524,6 +2524,114 @@ function _renderKundaliBody(chart, profile) {
     ${dashaHtml}`;
 }
 
+function _renderDashaAccordion(dashas, birthDobIso, planetRashis, lagnaIdx) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  return dashas.map((maha, i) => {
+    const isCurrent = maha.start_date <= today && today <= maha.end_date;
+    const currentCls = isCurrent ? " current" : "";
+    const badge = isCurrent ? '<span class="dasha-current-badge">ప్రస్తుతం</span>' : "";
+    const openCls = isCurrent ? " open" : "";
+
+    const currentAdIdx = maha.antardashas.findIndex(
+      a => a.start <= today && today <= a.end
+    );
+
+    const adRows = maha.antardashas.map((ad, j) => {
+      const adCurrent = (isCurrent && j === currentAdIdx) ? ' class="current-ad"' : "";
+      const startFmt = _fmtDate(ad.start);
+      const endFmt   = _fmtDate(ad.end);
+      return `<tr${adCurrent}>
+        <td>${maha.lord_emoji} ${maha.lord_te} – ${ad.lord_te}</td>
+        <td>${startFmt}</td>
+        <td>${endFmt}</td>
+      </tr>`;
+    }).join("");
+
+    const mahaRashiIdx = (planetRashis || {})[maha.lord];
+    const miniChart = _renderMiniDashaChart(planetRashis, lagnaIdx, mahaRashiIdx);
+
+    return `
+      <div class="dasha-row${currentCls}${openCls}" id="dashaRow${i}">
+        <div class="dasha-row-header" onclick="toggleDashaRow(${i})">
+          <span>${isCurrent ? "▼" : "▶"} ${maha.lord_emoji} ${maha.lord_te} మహాదశ</span>
+          ${badge}
+          <span class="dasha-row-dates">${_fmtDate(maha.start_date)} – ${_fmtDate(maha.end_date)}</span>
+        </div>
+        <div class="dasha-row-body">
+          <div class="dasha-mini-chart">${miniChart}</div>
+          <table class="dasha-ad-table">
+            <thead><tr><th>అంతర్దశ</th><th>ప్రారంభం</th><th>ముగింపు</th></tr></thead>
+            <tbody>${adRows}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function toggleDashaRow(idx) {
+  const row = document.getElementById("dashaRow" + idx);
+  if (!row) return;
+  const isOpen = row.classList.contains("open");
+  row.classList.toggle("open", !isOpen);
+  const arrow = row.querySelector(".dasha-row-header > span:first-child");
+  if (arrow) arrow.textContent = arrow.textContent.replace(isOpen ? "▼" : "▶", isOpen ? "▶" : "▼");
+}
+
+function _renderMiniDashaChart(planetRashis, lagnaIdx, highlightRashiIdx) {
+  if (!planetRashis) return "";
+  const RASHI_TE_SHORT = ["మే","వృ","మి","క","సి","క","తు","వృశ్చి","ధ","మక","కుం","మీ"];
+  const PLANET_TE_MAP = {
+    ravi:"ర",chandra:"చ",kuja:"కు",budha:"బు",guru:"గు",shukra:"శు",shani:"శ",rahu:"రా",ketu:"కే"
+  };
+  const RASHI_POS_4X4 = [
+    [0,1],[0,2],[0,3],[1,3],[2,3],[3,3],[3,2],[3,1],[3,0],[2,0],[1,0],[0,0]
+  ];
+
+  const cells = Array.from({length: 12}, () => []);
+  for (const [p, ri] of Object.entries(planetRashis)) {
+    if (ri >= 0 && ri < 12) cells[ri].push(PLANET_TE_MAP[p] || p);
+  }
+  const grid = Array.from({length: 4}, () => Array(4).fill(null));
+  for (let ri = 0; ri < 12; ri++) {
+    const [r, c] = RASHI_POS_4X4[ri];
+    grid[r][c] = { ri, planets: cells[ri], isLagna: ri === lagnaIdx };
+  }
+  let rows = "";
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 4; c++) {
+      const cell = grid[r][c];
+      if (!cell) {
+        rows += `<div class="horo-cell horo-center"></div>`;
+      } else {
+        const highlight = cell.ri === highlightRashiIdx
+          ? "background:#ffd700;border-color:#f5c842;" : "";
+        const cls = cell.isLagna ? "horo-cell horo-lagna" : "horo-cell";
+        rows += `<div class="${cls}" style="${highlight}">
+          <div class="horo-rashi" style="font-size:0.55rem">${RASHI_TE_SHORT[cell.ri]}</div>
+          <div class="horo-planets" style="font-size:0.62rem">${cell.planets.join(" ")}</div>
+          ${cell.isLagna ? '<span class="horo-lagna-mark">ల</span>' : ""}
+        </div>`;
+      }
+    }
+  }
+  return `<div class="horo-wrap"><div class="horo-grid" style="width:80px;height:80px">${rows}</div></div>`;
+}
+
+function _fmtDate(iso) {
+  if (!iso || !iso.includes("-")) return iso || "";
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function printKundaliPage() {
+  document.body.classList.add("kundali-printing");
+  document.querySelectorAll(".dasha-row").forEach(r => r.classList.add("open"));
+  window.print();
+  document.body.classList.remove("kundali-printing");
+  document.querySelectorAll(".dasha-row:not(.current)").forEach(r => r.classList.remove("open"));
+}
+
 // Default dates for range pickers
 (function() {
   const t = new Date(), n = new Date(t); n.setMonth(n.getMonth()+3);
