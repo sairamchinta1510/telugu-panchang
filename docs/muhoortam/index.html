@@ -1672,13 +1672,17 @@ async function _fetchAndRenderJanmaChakram(name, dob, time, place) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ dob, time, place }),
     });
-    if (!resp.ok) throw new Error("API error " + resp.status);
+    if (!resp.ok) {
+      const errText = await resp.text().catch(() => "");
+      throw new Error("API " + resp.status + ": " + errText);
+    }
     const chart = await resp.json();
     _renderJanmaChakram(chart);
   } catch (e) {
+    console.error("Janma Chakram error:", e);
     const body = document.getElementById("jcModalBody");
     if (body) body.innerHTML =
-      '<div class="jc-error">⚠️ చార్ట్ లోడ్ కాలేదు. మళ్ళీ ప్రయత్నించండి.</div>';
+      `<div class="jc-error">⚠️ చార్ట్ లోడ్ కాలేదు. మళ్ళీ ప్రయత్నించండి.<br><small style="opacity:0.7">${e.message}</small></div>`;
   }
 }
 
