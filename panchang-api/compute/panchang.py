@@ -241,10 +241,14 @@ def compute_panchang(jd: float, lat: float, lon: float, tz_name: str) -> dict:
     samvatsara = {"en": SAMVATSARA_EN[sam_idx], "te": SAMVATSARA_TE[sam_idx]}
 
     # ── Ayanam ──
-    sun_lon = sun_longitude(jd_ref)
+    # Uttarayanam: Makara Sankranti to Karkataka Sankranti (Sun sidereal longitude
+    # in [270°, 360°) union [0°, 90°)). Dakshinayanam: [90°, 270°) — Karkataka to
+    # Makara Sankranti.
+    sun_lon = sun_longitude(jd_ref) % 360
+    is_uttarayanam = sun_lon >= 270 or sun_lon < 90
     ayanam = {
-        "en": "Uttarayanam" if sun_lon < 180 else "Dakshinayanam",
-        "te": "ఉత్తరాయణం" if sun_lon < 180 else "దక్షిణాయణం",
+        "en": "Uttarayanam" if is_uttarayanam else "Dakshinayanam",
+        "te": "ఉత్తరాయణం" if is_uttarayanam else "దక్షిణాయణం",
     }
 
     # ── Rutu (derived from masam index, NOT from sun longitude directly) ──

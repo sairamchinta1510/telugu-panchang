@@ -50,6 +50,15 @@ def test_ayanam_uttarayanam_may_2026():
     assert p["ayanam"]["en"] == "Uttarayanam"
 
 
+def test_ayanam_dakshinayanam_september_2026():
+    # Regression test: sidereal Sun longitude in Sep is ~90-180°, which the old
+    # buggy formula (`sun_lon < 180`) wrongly reported as Uttarayanam. Correct
+    # answer is Dakshinayanam (Karkataka Sankranti ~Jul 16 to Makara Sankranti
+    # ~Jan 14).
+    p = pan(2026, 9, 27)
+    assert p["ayanam"]["en"] == "Dakshinayanam"
+
+
 def test_paksham_shukla():
     # 2026-05-17 is Shukla paksham
     p = pan(2026, 5, 17)

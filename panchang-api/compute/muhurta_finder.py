@@ -80,6 +80,15 @@ def _lookup_at_jd(transitions: list[dict], jd: float) -> int:
     return transitions[max(0, pos)]["idx"]
 
 
+def _is_uttarayanam(jd: float) -> bool:
+    """Return True if Sun's sidereal longitude falls in Uttarayanam
+    (Makara Sankranti to Karkataka Sankranti: [270°, 360°) union [0°, 90°)).
+    False for Dakshinayanam ([90°, 270°): Karkataka Sankranti to Makara Sankranti).
+    """
+    lon = sun_longitude(jd) % 360
+    return lon >= 270 or lon < 90
+
+
 def _segments_from_cache(day_cache: dict, rise_jd: float, end_jd: float) -> list[tuple]:
     """Build time segments by merging all precomputed transition breakpoints."""
     breakpoints = set()
@@ -471,7 +480,7 @@ def find_muhurtas_for_month(
                 dt_rise = jd_to_local_datetime(rise_jd, tz_name)
                 sun_idx = (dt_rise.weekday() + 1) % 7   # Sunday=0 … Saturday=6
                 lagna_idx = compute_lagna(rise_jd, lat, lon)
-                is_uttarayanam = sun_longitude(rise_jd) < 180
+                is_uttarayanam = _is_uttarayanam(rise_jd)
 
                 pan = compute_panchang(jd, lat, lon, tz_name)
                 masam_name = pan["masam"]["en"]
@@ -622,7 +631,7 @@ def check_muhurta_day(
     pan            = compute_panchang(jd, lat, lon, tz_name)
     masam_name     = pan["masam"]["en"]
     is_adhika      = pan["masam"]["adhika"]
-    is_uttarayanam = sun_longitude(rise_jd) < 180
+    is_uttarayanam = _is_uttarayanam(rise_jd)
 
     rise_mins = dt_rise.hour * 60 + dt_rise.minute + dt_rise.second / 60
     set_mins  = dt_set.hour  * 60 + dt_set.minute  + dt_set.second  / 60
