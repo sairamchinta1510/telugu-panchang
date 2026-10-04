@@ -20,6 +20,13 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #fdf6ec; colo
 .location-bar .loc-coords { color: #8d6e63; margin-left: auto; font-size: 0.72rem; }
 .location-bar.error { color: #bf360c; background: #fbe9e7; border-color: #ffccbc; }
 
+/* Date picker bar */
+.date-picker-bar { background: #fff; border: 1px solid #d7ccc8; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.date-picker-bar label { font-size: 0.78rem; font-weight: 600; color: #4e342e; display: flex; align-items: center; gap: 6px; }
+.date-picker-bar input[type="date"] { font-family: inherit; font-size: 0.82rem; color: #3e2723; background: #fdf6ec; border: 1px solid #d7ccc8; border-radius: 6px; padding: 6px 8px; }
+.date-picker-bar #today-btn { display: none; margin-left: auto; padding: 6px 12px; font-size: 0.76rem; font-weight: 600; background: #5d4037; color: #fff; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+.date-picker-bar #today-btn.show { display: inline-block; }
+
 /* Date banner */
 .date-banner { background: #fff; border: 1px solid #d7ccc8; border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; }
 .date-banner .gregorian { font-size: 0.82rem; color: #8d6e63; margin-bottom: 4px; }
@@ -297,6 +304,12 @@ footer { text-align: center; padding: 14px; font-size: 0.7rem; color: #a1887f; }
   <button id="loc-enable-btn" onclick="showLocationBlockedHelp()" style="display:none;margin-left:auto;padding:5px 11px;font-size:0.78rem;background:#5d4037;color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;">📍 Enable Location</button>
 </div>
 
+<div class="date-picker-bar">
+  <label for="date-picker">📅 <span>View date</span><span class="te" style="color:#8d6e63;font-weight:400;">· తేదీ ఎంచుకోండి</span></label>
+  <input type="date" id="date-picker" aria-label="Choose a date to view Panchang and Sankalpam">
+  <button id="today-btn" onclick="jumpToToday()">↺ Today</button>
+</div>
+
 <div class="date-banner">
   <div class="gregorian" id="gregorian-date"><div class="skel" style="width:180px"></div></div>
   <div class="telugu-date" id="telugu-date"><div class="skel" style="width:260px"></div></div>
@@ -401,15 +414,26 @@ footer { text-align: center; padding: 14px; font-size: 0.7rem; color: #a1887f; }
 const API_BASE = 'https://api.sanatanadharmas.com/panchang';
 
 async function fetchPanchang(lat, lon, date) {
-  const dateStr = [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, '0'),
-    String(date.getDate()).padStart(2, '0'),
-  ].join('-');
+  const dateStr = toDateInputValue(date);
   const url = `${API_BASE}?lat=${lat}&lon=${lon}&date=${dateStr}`;
   const resp = await fetch(url, { cache: 'no-store' });
   if (!resp.ok) throw new Error(`Panchang API returned ${resp.status}`);
   return await resp.json();
+}
+
+// ── Date helpers (local calendar date, matching the picker and API format) ──
+function toDateInputValue(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');
+}
+
+function isSameLocalDate(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+         a.getMonth() === b.getMonth() &&
+         a.getDate() === b.getDate();
 }
 
 // ══════════════════════════════════════════
@@ -679,17 +703,43 @@ const UI = (() => {
 // ══════════════════════════════════════════
 // BOOTSTRAP — Wire everything together
 // ══════════════════════════════════════════
-async function computeAndRender(loc) {
+let currentLoc = null;
+let currentViewDate = new Date();
+
+async function computeAndRender(loc, date) {
+  currentLoc = loc;
+  currentViewDate = date || new Date();
   try {
     UI.showLocation(loc);
-    const today = new Date();
-    const data = await fetchPanchang(loc.lat, loc.lon, today);
+    const data = await fetchPanchang(loc.lat, loc.lon, currentViewDate);
     UI.render(data, loc);
-    UI.scheduleRefreshAtMidnight();
+    const isToday = isSameLocalDate(currentViewDate, new Date());
+    const todayBtn = document.getElementById('today-btn');
+    if (todayBtn) todayBtn.classList.toggle('show', !isToday);
+    if (isToday) UI.scheduleRefreshAtMidnight();
   } catch (err) {
     UI.showError('Could not load Panchang data: ' + err.message);
     console.error(err);
   }
+}
+
+// ── Date Picker — native calendar control to view any day's Panchang/Sankalpam ──
+(function() {
+  const picker = document.getElementById('date-picker');
+  if (!picker) return;
+  picker.value = toDateInputValue(new Date());
+  picker.addEventListener('change', () => {
+    if (!picker.value || !currentLoc) return;
+    const [y, m, d] = picker.value.split('-').map(Number);
+    computeAndRender(currentLoc, new Date(y, m - 1, d, 12, 0, 0));
+  });
+})();
+
+function jumpToToday() {
+  const picker = document.getElementById('date-picker');
+  const today = new Date();
+  if (picker) picker.value = toDateInputValue(today);
+  if (currentLoc) computeAndRender(currentLoc, today);
 }
 
 // ── Dialog-first location flow ──
